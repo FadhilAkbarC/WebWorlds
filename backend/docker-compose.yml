@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0-latest
+    container_name: webworlds-db
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: webworlds
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - webworlds-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Express (Web UI - optional)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: webworlds-db-ui
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
+    networks:
+      - webworlds-network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  webworlds-network:
+    driver: bridge
+
+# Usage: docker-compose up -d
+# MongoDB:        localhost:27017 (admin/admin)
+# Mongo Express:  http://localhost:8081
+#
+# To stop:        docker-compose down
+# To view logs:   docker-compose logs -f
+# To reset:       docker-compose down -v
