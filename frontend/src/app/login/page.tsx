@@ -23,11 +23,24 @@ export default function LoginPage() {
       return;
     }
 
+    // Check API URL
+    if (!process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL.includes('localhost')) {
+      setLocalError('API URL is not configured for mobile. Please use a production URL.');
+      return;
+    }
+
     try {
       await login(email, password);
-      router.push('/');
-    } catch (err) {
-      setLocalError(error || 'Login failed');
+      // Force reload to sync state on mobile
+      window.location.href = '/';
+    } catch (err: any) {
+      if (err?.message?.includes('Network Error')) {
+        setLocalError('Network error: Check your connection or API URL.');
+      } else if (err?.response?.status === 0) {
+        setLocalError('CORS or network error: Check API server.');
+      } else {
+        setLocalError(error || 'Login failed');
+      }
     }
   };
 
