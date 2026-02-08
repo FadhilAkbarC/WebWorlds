@@ -29,8 +29,9 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
       if (response.data.success || Array.isArray(response.data.data)) {
         setComments(response.data.data || []);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch comments:', err);
+      setError(err.response?.data?.error || 'Comments are unavailable');
     } finally {
       setIsLoading(false);
     }
@@ -72,11 +73,11 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
     if (!confirm('Delete this comment?')) return;
 
     try {
-      await api.delete(`/comments/comment/${commentId}`);
+      await api.delete(`/comments/${commentId}`);
       setComments(comments.filter((c) => c._id !== commentId));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete comment:', err);
-      setError('Failed to delete comment');
+      setError(err.response?.data?.error || 'Failed to delete comment');
     }
   };
 
@@ -87,7 +88,7 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
     }
 
     try {
-      const response = await api.post(`/comments/comment/${commentId}/like`);
+      const response = await api.post(`/comments/${commentId}/like`);
       const updatedComment = response.data.data;
       
       setComments(comments.map((c) =>
@@ -107,7 +108,7 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
 
   const handleUnlikeComment = async (commentId: string) => {
     try {
-      const response = await api.post(`/comments/comment/${commentId}/unlike`);
+      const response = await api.post(`/comments/${commentId}/unlike`);
       const updatedComment = response.data.data;
       
       setComments(comments.map((c) =>

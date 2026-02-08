@@ -33,9 +33,11 @@ export default function ProfilePage() {
   }, [user?._id]);
 
   const fetchUserGames = async (page = 1, append = false) => {
+    if (!user?._id) return;
+
     try {
       setIsLoadingGames(true);
-      const response = await api.get(`/games/creator/${user?._id}?page=${page}&limit=12`);
+      const response = await api.get(`/games/creator/${user._id}?page=${page}&limit=12`);
       const data = response.data;
       const items = data.data || [];
       if (append) {
@@ -199,7 +201,7 @@ export default function ProfilePage() {
             </div>
           )}
           {/* Load more games */}
-          {gamesHasMore && (
+            {gamesHasMore && user?._id && (
               <div className="col-span-full text-center mt-4">
                 <button
                   onClick={() => fetchUserGames(gamesPage + 1, true)}
