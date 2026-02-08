@@ -48,6 +48,13 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+
+  // Turbopack configuration for Next.js 16
+  turbopack: {
+    resolveAlias: {
+      '@': './src',
+    },
+  },
 };
 
 export default nextConfig;
