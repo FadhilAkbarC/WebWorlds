@@ -146,11 +146,24 @@ export default function EditProfilePage() {
             {/* Change Password Section */}
             <div className="border-t border-slate-700 pt-6">
               <h3 className="text-lg font-semibold text-white mb-4">Security</h3>
+              <div className="space-y-3">
+                <Link
+                  href="/change-password"
+                  className="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                >
+                  Change Password
+                </Link>
+              </div>
+            </div>
+
+            {/* Settings Section */}
+            <div className="border-t border-slate-700 pt-6">
+              <h3 className="text-lg font-semibold text-white mb-4">More</h3>
               <Link
-                href="/change-password"
+                href="/settings"
                 className="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
               >
-                Change Password
+                Go to Settings
               </Link>
             </div>
 

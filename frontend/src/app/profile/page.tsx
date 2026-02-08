@@ -61,9 +61,12 @@ export default function ProfilePage() {
                 >
                   Edit Profile
                 </Link>
-                <button className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors">
+                <Link
+                  href="/settings"
+                  className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                >
                   Settings
-                </button>
+                </Link>
               </div>
             </div>
           </div>
