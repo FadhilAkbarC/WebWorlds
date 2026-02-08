@@ -4,9 +4,12 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { GameEngine } from '@/engine/GameEngine';
 import { useEditorStore } from '@/stores/editorStore';
+import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
 
 export default function EditorPage() {
+  const router = useRouter();
   const {
     project,
     isModified,
@@ -26,6 +29,8 @@ export default function EditorPage() {
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [publishForm, setPublishForm] = useState({
     title: '',
     description: '',
@@ -109,6 +114,59 @@ export default function EditorPage() {
     addScript(newScript);
     setNewScriptName('');
     setShowNewScriptDialog(false);
+  };
+
+  const handlePublishGame = async () => {
+    // Validate form
+    if (!publishForm.title.trim()) {
+      setPublishError('Game title is required');
+      return;
+    }
+
+    if (!project._id) {
+      setPublishError('Game not saved. Please save first.');
+      return;
+    }
+
+    try {
+      setIsPublishing(true);
+      setPublishError(null);
+
+      // 1. First update game with new title and description
+      await api.put(`/games/${project._id}`, {
+        title: publishForm.title,
+        description: publishForm.description,
+        category: publishForm.genre.length > 0 ? publishForm.genre[0] : 'Action',
+        tags: publishForm.tags.split(',').map(t => t.trim()).filter(t => t),
+      });
+
+      // 2. Then publish the game
+      const publishResponse = await api.post(`/games/${project._id}/publish`);
+
+      if (publishResponse.data.success) {
+        setShowPublishDialog(false);
+        setPublishForm({
+          title: '',
+          description: '',
+          genre: [],
+          tags: '',
+          thumbnail: '',
+        });
+        alert('Game published successfully! Redirecting to games page...');
+        setTimeout(() => {
+          router.push('/games');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Publishing error:', error);
+      setPublishError(
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to publish game'
+      );
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const currentScript = project.scripts.find((s) => s.id === activeTabId);
@@ -340,6 +398,12 @@ export default function EditorPage() {
             <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-700 max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-bold text-white mb-4">Publish Game</h3>
 
+              {publishError && (
+                <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4">
+                  {publishError}
+                </div>
+              )}
+
               <div className="space-y-4">
                 {/* Title */}
                 <div>
@@ -426,25 +490,19 @@ export default function EditorPage() {
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
                   <button
-                    onClick={() => {
-                      setShowPublishDialog(false);
-                      setPublishForm({
-                        title: '',
-                        description: '',
-                        genre: [],
-                        tags: '',
-                        thumbnail: '',
-                      });
-                      // Show success message
-                      alert('Game published successfully!');
-                    }}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded transition-colors"
+                    onClick={handlePublishGame}
+                    disabled={isPublishing}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold py-2 rounded transition-colors"
                   >
-                    Publish
+                    {isPublishing ? 'Publishing...' : 'Publish'}
                   </button>
                   <button
-                    onClick={() => setShowPublishDialog(false)}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded transition-colors"
+                    onClick={() => {
+                      setShowPublishDialog(false);
+                      setPublishError(null);
+                    }}
+                    disabled={isPublishing}
+                    className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-semibold py-2 rounded transition-colors"
                   >
                     Cancel
                   </button>

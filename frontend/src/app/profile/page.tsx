@@ -1,18 +1,45 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Trophy, Gamepad2, Calendar, Heart } from 'lucide-react';
+import { api } from '@/lib/api';
+import { Game } from '@/types';
+import { User, Mail, Trophy, Gamepad2, Calendar, Heart, Play } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, checkAuth } = useAuthStore();
+  const [userGames, setUserGames] = useState<Game[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchUserGames();
+    }
+  }, [user?._id]);
+
+  const fetchUserGames = async () => {
+    try {
+      setIsLoadingGames(true);
+      const response = await api.get(`/games/creator/${user?._id}`);
+      if (response.data.success) {
+        setUserGames(response.data.data || []);
+      } else {
+        setUserGames(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user games:', error);
+      setUserGames([]);
+    } finally {
+      setIsLoadingGames(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -100,25 +127,53 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="space-y-6">
-          {/* Recent Games */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">My Games</h2>
+        {/* My Games Section */}
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
+          <h2 className="text-2xl font-bold text-white mb-4">My Games</h2>
+          {isLoadingGames ? (
+            <div className="text-slate-400 text-center py-8">Loading games...</div>
+          ) : userGames.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userGames.map((game) => (
+                <Link
+                  key={game._id}
+                  href={`/games/${game._id}`}
+                  className="bg-slate-700 rounded-lg overflow-hidden border border-slate-600 hover:border-blue-500 transition-colors group"
+                >
+                  <div className="bg-gradient-to-br from-purple-600 to-blue-600 h-40 flex items-center justify-center relative">
+                    <Gamepad2 size={48} className="text-white opacity-30" />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black bg-opacity-40 flex items-center justify-center transition-opacity">
+                      <Play size={32} className="text-white" />
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-white mb-2 truncate">{game.title}</h3>
+                    <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                      {game.description || 'No description'}
+                    </p>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>❤️ {game.likes || 0}</span>
+                      <span>👁️ {game.plays || 0}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
             <div className="text-slate-400 text-center py-8">
               You haven't created any games yet.{' '}
               <Link href="/editor" className="text-blue-400 hover:text-blue-300">
                 Create one now
               </Link>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Activity */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
-            <div className="text-slate-400 text-center py-8">
-              No recent activity
-            </div>
+        {/* Activity */}
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+          <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
+          <div className="text-slate-400 text-center py-8">
+            No recent activity
           </div>
         </div>
       </div>
