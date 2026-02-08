@@ -1,0 +1,55 @@
+export declare const CONSTANTS: {
+    readonly DEFAULT_PAGE: 1;
+    readonly DEFAULT_LIMIT: 12;
+    readonly MAX_LIMIT: 100;
+    readonly MIN_LIMIT: 1;
+    readonly USERNAME_MIN_LENGTH: 3;
+    readonly USERNAME_MAX_LENGTH: 30;
+    readonly EMAIL_MAX_LENGTH: 255;
+    readonly PASSWORD_MIN_LENGTH: 8;
+    readonly BIO_MAX_LENGTH: 500;
+    readonly GAME_TITLE_MIN_LENGTH: 3;
+    readonly GAME_TITLE_MAX_LENGTH: 100;
+    readonly GAME_DESCRIPTION_MAX_LENGTH: 1000;
+    readonly GAME_WIDTH_MIN: 320;
+    readonly GAME_WIDTH_MAX: 2560;
+    readonly GAME_HEIGHT_MIN: 240;
+    readonly GAME_HEIGHT_MAX: 1440;
+    readonly GAME_FPS_MIN: 15;
+    readonly GAME_FPS_MAX: 120;
+    readonly GAME_CATEGORIES: readonly ["action", "puzzle", "adventure", "sports", "other"];
+    readonly HTTP_OK: 200;
+    readonly HTTP_CREATED: 201;
+    readonly HTTP_BAD_REQUEST: 400;
+    readonly HTTP_UNAUTHORIZED: 401;
+    readonly HTTP_FORBIDDEN: 403;
+    readonly HTTP_NOT_FOUND: 404;
+    readonly HTTP_CONFLICT: 409;
+    readonly HTTP_RATE_LIMITED: 429;
+    readonly HTTP_INTERNAL_ERROR: 500;
+    readonly ERRORS: {
+        readonly INVALID_EMAIL: "Invalid email format";
+        readonly INVALID_USERNAME: "Username must be 3-30 chars, lowercase letters, numbers, _, or -";
+        readonly INVALID_PASSWORD: "Password must be 8+ chars with uppercase, lowercase, and number";
+        readonly USER_EXISTS: "Username or email already registered";
+        readonly INVALID_CREDENTIALS: "Invalid credentials";
+        readonly NOT_FOUND: "Resource not found";
+        readonly NOT_AUTHORIZED: "Not authorized to perform this action";
+        readonly INVALID_TOKEN: "Invalid or expired token";
+        readonly DATABASE_ERROR: "Database error";
+        readonly VALIDATION_ERROR: "Validation failed";
+        readonly RATE_LIMIT: "Too many requests";
+    };
+    readonly SUCCESS: {
+        readonly USER_CREATED: "User created successfully";
+        readonly LOGIN_SUCCESS: "Login successful";
+        readonly GAME_CREATED: "Game created";
+        readonly GAME_UPDATED: "Game updated";
+        readonly GAME_PUBLISHED: "Game published";
+        readonly GAME_LIKED: "Game liked";
+        readonly GAME_UNLIKED: "Game unliked";
+        readonly DELETION_SUCCESS: "Deleted successfully";
+    };
+};
+export default CONSTANTS;
+//# sourceMappingURL=constants.d.ts.map

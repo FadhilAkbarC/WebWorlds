@@ -8,8 +8,7 @@ yarn.lock
 .env.*.local
 .env
 
-# Build output
-dist/
+# Build output (dist/ is committed to production)
 build/
 *.js.map
 *.ts.map
