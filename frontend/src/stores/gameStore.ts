@@ -11,6 +11,8 @@ interface GameStoreActions {
   setError: (error: string | null) => void;
   likeGame: (gameId: string) => Promise<void>;
   unlikeGame: (gameId: string) => Promise<void>;
+  trackGamePlay: (gameId: string) => Promise<void>;
+  updateGameStats: (gameId: string, stats: Partial<Game>) => void;
 }
 
 export const useGameStore = create<GameState & GameStoreActions>((set, get) => ({
@@ -73,11 +75,19 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
 
   likeGame: async (gameId: string) => {
     try {
-      await api.post(`/games/${gameId}/like`);
+      const response = await api.post(`/games/${gameId}/like`);
+      const updatedGame = response.data.data;
+      
       const games = get().games.map((g) =>
-        g._id === gameId ? { ...g, likes: g.likes + 1 } : g
+        g._id === gameId ? { ...g, likes: updatedGame.stats?.likes || g.likes + 1 } : g
       );
-      set({ games });
+      
+      set({ 
+        games,
+        currentGame: get().currentGame?._id === gameId 
+          ? { ...get().currentGame!, likes: updatedGame.stats?.likes || get().currentGame!.likes + 1 }
+          : get().currentGame
+      });
     } catch (error) {
       console.error('Failed to like game:', error);
     }
@@ -85,13 +95,50 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
 
   unlikeGame: async (gameId: string) => {
     try {
-      await api.post(`/games/${gameId}/unlike`);
+      const response = await api.post(`/games/${gameId}/unlike`);
+      const updatedGame = response.data.data;
+      
       const games = get().games.map((g) =>
-        g._id === gameId ? { ...g, likes: Math.max(0, g.likes - 1) } : g
+        g._id === gameId ? { ...g, likes: updatedGame.stats?.likes ?? Math.max(0, g.likes - 1) } : g
       );
-      set({ games });
+      
+      set({ 
+        games,
+        currentGame: get().currentGame?._id === gameId 
+          ? { ...get().currentGame!, likes: updatedGame.stats?.likes ?? Math.max(0, get().currentGame!.likes - 1) }
+          : get().currentGame
+      });
     } catch (error) {
       console.error('Failed to unlike game:', error);
     }
+  },
+
+  trackGamePlay: async (gameId: string) => {
+    try {
+      // The play count is incremented when fetching game (GET /games/:id)
+      // This function is just for explicit tracking
+      const response = await api.get(`/games/${gameId}`);
+      if (response.data.data || response.data.success) {
+        const gameData = response.data.data || response.data;
+        set((state) => ({
+          currentGame: state.currentGame?._id === gameId 
+            ? { ...state.currentGame, plays: gameData.stats?.plays || gameData.plays || state.currentGame.plays }
+            : state.currentGame
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to track game play:', error);
+    }
+  },
+
+  updateGameStats: (gameId: string, stats: Partial<Game>) => {
+    set((state) => ({
+      games: state.games.map((g) =>
+        g._id === gameId ? { ...g, ...stats } : g
+      ),
+      currentGame: state.currentGame?._id === gameId
+        ? { ...state.currentGame, ...stats }
+        : state.currentGame
+    }));
   },
 }));

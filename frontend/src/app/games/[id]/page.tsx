@@ -6,17 +6,21 @@ import Link from 'next/link';
 import { Play, Heart, Share2, User, MessageSquare, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+import { useGameStore } from '@/stores/gameStore';
 import { Game } from '@/types';
+import { CommentsSection } from '@/components/CommentsSection';
 
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
   const gameId = params.id as string;
   const { user } = useAuthStore();
+  const { likeGame, unlikeGame } = useGameStore();
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     if (gameId) {
@@ -31,11 +35,46 @@ export default function GameDetailPage() {
       const gameData = response.data.data || response.data;
       setGame(gameData);
       setError(null);
+      
+      // Check if user liked this game
+      if (user) {
+        try {
+          const likeCheckResponse = await api.get(`/games/${gameId}/like-status`);
+          setIsLiked(likeCheckResponse.data.isLiked || false);
+        } catch {
+          // Endpoint might not exist, skip
+          setIsLiked(false);
+        }
+      }
     } catch (err) {
       setError('Failed to load game details');
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!user) {
+      alert('Please login to like games');
+      return;
+    }
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        await unlikeGame(gameId);
+        setIsLiked(false);
+        setGame(prev => prev ? { ...prev, likes: Math.max(0, prev.likes - 1) } : null);
+      } else {
+        await likeGame(gameId);
+        setIsLiked(true);
+        setGame(prev => prev ? { ...prev, likes: prev.likes + 1 } : null);
+      }
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -162,6 +201,26 @@ export default function GameDetailPage() {
               Play Game
             </button>
 
+            {/* Like Button */}
+            <button
+              onClick={handleToggleLike}
+              disabled={isLiking}
+              className={`w-full py-2 rounded transition-colors font-medium text-sm flex items-center justify-center gap-2 ${
+                isLiked
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}
+            >
+              <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
+              {isLiked ? 'Liked' : 'Like'} ({game.likes || 0})
+            </button>
+
+            {/* Share Button */}
+            <button className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 border border-slate-700 transition-colors">
+              <Share2 size={20} />
+              Share
+            </button>
+
             {/* Creator Card */}
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
               <p className="text-slate-400 text-sm mb-4">Created by</p>
@@ -225,14 +284,8 @@ export default function GameDetailPage() {
         </div>
 
         {/* Comments Section */}
-        <div className="mt-12 bg-slate-800 rounded-lg border border-slate-700 p-6">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <MessageSquare size={24} />
-            Comments
-          </h2>
-          <div className="text-slate-400 text-center py-8">
-            No comments yet. Be the first to comment!
-          </div>
+        <div className="mt-12">
+          <CommentsSection gameId={gameId} />
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { config } from './config/env';
 import authRoutes from './routes/auth';
 import gameRoutes from './routes/games';
+import commentRoutes from './routes/comments';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Express {
@@ -48,6 +49,7 @@ export function createApp(): Express {
   // ============ API Routes ============
   app.use('/api/auth', authRoutes);
   app.use('/api/games', gameRoutes);
+  app.use('/api', commentRoutes);
 
   // ============ Health Check ============
   app.get('/health', (req, res) => {

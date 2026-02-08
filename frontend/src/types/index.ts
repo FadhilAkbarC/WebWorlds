@@ -82,6 +82,19 @@ export interface GameSession {
   status: 'active' | 'completed' | 'abandoned';
 }
 
+export interface Comment {
+  _id: string;
+  gameId: string;
+  userId: string;
+  username: string;
+  avatar?: string;
+  text: string;
+  likes: number;
+  likedBy: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface GameState {
   games: Game[];
   currentGame: Game | null;

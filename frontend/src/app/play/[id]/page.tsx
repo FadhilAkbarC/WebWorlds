@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { X, Volume2, VolumeX } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useGameStore } from '@/stores/gameStore';
 import { Game } from '@/types';
 
 export default function PlayGamePage() {
