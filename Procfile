@@ -1,1 +1,1 @@
-web: cd backend && npm ci --omit=dev && npm start
+web: cd backend && npm install --omit=dev && npm run build && npm start
