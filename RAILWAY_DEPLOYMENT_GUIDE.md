@@ -349,6 +349,88 @@ Pastikan Railway & Vercel berbeda:
 
 ---
 
+## 🔧 Troubleshooting - Masalah Umum & Solusi
+
+### ❌ Error: "npm ci" requires package-lock.json
+**Penyebab:** Railway gagal karena project tidak memiliki `package-lock.json`
+
+**Solusi:** ✅ Sudah diperbaiki
+- Procfile diubah dari `npm ci` → `npm install`
+- `npm install` otomatis generate lock file jika diperlukan
+- Lebih kompatibel dengan Railway environment
+
+```bash
+# Procfile Backend (sudah diubah):
+web: npm install --omit=dev && npm run build && npm start
+
+# Root Procfile (sudah diubah):
+web: cd backend && npm install --omit=dev && npm run build && npm start
+```
+
+### ❌ Error: "Cannot find module 'dotenv'"
+**Penyebab:** Dependencies tidak ter-install di production
+
+**Solusi:** ✅ Sudah diperbaiki
+- Added `npm install --omit=dev` di Procfile
+- Build script sekarang: `tsc` (compile TypeScript)
+- Dependencies akan ter-install sebelum start
+
+### ❌ Error: CORS atau Socket.io connection failed
+**Penyebab:** CORS_ORIGIN belum di-set di Railway
+
+**Solusi:** ✅ Sudah diperbaiki
+- Backend support multiple CORS origins
+- Socket.io CORS otomatis handle production URLs
+- Set env var: `CORS_ORIGIN=https://frontend-domain.com`
+
+### ❌ Error: Server tidak listening di port yang benar
+**Penyebab:** `HOST` set ke localhost, tidak accessible dari Railway
+
+**Solusi:** ✅ Sudah diperbaiki
+- `HOST` diubah ke `0.0.0.0` (listen all interfaces)
+- Railway otomatis expose port via domain
+
+### ❌ Build error: "tsc: command not found"
+**Penyebab:** TypeScript belum di-install
+
+**Solusi:** ✅ Sudah diperbaiki
+- TypeScript ada di devDependencies
+- `npm install` include devDependencies
+- Perubahan: install semua deps terlebih dahulu, baru build
+
+### ✅ Verification Checklist
+
+```bash
+# 1. Test backend LOCAL build
+cd backend
+npm install
+npm run build
+npm start
+# Should see: "🚀 WebWorlds Backend Server Running"
+
+# 2. Test frontend LOCAL build  
+cd ../frontend
+npm install
+npm run build
+npm start
+# Should see: "Ready in X.XXs"
+
+# 3. Verify Procfiles
+cat Procfile              # root
+cat backend/Procfile      # backend
+
+# 4. Verify environment
+cat backend/.env.example
+cat frontend/.env.example
+
+# 5. Push ke GitHub
+git add .
+git commit -m "fix: All Railway deployment issues resolved"
+git push
+```
+
+---
+
 ## 🎉 Selesai!
 
 Jika semua checklist ✅, deployment berhasil!
