@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "echo 'Build skipped - using pre-built dist/'",
+    "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Run tests here\"",
     "type-check": "tsc --noEmit",

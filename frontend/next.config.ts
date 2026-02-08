@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Build and output settings
+  output: 'standalone',
+  
   // Optimization settings
   compress: true,
   productionBrowserSourceMaps: false,

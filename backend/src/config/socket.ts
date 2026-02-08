@@ -11,9 +11,13 @@ interface GameRoom {
 const gameRooms = new Map<string, GameRoom>();
 
 export function setupSocket(httpServer: HTTPServer): SocketIOServer {
+  const corsOrigins = process.env.NODE_ENV === 'production' ? 
+    (process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || []) : 
+    [config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
+  
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: config.CORS_ORIGIN,
+      origin: corsOrigins,
       credentials: true,
       methods: ['GET', 'POST'],
     },
