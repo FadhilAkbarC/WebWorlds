@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { config } from '../config/env';
 
 export interface AuthRequest extends Request {
@@ -40,9 +40,11 @@ export function authenticateToken(
  * Generate JWT Token
  */
 export function generateToken(userId: string): string {
-  return jwt.sign({ userId }, config.JWT_SECRET, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const options: any = {
     expiresIn: config.JWT_EXPIRY,
-  });
+  };
+  return jwt.sign({ userId }, config.JWT_SECRET, options);
 }
 
 /**
