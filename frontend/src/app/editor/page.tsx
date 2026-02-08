@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { GameEngine } from '@/engine/GameEngine';
 import { useEditorStore } from '@/stores/editorStore';
-import { Save, Plus, X, Play, Settings } from 'lucide-react';
+import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
 
 export default function EditorPage() {
   const {
@@ -25,6 +25,14 @@ export default function EditorPage() {
   const [isPreviewActive, setIsPreviewActive] = useState(false);
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishForm, setPublishForm] = useState({
+    title: '',
+    description: '',
+    genre: [] as string[],
+    tags: '',
+    thumbnail: '',
+  });
 
   // Initialize editor on mount
   useEffect(() => {
@@ -134,6 +142,14 @@ export default function EditorPage() {
           >
             <Save size={18} />
             {isSaving ? 'Saving...' : 'Save'}
+          </button>
+
+          <button
+            onClick={() => setShowPublishDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors font-semibold"
+          >
+            <Upload size={18} />
+            Publish
           </button>
         </div>
       </div>
@@ -317,6 +333,126 @@ export default function EditorPage() {
             </details>
           </div>
         </div>
+
+        {/* Publish Dialog */}
+        {showPublishDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-700 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-white mb-4">Publish Game</h3>
+
+              <div className="space-y-4">
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Game Title <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="My Awesome Game"
+                    value={publishForm.title}
+                    onChange={(e) =>
+                      setPublishForm({ ...publishForm, title: e.target.value })
+                    }
+                    className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    placeholder="Describe your game..."
+                    value={publishForm.description}
+                    onChange={(e) =>
+                      setPublishForm({ ...publishForm, description: e.target.value })
+                    }
+                    rows={4}
+                    className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+
+                {/* Genre */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Genre
+                  </label>
+                  <div className="space-y-2">
+                    {['Action', 'Puzzle', 'Adventure', 'Casual', 'Strategy'].map(
+                      (genre) => (
+                        <label key={genre} className="flex items-center gap-2 text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={publishForm.genre.includes(genre)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setPublishForm({
+                                  ...publishForm,
+                                  genre: [...publishForm.genre, genre],
+                                });
+                              } else {
+                                setPublishForm({
+                                  ...publishForm,
+                                  genre: publishForm.genre.filter((g) => g !== genre),
+                                });
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          {genre}
+                        </label>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="fun, fast-paced, colorful"
+                    value={publishForm.tags}
+                    onChange={(e) =>
+                      setPublishForm({ ...publishForm, tags: e.target.value })
+                    }
+                    className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowPublishDialog(false);
+                      setPublishForm({
+                        title: '',
+                        description: '',
+                        genre: [],
+                        tags: '',
+                        thumbnail: '',
+                      });
+                      // Show success message
+                      alert('Game published successfully!');
+                    }}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded transition-colors"
+                  >
+                    Publish
+                  </button>
+                  <button
+                    onClick={() => setShowPublishDialog(false)}
+                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
