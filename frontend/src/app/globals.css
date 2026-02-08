@@ -1,3 +1,27 @@
+/* WBW Syntax Highlighting */
+.wbw-editor {
+  background: #181c1f !important;
+  color: #aaff55 !important;
+  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  caret-color: #fff;
+}
+.wbw-editor::selection {
+  background: #2d3a1f;
+}
+.wbw-keyword { color: #ffb300; font-weight: bold; }
+.wbw-number { color: #00e0ff; }
+.wbw-string { color: #ff6bcb; }
+.wbw-comment { color: #6c7a89; font-style: italic; }
+.wbw-constant { color: #ff5555; }
+.wbw-identifier { color: #aaff55; }
+.wbw-color { color: #00ff99; }
+.wbw-api { color: #ffd700; font-weight: bold; }
+.wbw-label { color: #ffb3ff; }
+.wbw-editor::-webkit-input-placeholder { color: #3a4a2f; }
+.wbw-editor:-moz-placeholder { color: #3a4a2f; }
+.wbw-editor::-moz-placeholder { color: #3a4a2f; }
+.wbw-editor:-ms-input-placeholder { color: #3a4a2f; }
+.wbw-editor::placeholder { color: #3a4a2f; }
 @import "tailwindcss";
 
 * {

@@ -7,6 +7,7 @@ import { useEditorStore } from '@/stores/editorStore';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
+import WBWEditor from '@/components/WBWEditor';
 
 const ManageGamesTab = dynamic(() => import('./ManageGamesTab'), { ssr: false });
 
@@ -55,9 +56,9 @@ export default function EditorPage() {
     if (!newScriptName.trim()) return;
     const newScript = {
       id: `script_${Date.now()}`,
-      name: newScriptName.endsWith('.js') ? newScriptName : `${newScriptName}.js`,
-      code: '// Start coding...\n',
-      language: 'javascript' as const,
+      name: newScriptName.endsWith('.wbw') ? newScriptName : `${newScriptName}.wbw`,
+      code: '// Start coding WBW...\n',
+      language: 'wbw' as const,
       createdAt: new Date().toISOString(),
     };
     addScript(newScript);
@@ -193,6 +194,22 @@ export default function EditorPage() {
                   <Plus size={16} />
                   New Script
                 </button>
+                <button
+                  onClick={async () => {
+                    const template = await fetch('/src/wbw-template.wbw').then(r => r.text());
+                    addScript({
+                      id: `script_${Date.now()}`,
+                      name: 'template.wbw',
+                      code: template,
+                      language: 'wbw',
+                      createdAt: new Date().toISOString(),
+                    });
+                  }}
+                  className="flex items-center gap-2 w-full mt-2 px-3 py-2 bg-green-800 hover:bg-green-700 text-white rounded text-sm transition-colors"
+                >
+                  <Plus size={16} />
+                  WBW Game Template
+                </button>
               </div>
               <div className="space-y-1">
                 {project.scripts.map((script) => (
@@ -262,11 +279,10 @@ export default function EditorPage() {
                   <div className="bg-slate-800 px-4 py-2 border-b border-slate-700">
                     <p className="text-sm text-slate-400">{currentScript.name}</p>
                   </div>
-                  <textarea
+                  <WBWEditor
                     value={currentScript.code}
-                    onChange={(e) => updateScript(currentScript.id, e.target.value)}
-                    className="flex-1 bg-slate-950 text-slate-100 font-mono text-sm p-4 resize-none focus:outline-none border-0"
-                    spellCheck="false"
+                    onChange={(val: string) => updateScript(currentScript.id, val)}
+                    readOnly={false}
                   />
                 </>
               ) : (

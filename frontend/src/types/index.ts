@@ -136,7 +136,7 @@ export interface GameScript {
   id: string;
   name: string;
   code: string;
-  language: 'javascript' | 'typescript';
+  language: 'javascript' | 'typescript' | 'wbw';
   createdAt: string;
 }
 
