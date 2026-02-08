@@ -127,13 +127,33 @@ export default function EditorPage() {
       setIsPublishing(true);
       setPublishError(null);
 
+      let currentProject = project;
+      let gameId = currentProject._id;
+
       // If game not saved yet, save it first
-      if (!project._id) {
-        await saveProject();
+      if (!gameId) {
+        try {
+          await saveProject();
+          // Wait a moment for async state update
+          await new Promise(resolve => setTimeout(resolve, 200));
+          currentProject = useEditorStore.getState().project;
+          gameId = currentProject._id;
+        } catch (saveError) {
+          console.error('Failed to save game:', saveError);
+          setPublishError('Failed to save game. Please try again.');
+          setIsPublishing(false);
+          return;
+        }
+      }
+
+      if (!gameId || typeof gameId === 'undefined') {
+        setPublishError('Game ID is missing. Please save first.');
+        setIsPublishing(false);
+        return;
       }
 
       // 1. First update game with new title and description
-      await api.put(`/games/${project._id}`, {
+      await api.put(`/games/${gameId}`, {
         title: publishForm.title,
         description: publishForm.description,
         category: publishForm.category.length > 0 ? publishForm.category[0]?.toLowerCase() : 'other',
@@ -141,7 +161,7 @@ export default function EditorPage() {
       });
 
       // 2. Then publish the game
-      const publishResponse = await api.post(`/games/${project._id}/publish`);
+      const publishResponse = await api.post(`/games/${gameId}/publish`);
 
       if (publishResponse.data.success) {
         setShowPublishDialog(false);

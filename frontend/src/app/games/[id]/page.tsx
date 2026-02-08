@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Play, Heart, Share2, User, MessageSquare, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -10,6 +10,7 @@ import { Game } from '@/types';
 
 export default function GameDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const gameId = params.id as string;
   const { user } = useAuthStore();
   const [game, setGame] = useState<Game | null>(null);
@@ -18,7 +19,9 @@ export default function GameDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
-    fetchGameDetail();
+    if (gameId) {
+      fetchGameDetail();
+    }
   }, [gameId]);
 
   const fetchGameDetail = async () => {
@@ -150,7 +153,11 @@ export default function GameDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Play Button */}
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
+            <button
+              onClick={() => gameId && router.push(`/play/${gameId}`)}
+              disabled={!gameId}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            >
               <Play size={20} />
               Play Game
             </button>

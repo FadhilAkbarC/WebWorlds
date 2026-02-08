@@ -30,31 +30,93 @@ interface EditorStore {
 }
 
 const defaultProject: GameProject = {
-  title: 'Untitled Game',
-  description: '',
+  title: 'My First Game',
+  description: 'A simple game created with WebWorlds',
   assets: [],
   scripts: [
     {
       id: 'main',
       name: 'main.js',
-      code: `// Welcome to WebWorlds Game Editor!
-// Start coding your game here.
+      code: `// WebWorlds Game Template - Ready to Publish & Play!
+// This is a simple example game. Modify it to create your own!
 
-const game = new Game({
-  width: 800,
-  height: 600,
-  fps: 60,
-});
+let score = 0;
+let playerX = game.width / 2 - 25;
+let playerY = game.height - 50;
+const playerWidth = 50;
+const playerHeight = 30;
+const playerSpeed = 5;
 
-game.onUpdate = () => {
-  // Update game logic here
-};
+let enemyX = 100;
+let enemyY = 100;
+const enemySize = 30;
 
-game.onRender = () => {
-  // Render your game here
-};
+// Game loop - called automatically
+function update() {
+  // Handle player movement
+  if (game.input.keys['a'] || game.input.keys['arrowleft']) {
+    playerX = Math.max(0, playerX - playerSpeed);
+  }
+  if (game.input.keys['d'] || game.input.keys['arrowright']) {
+    playerX = Math.min(game.width - playerWidth, playerX + playerSpeed);
+  }
 
-game.start();
+  // Simple enemy AI
+  if (Math.random() < 0.02) {
+    enemyX = Math.random() * (game.width - enemySize);
+  }
+}
+
+function render() {
+  // Clear canvas with dark background
+  game.clearCanvas('#0f172a');
+
+  // Draw game title
+  game.drawText('WebWorlds Game Demo', 20, 30, {
+    color: '#60a5fa',
+    size: 24,
+    font: 'bold 24px Arial',
+  });
+
+  // Draw score
+  game.drawText('Score: ' + score, 20, 65, {
+    color: '#10b981',
+    size: 18,
+  });
+
+  // Draw controls info
+  game.drawText('Use A/D or Arrow Keys to move', 20, game.height - 20, {
+    color: '#94a3b8',
+    size: 14,
+  });
+
+  // Draw player (colored rectangle)
+  game.drawRect(playerX, playerY, playerWidth, playerHeight, '#3b82f6');
+  game.drawText('Player', playerX + 10, playerY + 20, {
+    color: '#ffffff',
+    size: 12,
+  });
+
+  // Draw enemy (colored circle)
+  game.drawCircle(enemyX + enemySize / 2, enemyY, enemySize / 2, '#ef4444');
+
+  // Draw instruction
+  game.drawText('Click publish to share your game!', game.width / 2 - 100, game.height / 2, {
+    color: '#fbbf24',
+    size: 16,
+  });
+}
+
+// Game update and render loop
+if (typeof update===typeof function(){}) {
+  // Update called regularly
+  setInterval(update, 16); // ~60 FPS
+}
+
+if (typeof render===typeof function(){}) {
+  // Render called regularly
+  setInterval(render, 16); // ~60 FPS
+}
 `,
       language: 'javascript' as const,
       createdAt: new Date().toISOString(),
