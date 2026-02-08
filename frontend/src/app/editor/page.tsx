@@ -123,14 +123,14 @@ export default function EditorPage() {
       return;
     }
 
-    if (!project._id) {
-      setPublishError('Game not saved. Please save first.');
-      return;
-    }
-
     try {
       setIsPublishing(true);
       setPublishError(null);
+
+      // If game not saved yet, save it first
+      if (!project._id) {
+        await saveProject();
+      }
 
       // 1. First update game with new title and description
       await api.put(`/games/${project._id}`, {

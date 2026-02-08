@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { GameProject, GameAsset, GameScript } from '@/types';
+import { api } from '@/lib/api';
 
 interface EditorStore {
   project: GameProject;
@@ -99,12 +100,44 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   saveProject: async () => {
     set({ isSaving: true });
     try {
-      // Would call API here
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      set({ isModified: false, isSaving: false });
-    } catch (error) {
+      const state = get();
+      const project = state.project;
+
+      // If project has an ID, update existing game
+      if (project._id) {
+        await api.put(`/games/${project._id}`, {
+          title: project.title,
+          description: project.description,
+          code: project.scripts.find(s => s.id === 'main')?.code || '',
+          scripts: project.scripts,
+          assets: project.assets,
+          settings: project.settings,
+        });
+        set({ isModified: false, isSaving: false });
+      } else {
+        // If no ID, create a new game (draft)
+        const response = await api.post('/games', {
+          title: project.title,
+          description: project.description,
+          code: project.scripts.find(s => s.id === 'main')?.code || '',
+        });
+
+        if (response.data.success || response.data.data) {
+          const gameData = response.data.data || response.data;
+          set((state) => ({
+            project: {
+              ...state.project,
+              _id: gameData._id || gameData.id,
+            },
+            isModified: false,
+            isSaving: false,
+          }));
+        }
+      }
+    } catch (error: any) {
       console.error('Failed to save project:', error);
       set({ isSaving: false });
+      throw error;
     }
   },
 
