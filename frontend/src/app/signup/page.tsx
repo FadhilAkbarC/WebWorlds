@@ -33,8 +33,24 @@ export default function SignupPage() {
       return;
     }
 
+    // Validate password strength (8+ chars, uppercase, lowercase, number)
     if (password.length < 8) {
       setLocalError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setLocalError('Password must contain at least one uppercase letter');
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setLocalError('Password must contain at least one lowercase letter');
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setLocalError('Password must contain at least one number');
       return;
     }
 
@@ -133,7 +149,7 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-1">At least 8 characters</p>
+              <p className="text-xs text-slate-500 mt-1">8+ chars, uppercase, lowercase, and number required</p>
             </div>
 
             {/* Confirm Password */}
