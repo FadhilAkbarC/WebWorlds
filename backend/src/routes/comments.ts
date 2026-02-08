@@ -10,7 +10,7 @@ const router = Router();
  * Params: gameId
  * Query: ?page=1&limit=10
  */
-router.get('/:gameId/comments', optionalAuth, commentController.getGameComments);
+router.get('/games/:gameId/comments', optionalAuth, commentController.getGameComments);
 
 /**
  * POST /api/games/:gameId/comments
@@ -18,7 +18,7 @@ router.get('/:gameId/comments', optionalAuth, commentController.getGameComments)
  * Requires: Authentication
  * Body: { text }
  */
-router.post('/:gameId/comments', authenticateToken, commentController.createComment);
+router.post('/games/:gameId/comments', authenticateToken, commentController.createComment);
 
 /**
  * DELETE /api/comments/:commentId
@@ -26,7 +26,7 @@ router.post('/:gameId/comments', authenticateToken, commentController.createComm
  * Requires: Authentication
  */
 router.delete(
-  '/comment/:commentId',
+  '/comments/:commentId',
   authenticateToken,
   commentController.deleteComment
 );
@@ -37,7 +37,7 @@ router.delete(
  * Requires: Authentication
  */
 router.post(
-  '/comment/:commentId/like',
+  '/comments/:commentId/like',
   authenticateToken,
   commentController.likeComment
 );
@@ -48,7 +48,7 @@ router.post(
  * Requires: Authentication
  */
 router.post(
-  '/comment/:commentId/unlike',
+  '/comments/:commentId/unlike',
   authenticateToken,
   commentController.unlikeComment
 );

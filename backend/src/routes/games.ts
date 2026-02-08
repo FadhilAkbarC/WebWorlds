@@ -18,6 +18,12 @@ router.get('/', optionalAuth, gameController.list);
 router.get('/:id', optionalAuth, gameController.get);
 
 /**
+ * GET /api/games/:id/like-status
+ * Return whether the authenticated user has liked the game
+ */
+router.get('/:id/like-status', optionalAuth, gameController.likeStatus);
+
+/**
  * POST /api/games
  * Create new game (draft)
  * Requires: Authentication

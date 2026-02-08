@@ -340,6 +340,22 @@ export const gameController = {
   }),
 
   /**
+   * Get like status for the current user on a game
+   */
+  likeStatus: asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    let isLiked = false;
+    if (req.userId) {
+      const user = await User.findById(req.userId).select('likedGames').lean();
+      if (user && (user as any).likedGames) {
+        isLiked = (user as any).likedGames.some((g: any) => g.toString() === id);
+      }
+    }
+
+    res.json({ success: true, data: { isLiked } });
+  }),
+
+  /**
    * Get games by creator
    */
   getByCreator: asyncHandler(async (req: AuthRequest, res: Response) => {
