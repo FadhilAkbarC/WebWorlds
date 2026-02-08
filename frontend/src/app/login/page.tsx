@@ -35,7 +35,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Card */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 shadow-xl">
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 shadow-xl auth-card">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Login</h1>
@@ -63,7 +63,11 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@example.com"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors auth-input"
+                  autoComplete="email"
+                  inputMode="email"
+                  required
+                  touch-action="manipulation"
                 />
               </div>
             </div>
@@ -80,7 +84,10 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-10 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-10 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors auth-input"
+                  autoComplete="current-password"
+                  required
+                  touch-action="manipulation"
                 />
                 <button
                   type="button"
@@ -96,7 +103,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors mt-6"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors mt-6 auth-btn"
+              touch-action="manipulation"
             >
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
@@ -113,7 +121,7 @@ export default function LoginPage() {
           </div>
 
           {/* OAuth Buttons (Placeholder) */}
-          <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg transition-colors mb-2">
+          <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg transition-colors mb-2 auth-btn" touch-action="manipulation">
             Login with Google
           </button>
 
