@@ -110,7 +110,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <Calendar size={18} />
-                  Joined {new Date(user.createdAt).toLocaleDateString()}
+                  Joined {user.createdAt ? new Date(user.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}
                 </div>
               </div>
 

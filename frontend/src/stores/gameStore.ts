@@ -74,21 +74,33 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
   },
 
   likeGame: async (gameId: string) => {
+    // Prevent double-like: check if already liked
+    try {
+      const likeStatusResp = await api.get(`/games/${gameId}/like-status`);
+      if (likeStatusResp.data?.data?.isLiked) {
+        // Already liked, do nothing
+        return;
+      }
+    } catch (e) {
+      // If like-status fails, fallback to trying like
+    }
     try {
       const response = await api.post(`/games/${gameId}/like`);
       const updatedGame = response.data.data;
-      
       const games = get().games.map((g) =>
         g._id === gameId ? { ...g, likes: updatedGame.stats?.likes || g.likes + 1 } : g
       );
-      
       set({ 
         games,
         currentGame: get().currentGame?._id === gameId 
           ? { ...get().currentGame!, likes: updatedGame.stats?.likes || get().currentGame!.likes + 1 }
           : get().currentGame
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        // Already liked, do nothing
+        return;
+      }
       console.error('Failed to like game:', error);
     }
   },
