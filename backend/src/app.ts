@@ -6,6 +6,7 @@ import { config } from './config/env';
 import authRoutes from './routes/auth';
 import gameRoutes from './routes/games';
 import commentRoutes from './routes/comments';
+import activityRoutes from './routes/activities';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Express {
@@ -50,6 +51,7 @@ export function createApp(): Express {
   app.use('/api/auth', authRoutes);
   app.use('/api/games', gameRoutes);
   app.use('/api', commentRoutes);
+  app.use('/api', activityRoutes);
 
   // ============ Health Check ============
   app.get('/health', (req, res) => {

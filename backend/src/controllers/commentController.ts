@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { Comment, User } from '../models';
+import { Comment, User, Activity, Game } from '../models';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 
@@ -70,6 +70,21 @@ export const commentController = {
 
     await comment.save();
 
+    // Create activity for comment (include game title if possible)
+    try {
+      const game = await Game.findById(gameId).select('title').lean();
+      await Activity.create({
+        user: req.userId,
+        type: 'comment',
+        targetId: comment._id,
+        targetType: 'Comment',
+        meta: { gameId, gameTitle: game?.title },
+      });
+    } catch (e) {
+      // non-fatal
+      console.warn('Failed to create activity for comment', e);
+    }
+
     res.status(201).json({
       success: true,
       data: comment,
@@ -97,6 +112,13 @@ export const commentController = {
     }
 
     await Comment.findByIdAndDelete(commentId);
+
+    // remove comment activity entries (best-effort)
+    try {
+      await Activity.deleteMany({ targetId: commentId, type: 'comment' });
+    } catch (e) {
+      console.warn('Failed to cleanup activities for deleted comment', e);
+    }
 
     res.json({
       success: true,
@@ -129,6 +151,19 @@ export const commentController = {
     comment.likes += 1;
     comment.likedBy.push(req.userId as any);
     await comment.save();
+
+    // create activity for comment like
+    try {
+      await Activity.create({
+        user: req.userId,
+        type: 'like',
+        targetId: comment._id,
+        targetType: 'Comment',
+        meta: {},
+      });
+    } catch (e) {
+      console.warn('Failed to create activity for comment like', e);
+    }
 
     res.json({
       success: true,
@@ -165,6 +200,13 @@ export const commentController = {
     comment.likes = Math.max(0, comment.likes - 1);
     comment.likedBy.splice(likedIndex, 1);
     await comment.save();
+
+    // remove like activity (best-effort)
+    try {
+      await Activity.deleteMany({ user: req.userId, targetId: comment._id, type: 'like' });
+    } catch (e) {
+      console.warn('Failed to remove comment like activity', e);
+    }
 
     res.json({
       success: true,

@@ -13,6 +13,13 @@ export default function ProfilePage() {
   const { user, checkAuth } = useAuthStore();
   const [userGames, setUserGames] = useState<Game[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(false);
+  const [gamesPage, setGamesPage] = useState(1);
+  const [gamesHasMore, setGamesHasMore] = useState(true);
+
+  const [activities, setActivities] = useState<any[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [activitiesHasMore, setActivitiesHasMore] = useState(true);
 
   useEffect(() => {
     checkAuth();
@@ -20,24 +27,48 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user?._id) {
-      fetchUserGames();
+      fetchUserGames(1, false);
+      fetchActivities(1, false);
     }
   }, [user?._id]);
 
-  const fetchUserGames = async () => {
+  const fetchUserGames = async (page = 1, append = false) => {
     try {
       setIsLoadingGames(true);
-      const response = await api.get(`/games/creator/${user?._id}`);
-      if (response.data.success) {
-        setUserGames(response.data.data || []);
+      const response = await api.get(`/games/creator/${user?._id}?page=${page}&limit=12`);
+      const data = response.data;
+      const items = data.data || [];
+      if (append) {
+        setUserGames((prev) => [...prev, ...items]);
       } else {
-        setUserGames(response.data.data || []);
+        setUserGames(items);
       }
+      setGamesPage(data.pagination?.page || page);
+      setGamesHasMore((data.pagination?.page || page) < (data.pagination?.pages || 1));
     } catch (error) {
       console.error('Failed to fetch user games:', error);
-      setUserGames([]);
+      if (!append) setUserGames([]);
     } finally {
       setIsLoadingGames(false);
+    }
+  };
+
+  const fetchActivities = async (page = 1, append = false) => {
+    if (!user?._id) return;
+    try {
+      setIsLoadingActivities(true);
+      const response = await api.get(`/users/${user._id}/activities?page=${page}&limit=10`);
+      const data = response.data;
+      const items = data.data || [];
+      if (append) setActivities((prev) => [...prev, ...items]);
+      else setActivities(items);
+      setActivitiesPage(data.pagination?.page || page);
+      setActivitiesHasMore((data.pagination?.page || page) < (data.pagination?.pages || 1));
+    } catch (err) {
+      console.error('Failed to fetch activities', err);
+      if (!append) setActivities([]);
+    } finally {
+      setIsLoadingActivities(false);
     }
   };
 
@@ -167,14 +198,76 @@ export default function ProfilePage() {
               </Link>
             </div>
           )}
+          {/* Load more games */}
+          {gamesHasMore && (
+              <div className="col-span-full text-center mt-4">
+                <button
+                  onClick={() => fetchUserGames(gamesPage + 1, true)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
         </div>
 
         {/* Activity */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
           <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
-          <div className="text-slate-400 text-center py-8">
-            No recent activity
-          </div>
+          {isLoadingActivities ? (
+            <div className="text-slate-400 text-center py-8">Loading activities...</div>
+          ) : activities.length === 0 ? (
+            <div className="text-slate-400 text-center py-8">No recent activity</div>
+          ) : (
+            <div className="space-y-3">
+              {activities.map((a) => (
+                <div key={a._id} className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-sm text-slate-300">
+                    {a.type === 'create_game' && 'G'}
+                    {a.type === 'play' && '▶'}
+                    {a.type === 'like' && '❤'}
+                    {a.type === 'comment' && '💬'}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-slate-300">
+                      {a.type === 'create_game' && (
+                        <>
+                          Created <Link href={`/games/${a.targetId}`} className="text-blue-400">{a.meta?.title || 'a game'}</Link>
+                        </>
+                      )}
+                      {a.type === 'play' && (
+                        <>
+                          Played <Link href={`/play/${a.targetId}`} className="text-blue-400">{a.meta?.title || 'a game'}</Link>
+                        </>
+                      )}
+                      {a.type === 'like' && (
+                        <>
+                          Liked <Link href={`/games/${a.targetId}`} className="text-blue-400">{a.meta?.title || 'a game'}</Link>
+                        </>
+                      )}
+                      {a.type === 'comment' && (
+                        <>
+                          Commented on <Link href={`/games/${a.meta?.gameId || a.targetId}`} className="text-blue-400">{a.meta?.gameTitle || 'a game'}</Link>
+                        </>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500">{new Date(a.createdAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+
+              {activitiesHasMore && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => fetchActivities(activitiesPage + 1, true)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                  >
+                    Load more
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

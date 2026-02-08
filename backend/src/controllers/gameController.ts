@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { Game, User } from '../models';
+import { Game, User, Activity } from '../models';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { validators } from '../middleware/validation';
 import { AuthRequest } from '../middleware/auth';
@@ -69,6 +69,21 @@ export const gameController = {
     // Increment play count
     await Game.findByIdAndUpdate(id, { $inc: { 'stats.plays': 1 } });
 
+    // Create a play activity if user is present
+    if (req.userId) {
+      try {
+        await Activity.create({
+          user: req.userId,
+          type: 'play',
+          targetId: id,
+          targetType: 'Game',
+          meta: { title: game.title },
+        });
+      } catch (e) {
+        console.warn('Failed to create play activity', e);
+      }
+    }
+
     res.json({
       success: true,
       data: game,
@@ -108,6 +123,19 @@ export const gameController = {
     });
 
     await game.save();
+
+    // Create activity for game creation
+    try {
+      await Activity.create({
+        user: req.userId,
+        type: 'create_game',
+        targetId: game._id,
+        targetType: 'Game',
+        meta: { title: game.title },
+      });
+    } catch (e) {
+      console.warn('Failed to create activity for game creation', e);
+    }
 
     // Add to user's created games
     await User.findByIdAndUpdate(req.userId, {
@@ -257,6 +285,19 @@ export const gameController = {
       $push: { likedGames: id },
     });
 
+    // create like activity
+    try {
+      await Activity.create({
+        user: req.userId,
+        type: 'like',
+        targetId: id,
+        targetType: 'Game',
+        meta: { title: game?.title },
+      });
+    } catch (e) {
+      console.warn('Failed to create like activity', e);
+    }
+
     res.json({
       success: true,
       data: game,
@@ -285,6 +326,13 @@ export const gameController = {
       $pull: { likedGames: id },
     });
 
+    // remove like activity entries (best-effort)
+    try {
+      await Activity.deleteMany({ user: req.userId, targetId: id, type: 'like' });
+    } catch (e) {
+      console.warn('Failed to remove like activity', e);
+    }
+
     res.json({
       success: true,
       data: game,
@@ -296,15 +344,24 @@ export const gameController = {
    */
   getByCreator: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { creatorId } = req.params;
+    const page = Math.max(1, parseInt((req.query.page as string) || '1'));
+    const limit = Math.min(50, Math.max(1, parseInt((req.query.limit as string) || '12')));
+    const skip = (page - 1) * limit;
 
-    const games = await Game.find({ creator: creatorId, published: true })
-      .populate('creator', 'username avatar')
-      .sort({ createdAt: -1 })
-      .lean();
+    const [games, total] = await Promise.all([
+      Game.find({ creator: creatorId, published: true })
+        .populate('creator', 'username avatar')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Game.countDocuments({ creator: creatorId, published: true }),
+    ]);
 
     res.json({
       success: true,
       data: games,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   }),
 };
