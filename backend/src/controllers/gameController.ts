@@ -43,6 +43,7 @@ export const gameController = {
     ]);
 
     res.json({
+      success: true,
       data: games,
       pagination: {
         page,
@@ -68,7 +69,10 @@ export const gameController = {
     // Increment play count
     await Game.findByIdAndUpdate(id, { $inc: { 'stats.plays': 1 } });
 
-    res.json(game);
+    res.json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -111,7 +115,10 @@ export const gameController = {
       $inc: { 'stats.gamesCreated': 1 },
     });
 
-    res.status(201).json(game);
+    res.status(201).json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -155,7 +162,10 @@ export const gameController = {
 
     await game.save();
 
-    res.json(game);
+    res.json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -180,7 +190,10 @@ export const gameController = {
     game.published = true;
     await game.save();
 
-    res.json(game);
+    res.json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -210,7 +223,10 @@ export const gameController = {
 
     await Game.findByIdAndDelete(id);
 
-    res.json({ message: 'Game deleted' });
+    res.json({
+      success: true,
+      message: 'Game deleted',
+    });
   }),
 
   /**
@@ -241,7 +257,10 @@ export const gameController = {
       $push: { likedGames: id },
     });
 
-    res.json(game);
+    res.json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -266,7 +285,10 @@ export const gameController = {
       $pull: { likedGames: id },
     });
 
-    res.json(game);
+    res.json({
+      success: true,
+      data: game,
+    });
   }),
 
   /**
@@ -280,7 +302,10 @@ export const gameController = {
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json(games);
+    res.json({
+      success: true,
+      data: games,
+    });
   }),
 };
 

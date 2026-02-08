@@ -12,11 +12,11 @@ function getEnv(key, defaultValue) {
 exports.config = {
     NODE_ENV: getEnv('NODE_ENV', 'development'),
     PORT: parseInt(getEnv('PORT', '5000'), 10),
-    HOST: getEnv('HOST', 'localhost'),
+    HOST: getEnv('HOST', '0.0.0.0'),
     MONGODB_URI: getEnv('MONGODB_URI'),
     JWT_SECRET: getEnv('JWT_SECRET'),
     JWT_EXPIRY: getEnv('JWT_EXPIRY', '7d'),
-    CORS_ORIGIN: getEnv('CORS_ORIGIN', 'http://localhost:3000'),
+    CORS_ORIGIN: process.env.NODE_ENV === 'production' ? getEnv('CORS_ORIGIN') : getEnv('CORS_ORIGIN', 'http://localhost:3000'),
     RATE_LIMIT_WINDOW_MS: parseInt(getEnv('RATE_LIMIT_WINDOW_MS', '900000'), 10),
     RATE_LIMIT_MAX_REQUESTS: parseInt(getEnv('RATE_LIMIT_MAX_REQUESTS', '100'), 10),
     LOG_LEVEL: getEnv('LOG_LEVEL', 'info'),

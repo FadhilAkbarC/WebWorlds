@@ -32,6 +32,7 @@ exports.gameController = {
             models_1.Game.countDocuments(query),
         ]);
         res.json({
+            success: true,
             data: games,
             pagination: {
                 page,
@@ -48,7 +49,10 @@ exports.gameController = {
             throw new errorHandler_1.AppError(404, 'Game not found');
         }
         await models_1.Game.findByIdAndUpdate(id, { $inc: { 'stats.plays': 1 } });
-        res.json(game);
+        res.json({
+            success: true,
+            data: game,
+        });
     }),
     create: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -76,7 +80,10 @@ exports.gameController = {
             $push: { createdGames: game._id },
             $inc: { 'stats.gamesCreated': 1 },
         });
-        res.status(201).json(game);
+        res.status(201).json({
+            success: true,
+            data: game,
+        });
     }),
     update: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -110,7 +117,10 @@ exports.gameController = {
         if (assets)
             game.assets = assets;
         await game.save();
-        res.json(game);
+        res.json({
+            success: true,
+            data: game,
+        });
     }),
     publish: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -126,7 +136,10 @@ exports.gameController = {
         }
         game.published = true;
         await game.save();
-        res.json(game);
+        res.json({
+            success: true,
+            data: game,
+        });
     }),
     delete: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -145,7 +158,10 @@ exports.gameController = {
             $inc: { 'stats.gamesCreated': -1 },
         });
         await models_1.Game.findByIdAndDelete(id);
-        res.json({ message: 'Game deleted' });
+        res.json({
+            success: true,
+            message: 'Game deleted',
+        });
     }),
     like: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -160,7 +176,10 @@ exports.gameController = {
         await models_1.User.findByIdAndUpdate(req.userId, {
             $push: { likedGames: id },
         });
-        res.json(game);
+        res.json({
+            success: true,
+            data: game,
+        });
     }),
     unlike: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -171,7 +190,10 @@ exports.gameController = {
         await models_1.User.findByIdAndUpdate(req.userId, {
             $pull: { likedGames: id },
         });
-        res.json(game);
+        res.json({
+            success: true,
+            data: game,
+        });
     }),
     getByCreator: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         const { creatorId } = req.params;
@@ -179,7 +201,10 @@ exports.gameController = {
             .populate('creator', 'username avatar')
             .sort({ createdAt: -1 })
             .lean();
-        res.json(games);
+        res.json({
+            success: true,
+            data: games,
+        });
     }),
 };
 exports.default = exports.gameController;

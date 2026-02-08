@@ -5,9 +5,12 @@ const socket_io_1 = require("socket.io");
 const env_1 = require("./env");
 const gameRooms = new Map();
 function setupSocket(httpServer) {
+    const corsOrigins = process.env.NODE_ENV === 'production' ?
+        (process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || []) :
+        [env_1.config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
     const io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: env_1.config.CORS_ORIGIN,
+            origin: corsOrigins,
             credentials: true,
             methods: ['GET', 'POST'],
         },
