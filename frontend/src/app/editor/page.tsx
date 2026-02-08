@@ -196,7 +196,7 @@ export default function EditorPage() {
                 </button>
                 <button
                   onClick={async () => {
-                    const template = await fetch('/src/wbw-template.wbw').then(r => r.text());
+                    const template = await fetch('/wbw-template.wbw').then(r => r.text());
                     addScript({
                       id: `script_${Date.now()}`,
                       name: 'template.wbw',
