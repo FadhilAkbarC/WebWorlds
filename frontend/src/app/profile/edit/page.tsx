@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 
 export default function EditProfilePage() {
   const router = useRouter();
