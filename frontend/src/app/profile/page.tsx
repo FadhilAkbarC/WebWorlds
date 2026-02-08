@@ -75,19 +75,19 @@ export default function ProfilePage() {
             {
               icon: Gamepad2,
               label: 'Games Created',
-              value: user.stats.gamesCreated,
+              value: user.stats?.gamesCreated ?? 0,
             },
             {
               icon: Trophy,
               label: 'Games Played',
-              value: user.stats.gamesPlayed,
+              value: user.stats?.gamesPlayed ?? 0,
             },
             {
               icon: Heart,
               label: 'Games Liked',
-              value: user.stats.totalPlayTime,
+              value: user.stats?.totalPlayTime ?? 0,
             },
-            { icon: User, label: 'Followers', value: user.stats.followers },
+            { icon: User, label: 'Followers', value: user.stats?.followers ?? 0 },
           ].map((stat, idx) => (
             <div key={idx} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
               <stat.icon className="text-blue-400 mb-2" size={32} />
