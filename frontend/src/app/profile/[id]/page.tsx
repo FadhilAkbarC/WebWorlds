@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
-import { User, Mail, Trophy, Gamepad2, Calendar } from 'lucide-react';
+import { User, Mail, Trophy, Gamepad2, Calendar, Heart, Play } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Game } from '@/types';
 
 interface Profile {
   _id: string;
@@ -28,12 +29,37 @@ export default function PublicProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [userGames, setUserGames] = useState<Game[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(false);
 
   const isOwnProfile = currentUser?._id === userId;
 
   useEffect(() => {
     fetchProfile();
   }, [userId]);
+
+  useEffect(() => {
+    if (profile?._id) {
+      fetchUserGames();
+    }
+  }, [profile?._id]);
+
+  const fetchUserGames = async () => {
+    try {
+      setIsLoadingGames(true);
+      const response = await api.get(`/games/creator/${profile?._id}`);
+      if (response.data.success || Array.isArray(response.data.data)) {
+        setUserGames(response.data.data || []);
+      } else if (Array.isArray(response.data)) {
+        setUserGames(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user games:', error);
+      setUserGames([]);
+    } finally {
+      setIsLoadingGames(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -163,12 +189,43 @@ export default function PublicProfilePage() {
 
         {/* Games Section */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-          <h2 className="text-2xl font-bold text-white mb-4">Games</h2>
-          <div className="text-slate-400 text-center py-8">
-            {profile.stats?.gamesCreated === 0
-              ? 'This user hasn\'t created any games yet.'
-              : `View all ${profile.stats?.gamesCreated} games created by this user`}
-          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Games by {profile.username}</h2>
+          {isLoadingGames ? (
+            <div className="text-slate-400 text-center py-8">Loading games...</div>
+          ) : userGames.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userGames.map((game) => (
+                <Link
+                  key={game._id}
+                  href={`/games/${game._id}`}
+                  className="bg-slate-700 rounded-lg overflow-hidden border border-slate-600 hover:border-blue-500 transition-colors group"
+                >
+                  <div className="bg-gradient-to-br from-purple-600 to-blue-600 h-40 flex items-center justify-center relative">
+                    <Gamepad2 size={48} className="text-white opacity-30" />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black bg-opacity-40 flex items-center justify-center transition-opacity">
+                      <Play size={32} className="text-white" />
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-white mb-2 truncate">{game.title}</h3>
+                    <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                      {game.description || 'No description'}
+                    </p>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>❤️ {game.likes || 0}</span>
+                      <span>👁️ {game.plays || 0}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-slate-400 text-center py-8">
+              {profile.stats?.gamesCreated === 0
+                ? `${profile.username} hasn't created any games yet.`
+                : 'No games found'}
+            </div>
+          )}
         </div>
       </div>
     </div>

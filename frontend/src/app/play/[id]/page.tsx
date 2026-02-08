@@ -126,14 +126,13 @@ export default function PlayGamePage() {
       const gameCode = mainScript?.code || gameData.code || '';
 
       // Execute user code with game API available
+      // Make sure to use a different variable name to avoid conflicts
       const userCode = `
-        (function(game, Math, console) {
+        (function() {
+          // Make gameAPI available as 'game' for user code
+          const game = gameAPI;
           ${gameCode}
-        }).call(this, gameAPI, Math, {
-          log: (msg) => console.log('[Game]', msg),
-          error: (msg) => console.error('[Game]', msg),
-          warn: (msg) => console.warn('[Game]', msg),
-        });
+        }).call(this);
       `;
 
       // Create and execute the function
