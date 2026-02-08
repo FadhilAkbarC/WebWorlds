@@ -80,12 +80,17 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {game.genre.slice(0, 2).map((g) => (
+            {game.category && (
+              <span className="text-xs bg-slate-700 text-blue-300 px-2 py-1 rounded">
+                {game.category}
+              </span>
+            )}
+            {game.tags && game.tags.slice(0, 1).map((tag) => (
               <span
-                key={g}
-                className="text-xs bg-slate-700 text-blue-300 px-2 py-1 rounded"
+                key={tag}
+                className="text-xs bg-slate-700 text-purple-300 px-2 py-1 rounded"
               >
-                {g}
+                {tag}
               </span>
             ))}
           </div>

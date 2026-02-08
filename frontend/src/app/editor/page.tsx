@@ -34,7 +34,7 @@ export default function EditorPage() {
   const [publishForm, setPublishForm] = useState({
     title: '',
     description: '',
-    genre: [] as string[],
+    category: [] as string[],
     tags: '',
     thumbnail: '',
   });
@@ -136,7 +136,7 @@ export default function EditorPage() {
       await api.put(`/games/${project._id}`, {
         title: publishForm.title,
         description: publishForm.description,
-        category: publishForm.genre.length > 0 ? publishForm.genre[0] : 'Action',
+        category: publishForm.category.length > 0 ? publishForm.category[0]?.toLowerCase() : 'other',
         tags: publishForm.tags.split(',').map(t => t.trim()).filter(t => t),
       });
 
@@ -148,7 +148,7 @@ export default function EditorPage() {
         setPublishForm({
           title: '',
           description: '',
-          genre: [],
+          category: [],
           tags: '',
           thumbnail: '',
         });
@@ -437,34 +437,27 @@ export default function EditorPage() {
                   />
                 </div>
 
-                {/* Genre */}
+                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Genre
+                    Category
                   </label>
                   <div className="space-y-2">
-                    {['Action', 'Puzzle', 'Adventure', 'Casual', 'Strategy'].map(
-                      (genre) => (
-                        <label key={genre} className="flex items-center gap-2 text-slate-300">
+                    {['action', 'puzzle', 'adventure', 'sports', 'other'].map(
+                      (cat) => (
+                        <label key={cat} className="flex items-center gap-2 text-slate-300">
                           <input
-                            type="checkbox"
-                            checked={publishForm.genre.includes(genre)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setPublishForm({
-                                  ...publishForm,
-                                  genre: [...publishForm.genre, genre],
-                                });
-                              } else {
-                                setPublishForm({
-                                  ...publishForm,
-                                  genre: publishForm.genre.filter((g) => g !== genre),
-                                });
-                              }
+                            type="radio"
+                            checked={publishForm.category.length > 0 && publishForm.category[0] === cat}
+                            onChange={() => {
+                              setPublishForm({
+                                ...publishForm,
+                                category: [cat],
+                              });
                             }}
                             className="rounded"
                           />
-                          {genre}
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
                         </label>
                       )
                     )}

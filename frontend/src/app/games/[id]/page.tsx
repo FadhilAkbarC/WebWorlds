@@ -25,7 +25,8 @@ export default function GameDetailPage() {
     try {
       setIsLoading(true);
       const response = await api.get(`/games/${gameId}`);
-      setGame(response.data);
+      const gameData = response.data.data || response.data;
+      setGame(gameData);
       setError(null);
     } catch (err) {
       setError('Failed to load game details');
@@ -114,14 +115,14 @@ export default function GameDetailPage() {
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
               <h2 className="text-xl font-bold text-white mb-4">About This Game</h2>
               <div className="space-y-4 text-slate-300">
-                <div>
-                  <p className="text-sm text-slate-400 mb-1">Genre</p>
+              <div>
+                  <p className="text-sm text-slate-400 mb-1">Category</p>
                   <div className="flex flex-wrap gap-2">
-                    {game.genre?.length ? game.genre.map((g) => (
-                      <span key={g} className="bg-slate-700 px-3 py-1 rounded-full text-sm">
-                        {g}
+                    {game.category ? (
+                      <span className="bg-slate-700 px-3 py-1 rounded-full text-sm">
+                        {game.category}
                       </span>
-                    )) : (
+                    ) : (
                       <span className="text-slate-500">Not specified</span>
                     )}
                   </div>
@@ -140,7 +141,7 @@ export default function GameDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">Published</p>
-                  <p>{new Date(game.published).toLocaleDateString()}</p>
+                  <p>{game.createdAt ? new Date(game.createdAt).toLocaleDateString() : 'Unknown'}</p>
                 </div>
               </div>
             </div>
@@ -160,15 +161,19 @@ export default function GameDetailPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold">
-                    {game.creatorName ? game.creatorName[0].toUpperCase() : '?'}
+                    {(typeof game.creator === 'object' && game.creator?.username)
+                      ? game.creator.username[0].toUpperCase()
+                      : '?'}
                   </span>
                 </div>
                 <div>
-                  <p className="text-white font-semibold">{game.creatorName || 'Unknown'}</p>
+                  <p className="text-white font-semibold">
+                    {typeof game.creator === 'object' ? game.creator?.username : 'Unknown'}
+                  </p>
                 </div>
               </div>
               <Link
-                href={`/profile/${game.creatorId}`}
+                href={`/profile/${typeof game.creator === 'object' ? game.creator?._id : game.creatorId}`}
                 className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg text-center transition-colors block"
               >
                 View Profile
@@ -205,7 +210,7 @@ export default function GameDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 text-sm">Last Updated</span>
                 <span className="text-white font-semibold">
-                  {new Date(game.updated).toLocaleDateString()}
+                  {game.updatedAt ? new Date(game.updatedAt).toLocaleDateString() : 'Unknown'}
                 </span>
               </div>
             </div>

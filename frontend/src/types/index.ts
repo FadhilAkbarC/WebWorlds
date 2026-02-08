@@ -25,23 +25,50 @@ export interface Game {
   _id: string;
   title: string;
   description: string;
-  creatorId: string;
+  creator?: string | { _id?: string; username: string; avatar: string };
+  creatorId?: string;
   creatorName?: string;
-  thumbnail: string;
-  genre: string[];
+  thumbnail?: string;
   category: string;
-  mainFile: string;
-  version: number;
-  rating: number;
+  mainFile?: string;
+  version?: number;
+  rating?: number;
   plays: number;
   likes: number;
-  comments: number;
-  featured: boolean;
-  published: string;
-  updated: string;
-  visibility: 'public' | 'private' | 'unlisted';
-  tags: string[];
+  comments?: number;
+  featured?: boolean;
+  published: string | boolean;
+  updated?: string;
+  visibility?: 'public' | 'private' | 'unlisted';
+  tags?: string[];
   fileSize?: number;
+  stats?: {
+    plays: number;
+    likes: number;
+    averageRating: number;
+    totalRatings: number;
+  };
+  code?: string;
+  scripts?: Array<{
+    id: string;
+    name: string;
+    code: string;
+  }>;
+  assets?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+  }>;
+  settings?: {
+    width: number;
+    height: number;
+    fps: number;
+    maxPlayers?: number;
+    isMultiplayer: boolean;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface GameSession {
