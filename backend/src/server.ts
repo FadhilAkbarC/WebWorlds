@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 import http from 'http';
 import { createApp } from './app';
 import { connectDatabase } from './config/database';
