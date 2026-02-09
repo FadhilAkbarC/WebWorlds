@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import { Game, User, Activity } from '../models';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { validators } from '../middleware/validation';
@@ -134,7 +135,31 @@ export const gameController = {
     }
 
     const { id } = req.params;
-    const { title, description, code, settings, scripts, assets } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError(400, 'Invalid game id');
+    }
+
+    const body =
+      typeof req.body === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(req.body);
+            } catch {
+              throw new AppError(400, 'Invalid JSON body');
+            }
+          })()
+        : req.body || {};
+
+    const {
+      title,
+      description,
+      code,
+      settings,
+      scripts,
+      assets,
+      category,
+      tags,
+    } = body;
 
     const game = await Game.findById(id);
 
@@ -148,12 +173,39 @@ export const gameController = {
     }
 
     // Validate updates
+    if (title !== undefined && typeof title !== 'string') {
+      throw new AppError(400, 'Invalid title');
+    }
     if (title && !validators.title(title)) {
       throw new AppError(400, 'Invalid title');
     }
 
+    if (settings !== undefined && (typeof settings !== 'object' || !settings)) {
+      throw new AppError(400, 'Invalid game settings');
+    }
     if (settings && !validators.gameSettings(settings)) {
       throw new AppError(400, 'Invalid game settings');
+    }
+
+    if (category !== undefined) {
+      if (typeof category !== 'string') {
+        throw new AppError(400, 'Invalid category');
+      }
+      const normalizedCategory = category.trim().toLowerCase();
+      if (!validators.category(normalizedCategory)) {
+        throw new AppError(400, 'Invalid category');
+      }
+      game.category = normalizedCategory;
+    }
+
+    if (tags !== undefined) {
+      if (!Array.isArray(tags)) {
+        throw new AppError(400, 'Invalid tags');
+      }
+      const normalizedTags = tags
+        .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+        .filter((tag) => tag.length > 0);
+      game.tags = normalizedTags;
     }
 
     // Update fields
@@ -181,6 +233,9 @@ export const gameController = {
     }
 
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError(400, 'Invalid game id');
+    }
     const game = await Game.findById(id);
 
     if (!game) {

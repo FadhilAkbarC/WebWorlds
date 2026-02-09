@@ -100,6 +100,10 @@ export default function GameDetailPage() {
     );
   }
 
+  const isUnsplash =
+    typeof game.thumbnail === 'string' &&
+    /(images|plus)\.unsplash\.com/i.test(game.thumbnail);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -121,6 +125,7 @@ export default function GameDetailPage() {
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 66vw"
                   priority
+                  unoptimized={isUnsplash}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">

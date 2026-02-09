@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gameController = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const models_1 = require("../models");
 const errorHandler_1 = require("../middleware/errorHandler");
 const validation_1 = require("../middleware/validation");
@@ -87,7 +91,20 @@ exports.gameController = {
             throw new errorHandler_1.AppError(401, 'Not authenticated');
         }
         const { id } = req.params;
-        const { title, description, code, settings, scripts, assets } = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+            throw new errorHandler_1.AppError(400, 'Invalid game id');
+        }
+        const body = typeof req.body === 'string'
+            ? (() => {
+                try {
+                    return JSON.parse(req.body);
+                }
+                catch {
+                    throw new errorHandler_1.AppError(400, 'Invalid JSON body');
+                }
+            })()
+            : req.body || {};
+        const { title, description, code, settings, scripts, assets, category, tags, } = body;
         const game = await models_1.Game.findById(id);
         if (!game) {
             throw new errorHandler_1.AppError(404, 'Game not found');
@@ -95,11 +112,36 @@ exports.gameController = {
         if (game.creator.toString() !== req.userId) {
             throw new errorHandler_1.AppError(403, 'Not authorized to update this game');
         }
+        if (title !== undefined && typeof title !== 'string') {
+            throw new errorHandler_1.AppError(400, 'Invalid title');
+        }
         if (title && !validation_1.validators.title(title)) {
             throw new errorHandler_1.AppError(400, 'Invalid title');
         }
+        if (settings !== undefined && (typeof settings !== 'object' || !settings)) {
+            throw new errorHandler_1.AppError(400, 'Invalid game settings');
+        }
         if (settings && !validation_1.validators.gameSettings(settings)) {
             throw new errorHandler_1.AppError(400, 'Invalid game settings');
+        }
+        if (category !== undefined) {
+            if (typeof category !== 'string') {
+                throw new errorHandler_1.AppError(400, 'Invalid category');
+            }
+            const normalizedCategory = category.trim().toLowerCase();
+            if (!validation_1.validators.category(normalizedCategory)) {
+                throw new errorHandler_1.AppError(400, 'Invalid category');
+            }
+            game.category = normalizedCategory;
+        }
+        if (tags !== undefined) {
+            if (!Array.isArray(tags)) {
+                throw new errorHandler_1.AppError(400, 'Invalid tags');
+            }
+            const normalizedTags = tags
+                .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+                .filter((tag) => tag.length > 0);
+            game.tags = normalizedTags;
         }
         if (title)
             game.title = title;
@@ -122,6 +164,9 @@ exports.gameController = {
             throw new errorHandler_1.AppError(401, 'Not authenticated');
         }
         const { id } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+            throw new errorHandler_1.AppError(400, 'Invalid game id');
+        }
         const game = await models_1.Game.findById(id);
         if (!game) {
             throw new errorHandler_1.AppError(404, 'Game not found');

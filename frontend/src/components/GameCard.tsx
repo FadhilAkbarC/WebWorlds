@@ -16,6 +16,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
   const { user } = useAuthStore();
   const { likeGame, unlikeGame } = useGameStore();
   const [isLiked, setIsLiked] = React.useState(false);
+  const isUnsplash =
+    typeof game.thumbnail === 'string' &&
+    /(images|plus)\.unsplash\.com/i.test(game.thumbnail);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -51,6 +54,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
               fill
               sizes="(max-width: 1024px) 100vw, 33vw"
               priority={Boolean(game.featured)}
+              unoptimized={isUnsplash}
               className="object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
