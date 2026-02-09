@@ -437,20 +437,24 @@ export default function EditorPage() {
                   <summary className="cursor-pointer font-semibold">WBW Syntax Guide</summary>
                   <div className="mt-3 space-y-2 text-slate-400">
                     <p><code>player x y [w h]</code> spawn the player</p>
-                    <p><code>set NAME value</code> define variables</p>
-                    <p><code>add NAME value</code> / <code>sub NAME value</code> update variables</p>
+                    <p><code>size w h</code> / <code>pcolor #hex</code> player defaults</p>
+                    <p><code>speed n</code> / <code>gravity n</code> / <code>friction n</code></p>
+                    <p><code>set NAME value</code> / <code>add|sub|mul|div|mod</code> variables</p>
+                    <p><code>rand NAME min max</code> random value</p>
                     <p><code>bg #hex</code> / <code>color #hex</code> background &amp; draw color</p>
                     <p><code>platform x y w h</code> solid ground</p>
-                    <p><code>rect x y w h</code> / <code>circle x y r</code> shapes</p>
-                    <p><code>text &quot;Hello&quot; x y</code> draw text</p>
-                    <p><code>spawn enemy|item x y</code> create entities</p>
-                    <p><code>on left move -1 0</code> input bindings</p>
-                    <p><code>on up jump 9</code> jump action</p>
-                    <p><code>on space shoot 1</code> shoot bullets</p>
+                    <p><code>rect x y w h</code> / <code>circle x y r</code> / <code>line x1 y1 x2 y2</code></p>
+                    <p><code>tri x1 y1 x2 y2 x3 y3</code> triangle</p>
+                    <p><code>text &quot;Hello&quot; x y</code> / <code>textsize n</code> / <code>hud &quot;HP&quot; x y</code></p>
+                    <p><code>spawn enemy|item [id] x y [w h]</code> entities</p>
+                    <p><code>patrol id minX maxX speed</code> simple AI</p>
+                    <p><code>on left move -1 0</code> hold input</p>
+                    <p><code>onpress up jump 9</code> / <code>onpress space shoot 1</code></p>
+                    <p><code>onrelease left vel 0 0</code> release input</p>
                     <p><code>loop N ... end</code> repeat block</p>
-                    <p><code>if HP 0 goto gameover</code> conditional jump</p>
-                    <p><code>label:</code> define event blocks</p>
-                    <p><code>msg &quot;Text&quot;</code> / <code>shake 8</code> / <code>stop</code></p>
+                    <p><code>if HP &lt;= 0 goto gameover</code> conditional jump</p>
+                    <p><code>checkpoint x y</code> / <code>respawn</code> save &amp; reset</p>
+                    <p><code>msg &quot;Text&quot; [sec]</code> / <code>shake 8 [sec]</code> / <code>stop</code></p>
                   </div>
                 </details>
               </div>

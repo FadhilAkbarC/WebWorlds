@@ -18,28 +18,66 @@
   }
 }
 /* WBW Syntax Highlighting */
-.wbw-editor {
-  background: #181c1f !important;
-  color: #aaff55 !important;
+.wbw-editor-wrap {
+  position: relative;
+  flex: 1;
+  background: #181c1f;
+  overflow: hidden;
+}
+.wbw-editor-highlight {
+  position: absolute;
+  inset: 0;
+  padding: 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
   font-family: 'Fira Mono', 'Consolas', 'monospace';
-  caret-color: #fff;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.wbw-editor-input {
+  position: absolute;
+  inset: 0;
+  padding: 1rem;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #aaff55;
+  border: 0;
+  outline: none;
+  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.wbw-editor {
+  background: transparent !important;
+}
+.wbw-editor-placeholder {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: #3a4a2f;
+  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  font-size: 0.875rem;
+  pointer-events: none;
 }
 .wbw-editor::selection {
   background: #2d3a1f;
 }
-.wbw-keyword { color: #ffb300; font-weight: bold; }
+.wbw-core { color: #ffd166; font-weight: 600; }
+.wbw-input { color: #00f5d4; font-weight: 600; }
+.wbw-flow { color: #f15bb5; font-weight: 600; }
+.wbw-math { color: #4cc9f0; font-weight: 600; }
+.wbw-event { color: #fca311; font-weight: 600; }
+.wbw-key { color: #90e0ef; }
 .wbw-number { color: #00e0ff; }
 .wbw-string { color: #ff6bcb; }
 .wbw-comment { color: #6c7a89; font-style: italic; }
-.wbw-constant { color: #ff5555; }
+.wbw-constant { color: #ff7b7b; font-weight: 600; }
 .wbw-identifier { color: #aaff55; }
 .wbw-color { color: #00ff99; }
-.wbw-label { color: #ffb3ff; }
-.wbw-editor::-webkit-input-placeholder { color: #3a4a2f; }
-.wbw-editor:-moz-placeholder { color: #3a4a2f; }
-.wbw-editor::-moz-placeholder { color: #3a4a2f; }
-.wbw-editor:-ms-input-placeholder { color: #3a4a2f; }
-.wbw-editor::placeholder { color: #3a4a2f; }
+.wbw-label { color: #cdb4db; font-weight: 600; }
 @import "tailwindcss";
 
 * {
