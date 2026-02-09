@@ -493,7 +493,10 @@ export class WBWEngine {
 
   private loop = (time: number) => {
     if (!this.running) return;
-    const delta = this.lastTime ? (time - this.lastTime) / 1000 : 0;
+    if (!this.lastTime) {
+      this.lastTime = time;
+    }
+    const delta = (time - this.lastTime) / 1000;
     const frameTime = 1 / Math.max(1, this.fps);
     if (delta >= frameTime) {
       this.update(delta);
