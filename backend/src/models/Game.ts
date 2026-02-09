@@ -57,7 +57,7 @@ const gameSchema = new Schema<IGame>(
     },
     code: {
       type: String,
-      default: '// Game code here',
+      default: '// WBW code here',
     },
     scripts: [
       {

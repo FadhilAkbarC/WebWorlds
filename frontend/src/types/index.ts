@@ -3,8 +3,12 @@ export interface User {
   _id: string;
   username: string;
   email: string;
-  avatar: string;
-  createdAt: string;
+  avatar?: string;
+  bio?: string;
+  createdAt?: string;
+  followers?: number;
+  following?: number;
+  createdGames?: number;
   stats: {
     gamesCreated: number;
     gamesPlayed: number;

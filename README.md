@@ -197,7 +197,7 @@ WebWorlds/
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GameFilter.tsx
 │   │   │   └── ui/Tabs.tsx
-│   │   ├── engine/GameEngine.ts
+│   │   ├── engine/WBWEngine.ts
 │   │   ├── lib/api.ts
 │   │   ├── stores/ (Zustand)
 │   │   │   ├── authStore.ts

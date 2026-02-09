@@ -1,4 +1,4 @@
-// WBW Game Template v2
+export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v2
 // WBW is the only game engine language used by WebWorlds.
 // Syntax quick reference:
 // player x y [w h]
@@ -53,3 +53,4 @@ gameover:
   msg "Game Over"
   stop
 end
+`;

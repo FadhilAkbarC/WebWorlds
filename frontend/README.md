@@ -57,7 +57,7 @@ src/
 │   └── ui/
 │       └── Tabs.tsx
 ├── engine/
-│   └── GameEngine.ts (lightweight 2D engine)
+│   └── WBWEngine.ts (WBW runtime engine)
 ├── lib/
 │   └── api.ts (axios config & helpers)
 ├── stores/
@@ -76,7 +76,7 @@ src/
 - **State:** Zustand
 - **HTTP Client:** Axios
 - **Icons:** Lucide React
-- **Game Engine:** Custom lightweight 2D engine (~30KB gzipped)
+- **Game Engine:** WBW runtime engine (WBW-only scripts)
 
 ## Bundle Size Optimization
 

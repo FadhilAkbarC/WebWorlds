@@ -54,7 +54,7 @@ const gameSchema = new mongoose_1.Schema({
     },
     code: {
         type: String,
-        default: '// Game code here',
+        default: '// WBW code here',
     },
     scripts: [
         {

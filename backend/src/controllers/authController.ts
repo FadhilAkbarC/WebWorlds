@@ -59,9 +59,14 @@ export const authController = {
     res.status(201).json({
       token,
       user: {
+        _id: user._id,
         id: user._id,
         username: user.username,
         email: user.email,
+        bio: user.bio,
+        avatar: user.avatar,
+        stats: user.stats,
+        createdAt: user.createdAt,
       },
     });
   }),
@@ -98,10 +103,14 @@ export const authController = {
     res.json({
       token,
       user: {
+        _id: user._id,
         id: user._id,
         username: user.username,
         email: user.email,
         stats: user.stats,
+        bio: user.bio,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
       },
     });
   }),
@@ -121,6 +130,7 @@ export const authController = {
     }
 
     res.json({
+      _id: user._id,
       id: user._id,
       username: user.username,
       email: user.email,
@@ -129,6 +139,7 @@ export const authController = {
       stats: user.stats,
       createdGames: user.createdGames.length,
       followers: user.followers.length,
+      createdAt: user.createdAt,
     });
   }),
 

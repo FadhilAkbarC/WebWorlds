@@ -36,9 +36,14 @@ exports.authController = {
         res.status(201).json({
             token,
             user: {
+                _id: user._id,
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                bio: user.bio,
+                avatar: user.avatar,
+                stats: user.stats,
+                createdAt: user.createdAt,
             },
         });
     }),
@@ -59,10 +64,14 @@ exports.authController = {
         res.json({
             token,
             user: {
+                _id: user._id,
                 id: user._id,
                 username: user.username,
                 email: user.email,
                 stats: user.stats,
+                bio: user.bio,
+                avatar: user.avatar,
+                createdAt: user.createdAt,
             },
         });
     }),
@@ -75,6 +84,7 @@ exports.authController = {
             throw new errorHandler_1.AppError(404, 'User not found');
         }
         res.json({
+            _id: user._id,
             id: user._id,
             username: user.username,
             email: user.email,
@@ -83,6 +93,7 @@ exports.authController = {
             stats: user.stats,
             createdGames: user.createdGames.length,
             followers: user.followers.length,
+            createdAt: user.createdAt,
         });
     }),
     getProfile: (0, errorHandler_1.asyncHandler)(async (req, res) => {

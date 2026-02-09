@@ -2,12 +2,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import dynamic from 'next/dynamic';
-import { GameEngine } from '@/engine/GameEngine';
+import { WBWEngine, type WBWError } from '@/engine/WBWEngine';
 import { useEditorStore } from '@/stores/editorStore';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
 import WBWEditor from '@/components/WBWEditor';
+import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
 
 const ManageGamesTab = dynamic(() => import('./ManageGamesTab'), { ssr: false });
 
@@ -21,7 +22,6 @@ export default function EditorPage() {
     isSaving,
     updateProject,
     updateScript,
-    createNewProject,
     saveProject,
     addScript,
     removeScript,
@@ -30,8 +30,9 @@ export default function EditorPage() {
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<GameEngine | null>(null);
+  const engineRef = useRef<WBWEngine | null>(null);
   const [isPreviewActive, setIsPreviewActive] = useState(false);
+  const [wbwErrors, setWbwErrors] = useState<WBWError[]>([]);
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -49,35 +50,65 @@ export default function EditorPage() {
   // --- Effects ---
   useEffect(() => {
     // On first load, replace scripts with single WBW template from public folder
-    const initializeTemplate = async () => {
-      try {
-        const template = await fetch('/wbw-template.wbw').then((r) => r.text());
-        const baseProject = useEditorStore.getState().project;
-        const projectData = {
-          ...baseProject,
-          title: 'WBW Template',
-          description: 'Start with the official WBW template',
-          assets: [],
-          scripts: [
-            {
-              id: 'template',
-              name: 'template.wbw',
-              code: template,
-              language: 'wbw' as const,
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        };
-        loadProject(projectData as any);
-        setActiveTab('template');
-      } catch (err) {
-        // Fallback to creating a new project if template fetch fails
-        createNewProject();
-      }
+    const initializeTemplate = () => {
+      const baseProject = useEditorStore.getState().project;
+      const projectData = {
+        ...baseProject,
+        title: 'WBW Template',
+        description: 'Start with the official WBW template',
+        assets: [],
+        scripts: [
+          {
+            id: 'main',
+            name: 'main.wbw',
+            code: DEFAULT_WBW_TEMPLATE,
+            language: 'wbw' as const,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
+      loadProject(projectData as any);
+      setActiveTab('main');
     };
 
-    void initializeTemplate();
-  }, [createNewProject, loadProject, setActiveTab]);
+    initializeTemplate();
+  }, [loadProject, setActiveTab]);
+
+  useEffect(() => {
+    if (!isPreviewActive || !canvasRef.current || !currentScript) {
+      engineRef.current?.destroy();
+      engineRef.current = null;
+      setWbwErrors([]);
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const width = project.settings.width;
+    const height = project.settings.height;
+    const fps = project.settings.fps;
+
+    const engine = new WBWEngine(canvas, { width, height, fps });
+    const result = engine.load(currentScript.code);
+    setWbwErrors(result.errors);
+
+    if (result.errors.length === 0) {
+      engine.start();
+    }
+
+    engineRef.current = engine;
+
+    return () => {
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, [
+    currentScript,
+    currentScript?.code,
+    isPreviewActive,
+    project.settings.width,
+    project.settings.height,
+    project.settings.fps,
+  ]);
 
   // --- Handlers ---
   const handleAddScript = () => {
@@ -223,12 +254,11 @@ export default function EditorPage() {
                   New Script
                 </button>
                 <button
-                  onClick={async () => {
-                    const template = await fetch('/wbw-template.wbw').then(r => r.text());
+                  onClick={() => {
                     addScript({
                       id: `script_${Date.now()}`,
                       name: 'template.wbw',
-                      code: template,
+                      code: DEFAULT_WBW_TEMPLATE,
                       language: 'wbw',
                       createdAt: new Date().toISOString(),
                     });
@@ -266,9 +296,9 @@ export default function EditorPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-slate-800 rounded-lg p-6 w-96 border border-slate-700">
                     <h3 className="text-lg font-bold text-white mb-4">New Script</h3>
-                    <input
-                      type="text"
-                      placeholder="script.js"
+                      <input
+                        type="text"
+                        placeholder="level.wbw"
                       value={newScriptName}
                       onChange={(e) => setNewScriptName(e.target.value)}
                       onKeyDown={(e) => {
@@ -320,10 +350,24 @@ export default function EditorPage() {
               <h3 className="text-sm font-bold text-slate-300 uppercase mb-2">Preview</h3>
               <div className="flex-1 bg-slate-800 rounded border border-slate-700 overflow-auto flex items-center justify-center">
                 {isPreviewActive ? (
-                  <canvas
-                    ref={canvasRef}
-                    className="max-w-full max-h-full bg-slate-950"
-                  />
+                  wbwErrors.length > 0 ? (
+                    <div className="text-left text-sm text-red-300 p-4 space-y-2">
+                      <p className="font-semibold">WBW Syntax Errors</p>
+                      {wbwErrors.slice(0, 6).map((err) => (
+                        <p key={`${err.line}-${err.message}`}>
+                          Line {err.line}: {err.message}
+                        </p>
+                      ))}
+                      {wbwErrors.length > 6 && (
+                        <p>+{wbwErrors.length - 6} more errors...</p>
+                      )}
+                    </div>
+                  ) : (
+                    <canvas
+                      ref={canvasRef}
+                      className="max-w-full max-h-full bg-slate-950"
+                    />
+                  )
                 ) : (
                   <div className="text-center text-slate-400">
                     <Play size={48} className="mx-auto mb-2 opacity-50" />
@@ -387,6 +431,26 @@ export default function EditorPage() {
                         className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
                       />
                     </div>
+                  </div>
+                </details>
+                <details className="text-xs text-slate-300 mt-4">
+                  <summary className="cursor-pointer font-semibold">WBW Syntax Guide</summary>
+                  <div className="mt-3 space-y-2 text-slate-400">
+                    <p><code>player x y [w h]</code> spawn the player</p>
+                    <p><code>set NAME value</code> define variables</p>
+                    <p><code>add NAME value</code> / <code>sub NAME value</code> update variables</p>
+                    <p><code>bg #hex</code> / <code>color #hex</code> background &amp; draw color</p>
+                    <p><code>platform x y w h</code> solid ground</p>
+                    <p><code>rect x y w h</code> / <code>circle x y r</code> shapes</p>
+                    <p><code>text &quot;Hello&quot; x y</code> draw text</p>
+                    <p><code>spawn enemy|item x y</code> create entities</p>
+                    <p><code>on left move -1 0</code> input bindings</p>
+                    <p><code>on up jump 9</code> jump action</p>
+                    <p><code>on space shoot 1</code> shoot bullets</p>
+                    <p><code>loop N ... end</code> repeat block</p>
+                    <p><code>if HP 0 goto gameover</code> conditional jump</p>
+                    <p><code>label:</code> define event blocks</p>
+                    <p><code>msg &quot;Text&quot;</code> / <code>shake 8</code> / <code>stop</code></p>
                   </div>
                 </details>
               </div>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { GameProject, GameAsset, GameScript } from '@/types';
 import { api } from '@/lib/api';
+import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
 
 interface EditorStore {
   project: GameProject;
@@ -30,95 +31,15 @@ interface EditorStore {
 }
 
 const defaultProject: GameProject = {
-  title: 'My First Game',
-  description: 'A simple game created with WebWorlds',
+  title: 'WBW Template',
+  description: 'Start with the official WBW template',
   assets: [],
   scripts: [
     {
       id: 'main',
-      name: 'main.js',
-      code: `// WebWorlds Game Template - Ready to Publish & Play!
-// This is a simple example game. Modify it to create your own!
-
-let score = 0;
-let playerX = game.width / 2 - 25;
-let playerY = game.height - 50;
-const playerWidth = 50;
-const playerHeight = 30;
-const playerSpeed = 5;
-
-let enemyX = 100;
-let enemyY = 100;
-const enemySize = 30;
-
-// Game loop - called automatically
-function update() {
-  // Handle player movement
-  if (game.input.keys['a'] || game.input.keys['arrowleft']) {
-    playerX = Math.max(0, playerX - playerSpeed);
-  }
-  if (game.input.keys['d'] || game.input.keys['arrowright']) {
-    playerX = Math.min(game.width - playerWidth, playerX + playerSpeed);
-  }
-
-  // Simple enemy AI
-  if (Math.random() < 0.02) {
-    enemyX = Math.random() * (game.width - enemySize);
-  }
-}
-
-function render() {
-  // Clear canvas with dark background
-  game.clearCanvas('#0f172a');
-
-  // Draw game title
-  game.drawText('WebWorlds Game Demo', 20, 30, {
-    color: '#60a5fa',
-    size: 24,
-    font: 'bold 24px Arial',
-  });
-
-  // Draw score
-  game.drawText('Score: ' + score, 20, 65, {
-    color: '#10b981',
-    size: 18,
-  });
-
-  // Draw controls info
-  game.drawText('Use A/D or Arrow Keys to move', 20, game.height - 20, {
-    color: '#94a3b8',
-    size: 14,
-  });
-
-  // Draw player (colored rectangle)
-  game.drawRect(playerX, playerY, playerWidth, playerHeight, '#3b82f6');
-  game.drawText('Player', playerX + 10, playerY + 20, {
-    color: '#ffffff',
-    size: 12,
-  });
-
-  // Draw enemy (colored circle)
-  game.drawCircle(enemyX + enemySize / 2, enemyY, enemySize / 2, '#ef4444');
-
-  // Draw instruction
-  game.drawText('Click publish to share your game!', game.width / 2 - 100, game.height / 2, {
-    color: '#fbbf24',
-    size: 16,
-  });
-}
-
-// Game update and render loop
-if (typeof update===typeof function(){}) {
-  // Update called regularly
-  setInterval(update, 16); // ~60 FPS
-}
-
-if (typeof render===typeof function(){}) {
-  // Render called regularly
-  setInterval(render, 16); // ~60 FPS
-}
-`,
-      language: 'javascript' as const,
+      name: 'main.wbw',
+      code: DEFAULT_WBW_TEMPLATE,
+      language: 'wbw' as const,
       createdAt: new Date().toISOString(),
     },
   ],
@@ -165,12 +86,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const state = get();
       const project = state.project;
 
+      const primaryScript =
+        project.scripts.find((s) => s.id === 'main') || project.scripts[0];
+
       // If project has an ID, update existing game
       if (project._id) {
         await api.put(`/games/${project._id}`, {
           title: project.title,
           description: project.description,
-          code: project.scripts.find(s => s.id === 'main')?.code || '',
+          code: primaryScript?.code || '',
           scripts: project.scripts,
           assets: project.assets,
           settings: project.settings,
@@ -181,7 +105,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         const response = await api.post('/games', {
           title: project.title,
           description: project.description,
-          code: project.scripts.find(s => s.id === 'main')?.code || '',
+          code: primaryScript?.code || '',
         });
 
         if (response.data.success || response.data.data) {
@@ -247,15 +171,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   removeScript: (scriptId) => {
-    if (scriptId === 'main') return; // Cannot delete main script
-
-    set((state) => ({
-      project: {
-        ...state.project,
-        scripts: state.project.scripts.filter((s) => s.id !== scriptId),
-      },
-      isModified: true,
-    }));
+    set((state) => {
+      if (scriptId === 'main') return state;
+      if (state.project.scripts.length <= 1) return state;
+      return {
+        project: {
+          ...state.project,
+          scripts: state.project.scripts.filter((s) => s.id !== scriptId),
+        },
+        isModified: true,
+      };
+    });
   },
 
   updateScript: (scriptId, code) => {

@@ -16,7 +16,7 @@ export default function WBWEditor({ value, onChange, readOnly = false }: WBWEdit
       spellCheck={false}
       readOnly={readOnly}
       style={{ color: '#aaff55', background: '#181c1f', fontFamily: 'Fira Mono, monospace' }}
-      placeholder={readOnly ? undefined : '// Start coding WBW...'}
+      placeholder={readOnly ? undefined : '// Write WBW code here...'}
     />
   );
 }

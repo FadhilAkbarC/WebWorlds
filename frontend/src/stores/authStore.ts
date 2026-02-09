@@ -14,6 +14,11 @@ interface AuthStore extends AuthState {
   checkAuth: () => Promise<void>;
 }
 
+const normalizeUser = (user: any): User => ({
+  ...user,
+  _id: user?._id || user?.id,
+});
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -39,9 +44,10 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await apiClient.login(email, password);
           const { token, user } = response.data;
+          const normalizedUser = normalizeUser(user);
 
           set({
-            user: user,
+            user: normalizedUser,
             token: token,
             isLoading: false,
           });
@@ -62,9 +68,10 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await apiClient.register(username, email, password);
           const { token, user } = response.data;
+          const normalizedUser = normalizeUser(user);
 
           set({
-            user: user,
+            user: normalizedUser,
             token: token,
             isLoading: false,
           });
@@ -96,7 +103,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true });
         try {
           const response = await apiClient.getCurrentUser();
-          set({ user: response.data, isLoading: false });
+          set({ user: normalizeUser(response.data), isLoading: false });
         } catch (error) {
           // If 401, clear auth state
           if (error instanceof Error && error.message.includes('401')) {
