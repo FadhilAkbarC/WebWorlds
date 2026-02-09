@@ -8,13 +8,14 @@ export const metadata: Metadata = {
   title: 'WebWorlds - Play & Create Web Games',
   description: 'A lightweight, innovative web-based gaming platform for creating and playing user-generated games. Play on any device, anytime.',
   keywords: 'games, web games, user-generated content, roblox alternative, indie games',
-  viewport: 'width=device-width, initial-scale=1',
   openGraph: {
     title: 'WebWorlds',
     description: 'Play & Create Web Games',
     type: 'website',
   },
 };
+
+export const viewport = 'width=device-width, initial-scale=1';
 
 export default function RootLayout({
   children,

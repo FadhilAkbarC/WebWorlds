@@ -198,7 +198,6 @@ WebWorlds/
 │   │   │   ├── GameFilter.tsx
 │   │   │   └── ui/Tabs.tsx
 │   │   ├── engine/GameEngine.ts
-│   │   ├── hooks/useSocket.ts
 │   │   ├── lib/api.ts
 │   │   ├── stores/ (Zustand)
 │   │   │   ├── authStore.ts

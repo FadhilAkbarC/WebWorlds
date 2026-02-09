@@ -9,6 +9,7 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 router.get('/', auth_1.optionalAuth, gameController_1.default.list);
 router.get('/:id', auth_1.optionalAuth, gameController_1.default.get);
+router.get('/:id/like-status', auth_1.optionalAuth, gameController_1.default.likeStatus);
 router.post('/', auth_1.authenticateToken, gameController_1.default.create);
 router.put('/:id', auth_1.authenticateToken, gameController_1.default.update);
 router.post('/:id/publish', auth_1.authenticateToken, gameController_1.default.publish);

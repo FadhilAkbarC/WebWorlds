@@ -9,18 +9,50 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const env_1 = require("./config/env");
+const logger_1 = require("./utils/logger");
 const auth_1 = __importDefault(require("./routes/auth"));
 const games_1 = __importDefault(require("./routes/games"));
+const comments_1 = __importDefault(require("./routes/comments"));
+const activities_1 = __importDefault(require("./routes/activities"));
 const errorHandler_1 = require("./middleware/errorHandler");
 function createApp() {
     const app = (0, express_1.default)();
     app.use((0, helmet_1.default)());
+    const allowedOrigins = env_1.config.CORS_ORIGIN
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0);
+    if (allowedOrigins.length === 0) {
+        logger_1.logger.error('❌ CRITICAL: CORS_ORIGIN is empty! Set environment variable: CORS_ORIGIN=https://your-frontend-domain.com');
+        if (env_1.config.IS_PRODUCTION) {
+            console.error('Railway Setup: railway variables set CORS_ORIGIN=https://webworlds-xxx.vercel.app');
+            process.exit(1);
+        }
+    }
     app.use((0, cors_1.default)({
-        origin: env_1.config.CORS_ORIGIN,
+        origin: (origin, callback) => {
+            if (!origin) {
+                return callback(null, true);
+            }
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            }
+            else {
+                logger_1.logger.warn(`⚠️  CORS Rejected: ${origin}`, {
+                    allowedOrigins,
+                    hint: 'Update CORS_ORIGIN environment variable if domain is legitimate',
+                });
+                callback(new Error(`CORS not allowed for origin: ${origin}`));
+            }
+        },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization'],
+        exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+        maxAge: 86400,
+        optionsSuccessStatus: 200,
     }));
+    app.options('*', (0, cors_1.default)());
     app.use(express_1.default.json({ limit: '10mb' }));
     app.use(express_1.default.urlencoded({ limit: '10mb', extended: true }));
     const limiter = (0, express_rate_limit_1.default)({
@@ -39,6 +71,8 @@ function createApp() {
     }
     app.use('/api/auth', auth_1.default);
     app.use('/api/games', games_1.default);
+    app.use('/api', comments_1.default);
+    app.use('/api', activities_1.default);
     app.get('/health', (req, res) => {
         res.json({
             status: 'ok',

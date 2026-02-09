@@ -53,7 +53,28 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
         throw new Error('API did not return success');
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to fetch games';
+      // Detect CORS errors vs other network errors
+      let errorMsg = 'Failed to fetch games';
+      
+      if (error instanceof Error) {
+        if (
+          error.message.includes('CORS') ||
+          error.message.includes('Access-Control') ||
+          (error as any).code === 'ERR_NETWORK' ||
+          (error as any).response?.status === 0
+        ) {
+          errorMsg =
+            '❌ API Connection Error: Check backend CORS settings and NEXT_PUBLIC_API_URL environment variable. ' +
+            'Verify backend is running and accessible from your frontend domain.';
+          logger.error('CORS/Network Error:', {
+            originalError: error.message,
+            hint: 'Check backend CORS_ORIGIN and frontend NEXT_PUBLIC_API_URL',
+          });
+        } else {
+          errorMsg = error.message;
+        }
+      }
+
       set({
         error: errorMsg,
         isLoading: false,

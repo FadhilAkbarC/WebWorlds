@@ -3,14 +3,37 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupSocket = setupSocket;
 const socket_io_1 = require("socket.io");
 const env_1 = require("./env");
-const gameRooms = new Map();
+const services_1 = require("../services");
+const logger_1 = require("../utils/logger");
 function setupSocket(httpServer) {
-    const corsOrigins = process.env.NODE_ENV === 'production' ?
-        (process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || []) :
-        [env_1.config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
+    const allowedOrigins = env_1.config.CORS_ORIGIN
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0);
+    if (allowedOrigins.length === 0) {
+        logger_1.logger.error('❌ CRITICAL: CORS_ORIGIN is empty for Socket.io! ' +
+            'Set environment variable: CORS_ORIGIN=https://your-frontend-domain.com');
+        if (env_1.config.IS_PRODUCTION) {
+            process.exit(1);
+        }
+    }
     const io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: corsOrigins,
+            origin: (origin, callback) => {
+                if (!origin) {
+                    return callback(null, true);
+                }
+                if (allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                }
+                else {
+                    logger_1.logger.warn(`⚠️  Socket.io CORS rejected: ${origin}`, {
+                        allowedOrigins,
+                        hint: 'Update CORS_ORIGIN environment variable if domain is legitimate',
+                    });
+                    callback(new Error('CORS not allowed'));
+                }
+            },
             credentials: true,
             methods: ['GET', 'POST'],
         },
@@ -19,39 +42,45 @@ function setupSocket(httpServer) {
         pingInterval: 25000,
         pingTimeout: 20000,
     });
+    services_1.sessionManager.initialize();
     io.use((socket, next) => {
         const token = socket.handshake.auth.token;
         next();
     });
     io.on('connection', (socket) => {
-        console.log(`🔌 Socket connected: ${socket.id}`);
+        logger_1.logger.debug('Socket connected', { socketId: socket.id });
         socket.on('join-game', (data) => {
-            const { roomId, userId, playerName } = data;
+            const { roomId, userId, playerName, gameId, maxPlayers } = data;
             socket.join(roomId);
-            if (!gameRooms.has(roomId)) {
-                gameRooms.set(roomId, {
-                    players: new Map(),
-                    gameId: roomId,
-                    createdAt: new Date(),
-                });
-            }
-            const room = gameRooms.get(roomId);
-            room.players.set(socket.id, {
+            const room = services_1.sessionManager.getOrCreateRoom(roomId, gameId, maxPlayers);
+            const playerAdded = services_1.sessionManager.addPlayer(roomId, {
                 userId,
                 socketId: socket.id,
+                playerName,
                 score: 0,
+                connected: true,
             });
+            if (!playerAdded) {
+                logger_1.logger.warn('Failed to add player - room full', { roomId, playerId: userId });
+                socket.emit('error', { message: 'Room is full' });
+                return;
+            }
+            const roomPlayers = services_1.sessionManager.getPlayers(roomId);
             io.to(roomId).emit('player-joined', {
                 userId,
                 playerName,
-                playersInRoom: room.players.size,
-                timestamp: new Date(),
+                playersInRoom: roomPlayers.length,
+                timestamp: new Date().toISOString(),
             });
             socket.emit('room-state', {
-                players: Array.from(room.players.values()),
-                playerCount: room.players.size,
+                players: roomPlayers,
+                playerCount: roomPlayers.length,
             });
-            console.log(`✅ Player ${userId} joined room ${roomId} (${room.players.size} total)`);
+            logger_1.logger.debug('Player joined room', {
+                roomId,
+                userId,
+                playerCount: roomPlayers.length,
+            });
         });
         socket.on('game-update', (data) => {
             const { roomId, state } = data;
@@ -63,62 +92,57 @@ function setupSocket(httpServer) {
         });
         socket.on('update-score', (data) => {
             const { roomId, userId, score } = data;
-            const room = gameRooms.get(roomId);
-            if (room) {
-                for (const player of room.players.values()) {
-                    if (player.userId === userId) {
-                        player.score = score;
-                    }
-                }
-                io.to(roomId).emit('scores-updated', {
-                    userId,
-                    score,
-                    leaderboard: Array.from(room.players.values())
-                        .sort((a, b) => b.score - a.score),
-                });
-            }
+            services_1.sessionManager.updatePlayerScore(roomId, socket.id, score);
+            const roomPlayers = services_1.sessionManager.getPlayers(roomId);
+            io.to(roomId).emit('scores-updated', {
+                userId,
+                score,
+                leaderboard: roomPlayers.sort((a, b) => b.score - a.score),
+            });
         });
         socket.on('leave-game', (data) => {
             const { roomId, userId } = data;
             socket.leave(roomId);
-            const room = gameRooms.get(roomId);
-            if (room) {
-                room.players.delete(socket.id);
-                if (room.players.size === 0) {
-                    gameRooms.delete(roomId);
-                    console.log(`🗑️  Room ${roomId} cleaned up (empty)`);
-                }
-                else {
-                    io.to(roomId).emit('player-left', {
-                        userId,
-                        playersInRoom: room.players.size,
-                    });
-                }
+            services_1.sessionManager.removePlayer(roomId, socket.id);
+            const remainingPlayers = services_1.sessionManager.getPlayers(roomId);
+            if (remainingPlayers.length > 0) {
+                io.to(roomId).emit('player-left', {
+                    userId,
+                    playersInRoom: remainingPlayers.length,
+                });
             }
-            console.log(`👋 Player ${userId} left room ${roomId}`);
+            logger_1.logger.debug('Player left room', {
+                roomId,
+                userId,
+                remainingPlayers: remainingPlayers.length,
+            });
         });
         socket.on('chat', (data) => {
-            const { roomId, message, username } = data;
+            const { roomId, userId, message, username } = data;
+            if (!message || message.length > 500) {
+                logger_1.logger.warn('Invalid chat message', { roomId, userId });
+                return;
+            }
             io.to(roomId).emit('chat', {
                 username,
                 message,
-                timestamp: new Date(),
+                timestamp: new Date().toISOString(),
             });
         });
         socket.on('disconnect', () => {
-            for (const [roomId, room] of gameRooms.entries()) {
-                if (room.players.has(socket.id)) {
-                    room.players.delete(socket.id);
-                    if (room.players.size === 0) {
-                        gameRooms.delete(roomId);
-                    }
-                }
+            const rooms = io.sockets.adapter.rooms;
+            for (const roomId of rooms.keys()) {
+                services_1.sessionManager.removePlayer(roomId, socket.id);
             }
-            console.log(`❌ Socket disconnected: ${socket.id}`);
+            logger_1.logger.debug('Socket disconnected', { socketId: socket.id });
         });
         socket.on('error', (error) => {
-            console.error(`⚠️  Socket error [${socket.id}]:`, error);
+            logger_1.logger.error('Socket error', error, { socketId: socket.id });
         });
+    });
+    process.on('SIGTERM', () => {
+        logger_1.logger.info('SIGTERM received, shutting down session manager');
+        services_1.sessionManager.shutdown();
     });
     return io;
 }

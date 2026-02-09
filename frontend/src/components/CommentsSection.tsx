@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Heart, Trash2, MessageSquare } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Comment } from '@/types';
@@ -18,11 +18,7 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchComments();
-  }, [gameId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await api.get(`/games/${gameId}/comments?limit=20`);
@@ -35,7 +31,11 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [gameId]);
+
+  useEffect(() => {
+    void fetchComments();
+  }, [fetchComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

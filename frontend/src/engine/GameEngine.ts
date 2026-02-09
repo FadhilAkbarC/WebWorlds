@@ -1,5 +1,3 @@
-import { useEffect, useRef } from 'react';
-
 interface GameEngineOptions {
   width: number;
   height: number;
@@ -224,23 +222,3 @@ export class GameEngine {
     this.canvas.height = height;
   }
 }
-
-/**
- * React hook for using the game engine
- */
-export const useGameEngine = (options: GameEngineOptions) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<GameEngine | null>(null);
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    engineRef.current = new GameEngine(canvasRef.current, options);
-
-    return () => {
-      engineRef.current?.stop();
-    };
-  }, [options]);
-
-  return { canvasRef, engine: engineRef.current };
-};

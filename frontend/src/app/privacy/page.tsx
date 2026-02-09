@@ -10,7 +10,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">Introduction</h2>
             <p>
-              WebWorlds ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains 
+              WebWorlds (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains 
               how we collect, use, disclose, and safeguard your information when you visit our website and platform.
             </p>
           </section>

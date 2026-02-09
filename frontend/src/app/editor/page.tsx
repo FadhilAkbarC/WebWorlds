@@ -49,11 +49,12 @@ export default function EditorPage() {
   // --- Effects ---
   useEffect(() => {
     // On first load, replace scripts with single WBW template from public folder
-    (async () => {
+    const initializeTemplate = async () => {
       try {
         const template = await fetch('/wbw-template.wbw').then((r) => r.text());
+        const baseProject = useEditorStore.getState().project;
         const projectData = {
-          ...project,
+          ...baseProject,
           title: 'WBW Template',
           description: 'Start with the official WBW template',
           assets: [],
@@ -73,8 +74,10 @@ export default function EditorPage() {
         // Fallback to creating a new project if template fetch fails
         createNewProject();
       }
-    })();
-  }, []);
+    };
+
+    void initializeTemplate();
+  }, [createNewProject, loadProject, setActiveTab]);
 
   // --- Handlers ---
   const handleAddScript = () => {

@@ -143,22 +143,7 @@ class TokenManager {
 - Faster auth operations
 - Prevents orphaned tokens
 
-#### 3. **Improved Socket Hook** (`src/hooks/useSocket.ts`)
-```typescript
-- Global socket instance (no duplicates)
-- Automatic reconnection with token
-- Comprehensive event handlers
-- Memory leak prevention
-- Connection pooling
-```
-
-**Benefits:**
-- Single WebSocket connection
-- Prevents resource exhaustion
-- Better multiplayer stability
-- Type-safe event handling
-
-#### 4. **Optimized Game Store** (`src/stores/gameStore.ts`)
+#### 3. **Optimized Game Store** (`src/stores/gameStore.ts`)
 ```typescript
 - Uses optimized apiClient
 - Integrated logger
@@ -172,7 +157,7 @@ class TokenManager {
 - Faster state updates
 - Better memory management
 
-#### 5. **Frontend Logger** (`src/utils/logger.ts`)
+#### 4. **Frontend Logger** (`src/utils/logger.ts`)
 ```typescript
 - Development-only debug logging
 - Warnings/errors always visible
@@ -250,12 +235,7 @@ sessionManager.getStats()
 1. **src/lib/api.ts** - Token manager + optimized interceptors
 2. **src/stores/authStore.ts** - Integrated token manager
 3. **src/stores/gameStore.ts** - Use apiClient + logger
-4. **src/hooks/useSocket.ts** - Global socket instance
-5. **src/utils/logger.ts** - NEW: Frontend logger
-
-### Shared Files
-
-1. **shared/validation.ts** - NEW: Single source of truth
+4. **src/utils/logger.ts** - NEW: Frontend logger
 
 ---
 

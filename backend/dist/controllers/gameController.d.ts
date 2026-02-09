@@ -8,6 +8,7 @@ export declare const gameController: {
     delete: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
     like: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
     unlike: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
+    likeStatus: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
     getByCreator: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
 };
 export default gameController;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
@@ -34,17 +34,8 @@ export default function PublicProfilePage() {
 
   const isOwnProfile = currentUser?._id === userId;
 
-  useEffect(() => {
-    fetchProfile();
-  }, [userId]);
-
-  useEffect(() => {
-    if (profile?._id) {
-      fetchUserGames();
-    }
-  }, [profile?._id]);
-
-  const fetchUserGames = async () => {
+  const fetchUserGames = useCallback(async () => {
+    if (!profile?._id) return;
     try {
       setIsLoadingGames(true);
       const response = await api.get(`/games/creator/${profile?._id}`);
@@ -59,9 +50,9 @@ export default function PublicProfilePage() {
     } finally {
       setIsLoadingGames(false);
     }
-  };
+  }, [profile?._id]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       // Fallback: use current user data if viewing own profile
@@ -89,7 +80,15 @@ export default function PublicProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, isOwnProfile, userId]);
+
+  useEffect(() => {
+    void fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    void fetchUserGames();
+  }, [fetchUserGames]);
 
   if (isLoading) {
     return (

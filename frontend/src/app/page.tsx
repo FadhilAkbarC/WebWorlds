@@ -57,7 +57,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchGames(1);
-  }, []);
+  }, [fetchGames]);
 
   return (
     <>

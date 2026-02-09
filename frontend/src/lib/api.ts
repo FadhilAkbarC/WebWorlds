@@ -1,7 +1,46 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Backend URL configuration
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+// ============ Backend URL Configuration ============
+// CRITICAL: Must be set in Vercel environment as NEXT_PUBLIC_API_URL
+// Examples:
+// - Production: https://web-production-3dc36.up.railway.app/api
+// - Development: http://localhost:5000/api
+const BACKEND_URL = (() => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  // Validate that URL is set and not localhost in production
+  if (typeof window !== 'undefined') {
+    const isProduction = !window.location.hostname.includes('localhost');
+    
+    if (!envUrl) {
+      console.error(
+        '❌ CRITICAL: NEXT_PUBLIC_API_URL is not set. API calls will fail. ' +
+        'Set in Vercel Environment: NEXT_PUBLIC_API_URL=https://your-backend-api.com/api'
+      );
+      
+      // Fallback: try to infer from window location (last resort)
+      if (isProduction) {
+        // In production, don't guess - fail explicitly
+        return '';
+      }
+    }
+
+    // Warn if using localhost in production
+    if (isProduction && envUrl?.includes('localhost')) {
+      console.warn(
+        '⚠️  WARNING: Frontend is using localhost API in production. ' +
+        'Update NEXT_PUBLIC_API_URL to your production backend.'
+      );
+    }
+  }
+
+  return envUrl || 'http://localhost:5000/api';
+})();
+
+// Validate URL format
+if (BACKEND_URL && !BACKEND_URL.startsWith('http')) {
+  console.error('❌ BACKEND_URL must start with http:// or https://', BACKEND_URL);
+}
 
 /**
  * Token Manager - keeps token in memory to avoid localStorage parsing on every request

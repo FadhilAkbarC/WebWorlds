@@ -9,9 +9,8 @@ npm install
 # Create environment file
 cp .env.local.example .env.local
 
-# Update .env.local with your API URLs
+# Update .env.local with your API URL
 # NEXT_PUBLIC_API_URL=http://localhost:3001/api
-# NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 
 # Development
 npm run dev
@@ -32,7 +31,6 @@ npm start
 - ✅ User profiles
 - ✅ Game editor with live preview
 - ✅ Ultra-lightweight custom 2D game engine
-- ✅ Real-time multiplayer socket support
 - ✅ State management (Zustand)
 - ✅ API integration
 - ✅ Responsive design (mobile-first)
@@ -60,8 +58,6 @@ src/
 │       └── Tabs.tsx
 ├── engine/
 │   └── GameEngine.ts (lightweight 2D engine)
-├── hooks/
-│   └── useSocket.ts (multiplayer support)
 ├── lib/
 │   └── api.ts (axios config & helpers)
 ├── stores/
@@ -79,7 +75,6 @@ src/
 - **Styling:** Tailwind CSS v4
 - **State:** Zustand
 - **HTTP Client:** Axios
-- **Real-time:** Socket.io-client
 - **Icons:** Lucide React
 - **Game Engine:** Custom lightweight 2D engine (~30KB gzipped)
 
@@ -109,7 +104,6 @@ git push origin main
 
 Required for production:
 - `NEXT_PUBLIC_API_URL` - Railway backend URL
-- `NEXT_PUBLIC_SOCKET_URL` - Socket.io server URL
 
 ## License
 

@@ -4,13 +4,15 @@ exports.gameController = void 0;
 const models_1 = require("../models");
 const errorHandler_1 = require("../middleware/errorHandler");
 const validation_1 = require("../middleware/validation");
+const services_1 = require("../services");
+const logger_1 = require("../utils/logger");
+const response_1 = require("../utils/response");
 exports.gameController = {
     list: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         const page = Math.max(1, parseInt(req.query.page) || 1);
         const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 12));
         const search = req.query.search?.trim() || '';
         const category = req.query.category?.trim() || '';
-        const skip = (page - 1) * limit;
         const query = { published: true };
         if (search) {
             query.$or = [
@@ -22,37 +24,26 @@ exports.gameController = {
         if (category && validation_1.validators.category(category)) {
             query.category = category;
         }
-        const [games, total] = await Promise.all([
-            models_1.Game.find(query)
-                .populate('creator', 'username avatar')
-                .skip(skip)
-                .limit(limit)
-                .sort({ createdAt: -1 })
-                .lean(),
-            models_1.Game.countDocuments(query),
-        ]);
-        res.json({
-            success: true,
-            data: games,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-            },
-        });
+        const result = await services_1.db.getGames(query, page, limit);
+        res.json((0, response_1.successResponse)(result.games, result.pagination));
     }),
     get: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         const { id } = req.params;
-        const game = await models_1.Game.findById(id).populate('creator', 'username avatar');
+        const game = await services_1.db.getGameById(id, { populate: true });
         if (!game) {
             throw new errorHandler_1.AppError(404, 'Game not found');
         }
-        await models_1.Game.findByIdAndUpdate(id, { $inc: { 'stats.plays': 1 } });
-        res.json({
-            success: true,
-            data: game,
-        });
+        models_1.Game.findByIdAndUpdate(id, { $inc: { 'stats.plays': 1 } }).catch((e) => logger_1.logger.warn('Failed to update play count', { gameId: id }));
+        if (req.userId) {
+            models_1.Activity.create({
+                user: req.userId,
+                type: 'play',
+                targetId: id,
+                targetType: 'Game',
+                meta: { title: game.title },
+            }).catch((e) => logger_1.logger.warn('Failed to create play activity'));
+        }
+        res.json((0, response_1.successResponse)(game));
     }),
     create: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -76,14 +67,20 @@ exports.gameController = {
             published: false,
         });
         await game.save();
-        await models_1.User.findByIdAndUpdate(req.userId, {
+        models_1.Activity.create({
+            user: req.userId,
+            type: 'create_game',
+            targetId: game._id,
+            targetType: 'Game',
+            meta: { title: game.title },
+        }).catch(() => logger_1.logger.warn('Failed to create activity'));
+        models_1.User.findByIdAndUpdate(req.userId, {
             $push: { createdGames: game._id },
             $inc: { 'stats.gamesCreated': 1 },
+        }).then(() => {
+            services_1.db.invalidateUserCache(req.userId);
         });
-        res.status(201).json({
-            success: true,
-            data: game,
-        });
+        res.status(201).json((0, response_1.successResponse)(game));
     }),
     update: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -117,10 +114,8 @@ exports.gameController = {
         if (assets)
             game.assets = assets;
         await game.save();
-        res.json({
-            success: true,
-            data: game,
-        });
+        services_1.db.invalidateGameCache(id);
+        res.json((0, response_1.successResponse)(game));
     }),
     publish: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -132,14 +127,13 @@ exports.gameController = {
             throw new errorHandler_1.AppError(404, 'Game not found');
         }
         if (game.creator.toString() !== req.userId) {
-            throw new errorHandler_1.AppError(403, 'Not authorized');
+            throw new errorHandler_1.AppError(403, 'Not authorized to publish this game');
         }
         game.published = true;
         await game.save();
-        res.json({
-            success: true,
-            data: game,
-        });
+        services_1.db.invalidateGameCache(id);
+        logger_1.logger.info('Game published', { gameId: id, userId: req.userId });
+        res.json((0, response_1.successResponse)(game));
     }),
     delete: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -151,35 +145,43 @@ exports.gameController = {
             throw new errorHandler_1.AppError(404, 'Game not found');
         }
         if (game.creator.toString() !== req.userId) {
-            throw new errorHandler_1.AppError(403, 'Not authorized');
+            throw new errorHandler_1.AppError(403, 'Not authorized to delete this game');
         }
-        await models_1.User.findByIdAndUpdate(game.creator, {
+        models_1.User.findByIdAndUpdate(game.creator, {
             $pull: { createdGames: game._id },
             $inc: { 'stats.gamesCreated': -1 },
+        }).then(() => {
+            services_1.db.invalidateUserCache(game.creator.toString());
         });
         await models_1.Game.findByIdAndDelete(id);
-        res.json({
-            success: true,
-            message: 'Game deleted',
-        });
+        services_1.db.invalidateGameCache(id);
+        logger_1.logger.info('Game deleted', { gameId: id, userId: req.userId });
+        res.json((0, response_1.successResponse)({ message: 'Game deleted successfully' }));
     }),
     like: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
             throw new errorHandler_1.AppError(401, 'Not authenticated');
         }
         const { id } = req.params;
-        const user = await models_1.User.findById(req.userId);
-        if (user?.likedGames.includes(id)) {
+        const user = await models_1.User.findById(req.userId).select('likedGames').lean();
+        if (user && user.likedGames.includes(id)) {
             throw new errorHandler_1.AppError(409, 'Already liked this game');
         }
         const game = await models_1.Game.findByIdAndUpdate(id, { $inc: { 'stats.likes': 1 } }, { new: true });
-        await models_1.User.findByIdAndUpdate(req.userId, {
+        models_1.User.findByIdAndUpdate(req.userId, {
             $push: { likedGames: id },
+        }).then(() => {
+            services_1.db.invalidateUserCache(req.userId);
         });
-        res.json({
-            success: true,
-            data: game,
-        });
+        models_1.Activity.create({
+            user: req.userId,
+            type: 'like',
+            targetId: id,
+            targetType: 'Game',
+            meta: { title: game?.title },
+        }).catch(() => logger_1.logger.warn('Failed to create like activity'));
+        services_1.db.invalidateGameCache(id);
+        res.json((0, response_1.successResponse)(game));
     }),
     unlike: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         if (!req.userId) {
@@ -187,24 +189,36 @@ exports.gameController = {
         }
         const { id } = req.params;
         const game = await models_1.Game.findByIdAndUpdate(id, { $inc: { 'stats.likes': -1 } }, { new: true });
-        await models_1.User.findByIdAndUpdate(req.userId, {
+        models_1.User.findByIdAndUpdate(req.userId, {
             $pull: { likedGames: id },
+        }).then(() => {
+            services_1.db.invalidateUserCache(req.userId);
         });
-        res.json({
-            success: true,
-            data: game,
-        });
+        models_1.Activity.deleteMany({
+            user: req.userId,
+            targetId: id,
+            type: 'like',
+        }).catch(() => logger_1.logger.warn('Failed to remove like activity'));
+        services_1.db.invalidateGameCache(id);
+        res.json((0, response_1.successResponse)(game));
+    }),
+    likeStatus: (0, errorHandler_1.asyncHandler)(async (req, res) => {
+        const { id } = req.params;
+        let isLiked = false;
+        if (req.userId) {
+            const user = await models_1.User.findById(req.userId).select('likedGames').lean();
+            if (user && user.likedGames) {
+                isLiked = user.likedGames.some((g) => g.toString() === id);
+            }
+        }
+        res.json((0, response_1.successResponse)({ isLiked }));
     }),
     getByCreator: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         const { creatorId } = req.params;
-        const games = await models_1.Game.find({ creator: creatorId, published: true })
-            .populate('creator', 'username avatar')
-            .sort({ createdAt: -1 })
-            .lean();
-        res.json({
-            success: true,
-            data: games,
-        });
+        const page = Math.max(1, parseInt(req.query.page || '1'));
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '12')));
+        const result = await services_1.db.getUserGames(creatorId, page, limit);
+        res.json((0, response_1.successResponse)(result.games, result.pagination));
     }),
 };
 exports.default = exports.gameController;

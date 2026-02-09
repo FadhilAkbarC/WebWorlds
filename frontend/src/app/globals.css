@@ -34,7 +34,6 @@
 .wbw-constant { color: #ff5555; }
 .wbw-identifier { color: #aaff55; }
 .wbw-color { color: #00ff99; }
-.wbw-api { color: #ffd700; font-weight: bold; }
 .wbw-label { color: #ffb3ff; }
 .wbw-editor::-webkit-input-placeholder { color: #3a4a2f; }
 .wbw-editor:-moz-placeholder { color: #3a4a2f; }

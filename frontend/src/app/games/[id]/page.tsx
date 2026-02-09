@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Play, Heart, Share2, User, MessageSquare, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -22,13 +23,7 @@ export default function GameDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
-  useEffect(() => {
-    if (gameId) {
-      fetchGameDetail();
-    }
-  }, [gameId]);
-
-  const fetchGameDetail = async () => {
+  const fetchGameDetail = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await api.get(`/games/${gameId}`);
@@ -52,7 +47,13 @@ export default function GameDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [gameId, user]);
+
+  useEffect(() => {
+    if (gameId) {
+      void fetchGameDetail();
+    }
+  }, [gameId, fetchGameDetail]);
 
   const handleToggleLike = async () => {
     if (!user) {
@@ -111,12 +112,14 @@ export default function GameDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Thumbnail */}
-            <div className="w-full aspect-video bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+            <div className="w-full aspect-video bg-slate-800 rounded-lg overflow-hidden border border-slate-700 relative">
               {game.thumbnail ? (
-                <img
+                <Image
                   src={game.thumbnail}
                   alt={game.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 66vw"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">

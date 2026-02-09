@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Game } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
@@ -15,11 +15,8 @@ export default function ManageGamesTab() {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user?._id) fetchGames();
-  }, [user?._id]);
-
-  const fetchGames = async () => {
+  const fetchGames = useCallback(async () => {
+    if (!user?._id) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -30,7 +27,11 @@ export default function ManageGamesTab() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?._id]);
+
+  useEffect(() => {
+    void fetchGames();
+  }, [fetchGames]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this game permanently? This cannot be undone!')) return;

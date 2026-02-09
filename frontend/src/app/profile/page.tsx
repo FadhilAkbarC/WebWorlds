@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -21,18 +21,7 @@ export default function ProfilePage() {
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [activitiesHasMore, setActivitiesHasMore] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (user?._id) {
-      fetchUserGames(1, false);
-      fetchActivities(1, false);
-    }
-  }, [user?._id]);
-
-  const fetchUserGames = async (page = 1, append = false) => {
+  const fetchUserGames = useCallback(async (page = 1, append = false) => {
     if (!user?._id) return;
 
     try {
@@ -53,9 +42,9 @@ export default function ProfilePage() {
     } finally {
       setIsLoadingGames(false);
     }
-  };
+  }, [user?._id]);
 
-  const fetchActivities = async (page = 1, append = false) => {
+  const fetchActivities = useCallback(async (page = 1, append = false) => {
     if (!user?._id) return;
     try {
       setIsLoadingActivities(true);
@@ -72,7 +61,18 @@ export default function ProfilePage() {
     } finally {
       setIsLoadingActivities(false);
     }
-  };
+  }, [user?._id]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchUserGames(1, false);
+      fetchActivities(1, false);
+    }
+  }, [fetchActivities, fetchUserGames, user?._id]);
 
   if (!user) {
     return (
@@ -194,7 +194,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="text-slate-400 text-center py-8">
-              You haven't created any games yet.{' '}
+              You haven&apos;t created any games yet.{' '}
               <Link href="/editor" className="text-blue-400 hover:text-blue-300">
                 Create one now
               </Link>

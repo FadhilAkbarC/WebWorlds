@@ -6,9 +6,22 @@ import { logger } from '../utils/logger';
 
 export function setupSocket(httpServer: HTTPServer): SocketIOServer {
   // Parse allowed origins from environment (comma-separated)
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()).filter((o) => o.length > 0) || [])
-    : [config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
+  // Must match Express CORS configuration
+  const allowedOrigins = config.CORS_ORIGIN
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+  // Validate CORS_ORIGIN is not empty
+  if (allowedOrigins.length === 0) {
+    logger.error(
+      '❌ CRITICAL: CORS_ORIGIN is empty for Socket.io! ' +
+        'Set environment variable: CORS_ORIGIN=https://your-frontend-domain.com'
+    );
+    if (config.IS_PRODUCTION) {
+      process.exit(1);
+    }
+  }
 
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -19,10 +32,13 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
         }
 
         // Check if origin is in allowed list
-        if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          logger.warn(`Socket.io CORS rejected: ${origin}`, { allowedOrigins });
+          logger.warn(`⚠️  Socket.io CORS rejected: ${origin}`, { 
+            allowedOrigins,
+            hint: 'Update CORS_ORIGIN environment variable if domain is legitimate',
+          });
           callback(new Error('CORS not allowed'));
         }
       },
@@ -154,7 +170,7 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
      * Chat message
      */
     socket.on('chat', (data: { roomId: string; userId: string; message: string; username: string }) => {
-      const { roomId, message, username } = data;
+      const { roomId, userId, message, username } = data;
 
       // Validate message length
       if (!message || message.length > 500) {

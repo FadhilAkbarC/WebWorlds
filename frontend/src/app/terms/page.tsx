@@ -24,7 +24,7 @@ export default function TermsPage() {
               <li>Modify or copy the materials</li>
               <li>Use the materials for any commercial purpose or for any public display</li>
               <li>Attempt to decompile or reverse engineer any software contained on the site</li>
-              <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
+              <li>Transfer the materials to another person or &quot;mirror&quot; the materials on any other server</li>
               <li>Remove any copyright or other proprietary notations from the materials</li>
             </ul>
           </section>
@@ -32,7 +32,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">3. Disclaimer</h2>
             <p>
-              The materials on WebWorlds are provided on an 'as is' basis. We make no warranties, expressed or implied, 
+              The materials on WebWorlds are provided on an &apos;as is&apos; basis. We make no warranties, expressed or implied, 
               and hereby disclaim and negate all other warranties including, without limitation, implied warranties or 
               conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual 
               property or other violation of rights.

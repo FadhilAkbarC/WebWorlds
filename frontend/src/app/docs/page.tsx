@@ -17,7 +17,7 @@ export default function DocsPage() {
           <section className="space-y-4">
             <h3 className="text-xl font-bold text-white">1. Creating an Account</h3>
             <p className="text-slate-300">
-              To start using WebWorlds, you'll need to create an account. Click on "Sign Up" and fill in your details:
+              To start using WebWorlds, you&apos;ll need to create an account. Click on &quot;Sign Up&quot; and fill in your details:
             </p>
             <ul className="list-disc list-inside text-slate-400 space-y-2">
               <li>Username: 3-20 characters, alphanumeric only</li>
@@ -29,7 +29,7 @@ export default function DocsPage() {
           <section className="space-y-4">
             <h3 className="text-xl font-bold text-white">2. Creating Your First Game</h3>
             <p className="text-slate-300">
-              Navigate to the "Create" section to open the game editor. You can create interactive games using our 
+              Navigate to the &quot;Create&quot; section to open the game editor. You can create interactive games using our 
               intuitive visual editor without writing any code.
             </p>
           </section>
@@ -37,7 +37,7 @@ export default function DocsPage() {
           <section className="space-y-4">
             <h3 className="text-xl font-bold text-white">3. Browsing Games</h3>
             <p className="text-slate-300">
-              Visit the "Games" section to browse and play games created by our community. Filter by category, 
+              Visit the &quot;Games&quot; section to browse and play games created by our community. Filter by category, 
               view trending games, and discover new favorites.
             </p>
           </section>

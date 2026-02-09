@@ -1,12 +1,12 @@
 declare class Logger {
-    private levels;
-    private currentLevel;
+    private readonly logLevelMap;
+    private readonly currentLevel;
+    private readonly isDev;
     private shouldLog;
-    private formatMessage;
-    debug(message: string, data?: any): void;
-    info(message: string, data?: any): void;
-    warn(message: string, data?: any): void;
-    error(message: string, error?: any): void;
+    debug(message: string, context?: Record<string, any>): void;
+    info(message: string, context?: Record<string, any>): void;
+    warn(message: string, context?: Record<string, any>): void;
+    error(message: string, error?: Error | unknown, context?: Record<string, any>): void;
 }
 export declare const logger: Logger;
 export {};

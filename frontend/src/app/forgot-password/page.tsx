@@ -93,11 +93,11 @@ export default function ForgotPasswordPage() {
           ) : (
             <div className="space-y-4">
               <p className="text-slate-300">
-                We've sent a password reset link to <strong>{email}</strong>. 
+                We&apos;ve sent a password reset link to <strong>{email}</strong>. 
                 Check your email and follow the instructions to reset your password.
               </p>
               <p className="text-slate-400 text-sm">
-                Didn't receive the email? Check your spam folder or{' '}
+                Didn&apos;t receive the email? Check your spam folder or{' '}
                 <button
                   onClick={() => setSuccess(false)}
                   className="text-blue-400 hover:text-blue-300"

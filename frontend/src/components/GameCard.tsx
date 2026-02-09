@@ -3,6 +3,7 @@
 import React from 'react';
 import { Game } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, Play, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
@@ -44,10 +45,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
         {/* Thumbnail */}
         <div className="relative w-full aspect-video bg-slate-700 overflow-hidden">
           {game.thumbnail ? (
-            <img
+            <Image
               src={game.thumbnail}
               alt={game.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+              fill
+              sizes="(max-width: 1024px) 100vw, 33vw"
+              className="object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">

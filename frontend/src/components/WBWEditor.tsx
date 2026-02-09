@@ -1,6 +1,6 @@
 import React from 'react';
 
-// This is a placeholder for a custom WBW editor. In production, use Monaco/CodeMirror with wbw-syntax.js
+// This is a placeholder for a custom WBW editor. In production, use Monaco/CodeMirror with a WBW syntax highlighter.
 type WBWEditorProps = {
   value: string;
   onChange: (val: string) => void;

@@ -55,7 +55,7 @@ export default function HelpPage() {
               <h2 className="text-2xl font-bold text-white">Email Support</h2>
             </div>
             <p className="text-slate-300 mb-4">
-              Have a question or issue? Send us an email and we'll get back to you within 24 hours.
+              Have a question or issue? Send us an email and we&apos;ll get back to you within 24 hours.
             </p>
             <a
               href="mailto:support@webworlds.dev"

@@ -3,7 +3,7 @@
  * Reduces redundant DB queries and improves response time
  */
 
-import { User, Game, Comment, Activity } from '../models';
+import { User, Game } from '../models';
 import { cache } from '../utils/cache';
 import { logger } from '../utils/logger';
 
@@ -65,9 +65,9 @@ class DatabaseService {
     }
 
     try {
-      let query = Game.findById(gameId);
+      const query = Game.findById(gameId);
       if (options?.populate) {
-        query = query.populate('creator', 'username avatar');
+        query.populate('creator', 'username avatar');
       }
       const game = await query.lean();
       

@@ -23,6 +23,19 @@ export function createApp(): Express {
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);
 
+  // Validate CORS_ORIGIN is not empty
+  if (allowedOrigins.length === 0) {
+    logger.error(
+      '❌ CRITICAL: CORS_ORIGIN is empty! Set environment variable: CORS_ORIGIN=https://your-frontend-domain.com'
+    );
+    if (config.IS_PRODUCTION) {
+      console.error(
+        'Railway Setup: railway variables set CORS_ORIGIN=https://webworlds-xxx.vercel.app'
+      );
+      process.exit(1);
+    }
+  }
+
   app.use(
     cors({
       origin: (origin, callback) => {
@@ -35,20 +48,26 @@ export function createApp(): Express {
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          // Log rejected CORS attempts in production
-          if (config.IS_PRODUCTION) {
-            logger.warn(`CORS Rejected: ${origin}`, { allowedOrigins });
-          }
+          // Log rejected CORS attempts
+          logger.warn(`⚠️  CORS Rejected: ${origin}`, {
+            allowedOrigins,
+            hint: 'Update CORS_ORIGIN environment variable if domain is legitimate',
+          });
+          // Return error - CORS will add error response headers
           callback(new Error(`CORS not allowed for origin: ${origin}`));
         }
       },
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization'],
+      exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
       maxAge: 86400, // Cache preflight for 24 hours
       optionsSuccessStatus: 200, // For legacy browsers
     })
   );
+
+  // Explicit OPTIONS handler for better error handling
+  app.options('*', cors()); // Preflight for all routes
 
   // ============ Body Parsing ============
   app.use(express.json({ limit: '10mb' }));

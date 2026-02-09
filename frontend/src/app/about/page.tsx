@@ -20,7 +20,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-white mb-4">Our Vision</h2>
             <p>
               We believe that creativity should have no boundaries. By democratizing game development through an 
-              accessible web platform, we're building a vibrant community where anyone can create, share, and play 
+              accessible web platform, we&apos;re building a vibrant community where anyone can create, share, and play 
               innovative games without requiring extensive programming knowledge.
             </p>
           </section>
@@ -39,7 +39,7 @@ export default function AboutPage() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">Contact Us</h2>
             <p>
-              Have questions or feedback? We'd love to hear from you at{' '}
+              Have questions or feedback? We&apos;d love to hear from you at{' '}
               <a href="mailto:hello@webworlds.dev" className="text-blue-400 hover:text-blue-300">
                 hello@webworlds.dev
               </a>
