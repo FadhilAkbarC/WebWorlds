@@ -5,13 +5,27 @@ import { sessionManager } from '../services';
 import { logger } from '../utils/logger';
 
 export function setupSocket(httpServer: HTTPServer): SocketIOServer {
-  const corsOrigins = process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) || [])
+  // Parse allowed origins from environment (comma-separated)
+  const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? (process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()).filter((o) => o.length > 0) || [])
     : [config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
 
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: corsOrigins,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps)
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        // Check if origin is in allowed list
+        if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          logger.warn(`Socket.io CORS rejected: ${origin}`, { allowedOrigins });
+          callback(new Error('CORS not allowed'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST'],
     },

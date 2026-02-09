@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { config } from './config/env';
+import { logger } from './utils/logger';
 import authRoutes from './routes/auth';
 import gameRoutes from './routes/games';
 import commentRoutes from './routes/comments';
@@ -15,13 +16,37 @@ export function createApp(): Express {
   // ============ Security Middleware ============
   app.use(helmet());
 
-  // CORS configuration
+  // ============ CORS Configuration ============
+  // Parse allowed origins from environment (comma-separated)
+  const allowedOrigins = config.CORS_ORIGIN
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
   app.use(
     cors({
-      origin: config.CORS_ORIGIN,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl requests)
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          // Log rejected CORS attempts in production
+          if (config.IS_PRODUCTION) {
+            logger.warn(`CORS Rejected: ${origin}`, { allowedOrigins });
+          }
+          callback(new Error(`CORS not allowed for origin: ${origin}`));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
+      maxAge: 86400, // Cache preflight for 24 hours
+      optionsSuccessStatus: 200, // For legacy browsers
     })
   );
 
