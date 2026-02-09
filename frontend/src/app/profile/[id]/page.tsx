@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Award, Calendar, Gamepad2, Star, User } from 'lucide-react';
+import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Game } from '@/types';
@@ -87,7 +87,7 @@ export default function PublicProfilePage() {
       })
     : 'Unknown';
 
-  const badges: Badge[] = useMemo(() => {
+  const achievementBadges: Badge[] = useMemo(() => {
     const gamesCreated = profile?.stats?.gamesCreated ?? 0;
     const gamesPlayed = profile?.stats?.gamesPlayed ?? 0;
     const totalPlay =
@@ -130,6 +130,19 @@ export default function PublicProfilePage() {
     ];
   }, [joinedDate, profile?.createdAt, profile?.stats, userGames.length]);
 
+  const isVerified = Boolean(
+    (profile as any)?.verified ||
+    (profile as any)?.isVerified ||
+    (profile as any)?.badges?.verified
+  );
+
+  const isStaff = Boolean(
+    (profile as any)?.staff ||
+    (profile as any)?.isStaff ||
+    (profile as any)?.role === 'staff' ||
+    (profile as any)?.badges?.staff
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -152,35 +165,49 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 text-white">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 flex flex-col md:flex-row gap-6">
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-6 shadow-lg">
           <div className="flex items-center gap-4">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center ring-2 ring-slate-800">
               <span className="text-4xl font-bold">
                 {profile.username[0].toUpperCase()}
               </span>
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{profile.username}</h1>
-              <p className="text-slate-400 text-sm">Joined {joinedDate}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-bold">{profile.username}</h1>
+                {isVerified && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-200">
+                    <BadgeCheck size={14} />
+                    Verified
+                  </span>
+                )}
+                {isStaff && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400/40 bg-yellow-500/10 px-2 py-0.5 text-xs font-semibold text-yellow-200">
+                    <ShieldCheck size={14} />
+                    Staff
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-400 text-sm mt-1">Joined {joinedDate}</p>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-wrap gap-6 items-center md:justify-end">
-            <div className="text-center">
+          <div className="flex-1 flex flex-wrap gap-6 items-center lg:justify-end">
+            <div className="text-center min-w-[110px]">
               <p className="text-2xl font-bold">{profile.stats?.gamesCreated ?? 0}</p>
               <p className="text-xs text-slate-400">Creations</p>
             </div>
-            <div className="text-center">
+            <div className="text-center min-w-[110px]">
               <p className="text-2xl font-bold">{profile.stats?.gamesPlayed ?? 0}</p>
               <p className="text-xs text-slate-400">Plays</p>
             </div>
-            <div className="text-center">
+            <div className="text-center min-w-[110px]">
               <p className="text-2xl font-bold">{profile.stats?.followers ?? 0}</p>
               <p className="text-xs text-slate-400">Followers</p>
             </div>
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold">
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-semibold">
               Follow
             </button>
           </div>
@@ -206,8 +233,8 @@ export default function PublicProfilePage() {
         </div>
 
         {activeTab === 'about' ? (
-          <div className="grid md:grid-cols-3 gap-6 mt-6">
-            <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-lg p-6">
+          <div className="grid lg:grid-cols-3 gap-6 mt-6">
+            <div className="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
               <h2 className="text-lg font-bold mb-3">About</h2>
               <p className="text-slate-300 text-sm leading-relaxed">
                 {profile.bio || 'This user has not added an about section yet.'}
@@ -224,17 +251,18 @@ export default function PublicProfilePage() {
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-3">Badges</h2>
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6">
+              <h2 className="text-lg font-bold mb-1">Badges</h2>
+              <p className="text-xs text-slate-500 mb-4">Decor &amp; achievements</p>
               <div className="space-y-3">
-                {badges.map((badge) => (
+                {achievementBadges.map((badge) => (
                   <div
                     key={badge.name}
-                    className={`flex items-center gap-3 p-3 rounded-md border border-slate-800 ${
-                      badge.earned ? 'bg-slate-800' : 'bg-slate-900 opacity-50'
+                    className={`flex items-center gap-3 p-3 rounded-xl border border-slate-800 ${
+                      badge.earned ? 'bg-slate-800/70' : 'bg-slate-900 opacity-50'
                     }`}
                   >
-                    <div className="text-blue-400">{badge.icon}</div>
+                    <div className="text-blue-300">{badge.icon}</div>
                     <div>
                       <p className="text-sm font-semibold">{badge.name}</p>
                       <p className="text-xs text-slate-400">{badge.description}</p>
