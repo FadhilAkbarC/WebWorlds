@@ -120,6 +120,7 @@ export default function GameDetailPage() {
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 66vw"
+                  priority
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">

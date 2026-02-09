@@ -7,12 +7,27 @@ const errorHandler_1 = require("../middleware/errorHandler");
 const validation_1 = require("../middleware/validation");
 exports.authController = {
     register: (0, errorHandler_1.asyncHandler)(async (req, res) => {
-        const { username, email, password } = req.body;
+        const body = typeof req.body === 'string'
+            ? (() => {
+                try {
+                    return JSON.parse(req.body);
+                }
+                catch {
+                    return {};
+                }
+            })()
+            : req.body || {};
+        const usernameInput = typeof body.username === 'string' ? body.username.trim() : '';
+        const emailInput = typeof body.email === 'string' ? body.email.trim() : '';
+        const passwordInput = typeof body.password === 'string' ? body.password : '';
+        const username = usernameInput.toLowerCase();
+        const email = emailInput.toLowerCase();
+        const password = passwordInput;
         if (!username || !email || !password) {
             throw new errorHandler_1.AppError(400, 'Missing required fields: username, email, password');
         }
         if (!validation_1.validators.username(username)) {
-            throw new errorHandler_1.AppError(400, 'Username must be 3-30 chars, lowercase letters, numbers, _, or -');
+            throw new errorHandler_1.AppError(400, 'Username must be 3-30 chars, letters, numbers, _, or -');
         }
         if (!validation_1.validators.email(email)) {
             throw new errorHandler_1.AppError(400, 'Invalid email format');

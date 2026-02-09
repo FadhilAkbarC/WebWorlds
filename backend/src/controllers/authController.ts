@@ -10,7 +10,24 @@ export const authController = {
    * Register a new user
    */
   register: asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { username, email, password } = req.body;
+    const body =
+      typeof req.body === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(req.body);
+            } catch {
+              return {};
+            }
+          })()
+        : req.body || {};
+
+    const usernameInput = typeof body.username === 'string' ? body.username.trim() : '';
+    const emailInput = typeof body.email === 'string' ? body.email.trim() : '';
+    const passwordInput = typeof body.password === 'string' ? body.password : '';
+
+    const username = usernameInput.toLowerCase();
+    const email = emailInput.toLowerCase();
+    const password = passwordInput;
 
     // Validation
     if (!username || !email || !password) {
@@ -20,7 +37,7 @@ export const authController = {
     if (!validators.username(username)) {
       throw new AppError(
         400,
-        'Username must be 3-30 chars, lowercase letters, numbers, _, or -'
+        'Username must be 3-30 chars, letters, numbers, _, or -'
       );
     }
 
