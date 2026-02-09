@@ -11,7 +11,7 @@ const CATEGORIES = ['action', 'adventure', 'puzzle', 'sports', 'other'];
 const TABS = [
   { id: 'games', label: 'Games', icon: Search },
   { id: 'people', label: 'People', icon: Users },
-  { id: 'groups', label: 'Communities', icon: UsersRound },
+  { id: 'groups', label: 'Groups', icon: UsersRound },
 ];
 
 function SearchPageClient() {
@@ -40,7 +40,7 @@ function SearchPageClient() {
   const totalPages = Math.max(1, Math.ceil(totalCount / 24));
   const headerSubtitle = useMemo(() => {
     if (activeTab === 'people') return 'Search users and creators';
-    if (activeTab === 'groups') return 'Find communities and groups';
+    if (activeTab === 'groups') return 'Find groups and communities';
     return 'Browse and discover new games';
   }, [activeTab]);
 
@@ -149,7 +149,7 @@ function SearchPageClient() {
         {activeTab === 'groups' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-4">
             <UsersRound size={36} className="text-emerald-300 mx-auto" />
-            <h2 className="text-xl font-semibold text-white">Community Search</h2>
+            <h2 className="text-xl font-semibold text-white">Group Search</h2>
             <p className="text-slate-400 text-sm">
               Discover groups and communities. Built for quick loading even on slow
               connections.

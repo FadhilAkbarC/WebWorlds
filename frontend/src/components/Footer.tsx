@@ -27,6 +27,11 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/groups" className="text-slate-400 hover:text-white transition-colors">
+                  Groups
+                </Link>
+              </li>
+              <li>
                 <Link href="/editor" className="text-slate-400 hover:text-white transition-colors">
                   Create Game
                 </Link>
