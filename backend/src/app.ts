@@ -8,6 +8,8 @@ import authRoutes from './routes/auth';
 import gameRoutes from './routes/games';
 import commentRoutes from './routes/comments';
 import activityRoutes from './routes/activities';
+import groupRoutes from './routes/groups';
+import userRoutes from './routes/users';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 export function createApp(): Express {
@@ -94,6 +96,8 @@ export function createApp(): Express {
   // ============ API Routes ============
   app.use('/api/auth', authRoutes);
   app.use('/api/games', gameRoutes);
+  app.use('/api/groups', groupRoutes);
+  app.use('/api/users', userRoutes);
   app.use('/api', commentRoutes);
   app.use('/api', activityRoutes);
 
@@ -131,6 +135,17 @@ export function createApp(): Express {
           'POST /api/games/:id/like': 'Like game (requires auth)',
           'POST /api/games/:id/unlike': 'Unlike game (requires auth)',
           'GET /api/games/creator/:creatorId': 'Get creator\'s games',
+        },
+        groups: {
+          'GET /api/groups': 'List groups (paginated, searchable)',
+          'GET /api/groups/mine': 'List my groups (requires auth)',
+          'GET /api/groups/:id': 'Get group details',
+          'POST /api/groups': 'Create group (requires auth)',
+          'POST /api/groups/:id/join': 'Join group (requires auth)',
+          'POST /api/groups/:id/leave': 'Leave group (requires auth)',
+        },
+        users: {
+          'GET /api/users': 'Search users',
         },
       },
       websocket: {

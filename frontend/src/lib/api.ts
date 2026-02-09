@@ -205,10 +205,25 @@ export const apiClient = {
   getGamesByCreator: (creatorId: string, params?: Record<string, unknown>) =>
     api.get(`/games/creator/${creatorId}`, { params }),
 
+  // Groups
+  getGroups: (params?: Record<string, unknown>) =>
+    api.get('/groups', { params }),
+
+  getMyGroups: () => api.get('/groups/mine'),
+
+  createGroup: (data: Record<string, unknown>) => api.post('/groups', data),
+
+  joinGroup: (id: string) => api.post(`/groups/${id}/join`),
+
+  leaveGroup: (id: string) => api.post(`/groups/${id}/leave`),
+
   // Users
   getCurrentUser: () => api.get('/auth/me'),
 
   getUser: (id: string) => api.get(`/auth/profile/${id}`),
+
+  searchUsers: (params?: Record<string, unknown>) =>
+    api.get('/users', { params }),
 
   updateProfile: (data: Record<string, unknown>) =>
     api.put('/auth/profile', data),

@@ -6,6 +6,9 @@ import { GameCard } from '@/components/GameCard';
 import { GameFilter } from '@/components/GameFilter';
 import { useGameStore } from '@/stores/gameStore';
 import { Users, Search, UsersRound } from 'lucide-react';
+import { apiClient } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import type { Group, UserSearch } from '@/types';
 
 const CATEGORIES = ['action', 'adventure', 'puzzle', 'sports', 'other'];
 const TABS = [
@@ -17,9 +20,17 @@ const TABS = [
 function SearchPageClient() {
   const params = useSearchParams();
   const { games, isLoading, totalCount, page, fetchGames, setPage } = useGameStore();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('games');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [people, setPeople] = useState<UserSearch[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [peopleLoading, setPeopleLoading] = useState(false);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [peopleError, setPeopleError] = useState<string | null>(null);
+  const [groupsError, setGroupsError] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
 
   useEffect(() => {
     const tab = params.get('tab');
@@ -36,6 +47,50 @@ function SearchPageClient() {
     if (activeTab !== 'games') return;
     fetchGames(page, searchQuery, selectedCategory, 24);
   }, [fetchGames, page, searchQuery, selectedCategory, activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'people') return;
+    const handler = setTimeout(async () => {
+      const query = searchQuery.trim();
+      if (!query) {
+        setPeople([]);
+        return;
+      }
+      setPeopleLoading(true);
+      setPeopleError(null);
+      try {
+        const response = await apiClient.searchUsers({ search: query, page: 1, limit: 24 });
+        setPeople(response.data?.data || []);
+      } catch (e) {
+        setPeopleError('Failed to search people');
+      } finally {
+        setPeopleLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [activeTab, searchQuery]);
+
+  useEffect(() => {
+    if (activeTab !== 'groups') return;
+    const handler = setTimeout(async () => {
+      const query = searchQuery.trim();
+      if (!query) {
+        setGroups([]);
+        return;
+      }
+      setGroupsLoading(true);
+      setGroupsError(null);
+      try {
+        const response = await apiClient.getGroups({ search: query, page: 1, limit: 24 });
+        setGroups(response.data?.data || []);
+      } catch (e) {
+        setGroupsError('Failed to search groups');
+      } finally {
+        setGroupsLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [activeTab, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / 24));
   const headerSubtitle = useMemo(() => {
@@ -136,24 +191,103 @@ function SearchPageClient() {
         )}
 
         {activeTab === 'people' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-4">
-            <Users size={36} className="text-blue-300 mx-auto" />
-            <h2 className="text-xl font-semibold text-white">People Search</h2>
-            <p className="text-slate-400 text-sm">
-              Search users by name to connect and follow creators. This section will
-              reuse the same fast search pipeline as games.
-            </p>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search people"
+                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            {peopleLoading ? (
+              <div className="text-sm text-slate-400">Searching...</div>
+            ) : peopleError ? (
+              <div className="text-sm text-red-400">{peopleError}</div>
+            ) : people.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-sm">
+                Start typing to find people.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {people.map((person) => (
+                  <div
+                    key={person._id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm">
+                      {person.username?.slice(0, 1).toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{person.username}</p>
+                      <p className="text-xs text-slate-400">
+                        {person.stats?.gamesCreated ?? 0} creations •{' '}
+                        {person.stats?.followers ?? 0} followers
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'groups' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-4">
-            <UsersRound size={36} className="text-emerald-300 mx-auto" />
-            <h2 className="text-xl font-semibold text-white">Group Search</h2>
-            <p className="text-slate-400 text-sm">
-              Discover groups and communities. Built for quick loading even on slow
-              connections.
-            </p>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search groups"
+                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            {groupsLoading ? (
+              <div className="text-sm text-slate-400">Searching...</div>
+            ) : groupsError ? (
+              <div className="text-sm text-red-400">{groupsError}</div>
+            ) : groups.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-sm">
+                Start typing to find groups.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.map((group) => (
+                  <div
+                    key={group._id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-white">{group.name}</p>
+                      <button
+                        onClick={async () => {
+                          if (!user) {
+                            setGroupsError('Login required to join groups');
+                            return;
+                          }
+                          setJoiningId(group._id);
+                          try {
+                            await apiClient.joinGroup(group._id);
+                          } finally {
+                            setJoiningId(null);
+                          }
+                        }}
+                        disabled={joiningId === group._id || group.isMember}
+                        className="text-xs text-blue-300 disabled:opacity-50"
+                      >
+                        {group.isMember ? 'Joined' : joiningId === group._id ? 'Joining...' : 'Join'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 line-clamp-2">
+                      {group.description || 'Community group'}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      {group.membersCount || 0} members
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

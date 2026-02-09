@@ -14,6 +14,8 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const games_1 = __importDefault(require("./routes/games"));
 const comments_1 = __importDefault(require("./routes/comments"));
 const activities_1 = __importDefault(require("./routes/activities"));
+const groups_1 = __importDefault(require("./routes/groups"));
+const users_1 = __importDefault(require("./routes/users"));
 const errorHandler_1 = require("./middleware/errorHandler");
 function createApp() {
     const app = (0, express_1.default)();
@@ -71,6 +73,8 @@ function createApp() {
     }
     app.use('/api/auth', auth_1.default);
     app.use('/api/games', games_1.default);
+    app.use('/api/groups', groups_1.default);
+    app.use('/api/users', users_1.default);
     app.use('/api', comments_1.default);
     app.use('/api', activities_1.default);
     app.get('/health', (req, res) => {
@@ -104,6 +108,17 @@ function createApp() {
                     'POST /api/games/:id/like': 'Like game (requires auth)',
                     'POST /api/games/:id/unlike': 'Unlike game (requires auth)',
                     'GET /api/games/creator/:creatorId': 'Get creator\'s games',
+                },
+                groups: {
+                    'GET /api/groups': 'List groups (paginated, searchable)',
+                    'GET /api/groups/mine': 'List my groups (requires auth)',
+                    'GET /api/groups/:id': 'Get group details',
+                    'POST /api/groups': 'Create group (requires auth)',
+                    'POST /api/groups/:id/join': 'Join group (requires auth)',
+                    'POST /api/groups/:id/leave': 'Leave group (requires auth)',
+                },
+                users: {
+                    'GET /api/users': 'Search users',
                 },
             },
             websocket: {

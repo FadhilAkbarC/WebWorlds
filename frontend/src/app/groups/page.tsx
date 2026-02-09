@@ -2,83 +2,105 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlusCircle, UsersRound, Globe, Lock } from 'lucide-react';
-
-type Group = {
-  id: string;
-  name: string;
-  description: string;
-  icon?: string;
-  privacy: 'public' | 'private';
-  members: number;
-  createdAt: string;
-};
-
-const STORAGE_KEY = 'webworlds.groups';
-
-function loadGroups(): Group[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveGroups(groups: Group[]) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
-  } catch {
-    // ignore storage failures
-  }
-}
+import { apiClient } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import type { Group } from '@/types';
 
 export default function GroupsPage() {
+  const { user } = useAuthStore();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  const fetchGroups = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.getGroups({ page: 1, limit: 30 });
+      const data = response.data?.data || [];
+      setGroups(data);
+    } catch (e) {
+      setError('Failed to load groups');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMyGroups = async () => {
+    if (!user) {
+      setMyGroups([]);
+      return;
+    }
+    try {
+      const response = await apiClient.getMyGroups();
+      setMyGroups(response.data?.data || []);
+    } catch {
+      setMyGroups([]);
+    }
+  };
 
   useEffect(() => {
-    setGroups(loadGroups());
-  }, []);
+    void fetchGroups();
+    void fetchMyGroups();
+  }, [user]);
 
-  useEffect(() => {
-    saveGroups(groups);
-  }, [groups]);
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    if (!user) {
+      setError('Login required to create a group');
+      return;
+    }
     if (!name.trim()) {
       setError('Group name is required');
       return;
     }
-    const newGroup: Group = {
-      id: `grp_${Date.now()}`,
-      name: name.trim(),
-      description: description.trim() || 'Community group',
-      privacy,
-      members: 1,
-      createdAt: new Date().toISOString(),
-    };
-    setGroups((prev) => [newGroup, ...prev]);
-    setName('');
-    setDescription('');
-    setPrivacy('public');
+    setIsCreating(true);
     setError(null);
+    try {
+      await apiClient.createGroup({
+        name: name.trim(),
+        description: description.trim(),
+        privacy,
+      });
+      setName('');
+      setDescription('');
+      setPrivacy('public');
+      await fetchGroups();
+      await fetchMyGroups();
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to create group');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const spotlight = useMemo(
-    () => [
-      { name: 'Builder Squad', members: 1200 },
-      { name: 'Speedrunners', members: 860 },
-      { name: 'Pixel Artists', members: 540 },
-    ],
-    []
-  );
+  const handleJoin = async (groupId: string) => {
+    if (!user) {
+      setError('Login required to join groups');
+      return;
+    }
+    setJoiningId(groupId);
+    try {
+      await apiClient.joinGroup(groupId);
+      await fetchGroups();
+      await fetchMyGroups();
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to join group');
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const spotlight = useMemo(() => {
+    const sorted = [...groups].sort(
+      (a, b) => (b.membersCount || 0) - (a.membersCount || 0)
+    );
+    return sorted.slice(0, 3);
+  }, [groups]);
 
   return (
     <div className="min-h-screen bg-[#1b1b1b]">
@@ -132,9 +154,10 @@ export default function GroupsPage() {
               </div>
               <button
                 onClick={handleCreate}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg"
+                disabled={isCreating}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2 rounded-lg"
               >
-                Create Group
+                {isCreating ? 'Creating...' : 'Create Group'}
               </button>
             </div>
           </div>
@@ -145,33 +168,49 @@ export default function GroupsPage() {
               <h2 className="text-lg font-semibold">Community Spotlight</h2>
             </div>
             <div className="space-y-3">
-              {spotlight.map((group) => (
-                <div
-                  key={group.name}
-                  className="flex items-center justify-between bg-[#2a2a2a] border border-[#343434] rounded-xl px-3 py-2"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-white">{group.name}</p>
-                    <p className="text-xs text-slate-400">{group.members} members</p>
+              {spotlight.length === 0 ? (
+                <div className="text-xs text-slate-400">No groups yet.</div>
+              ) : (
+                spotlight.map((group) => (
+                  <div
+                    key={group._id}
+                    className="flex items-center justify-between bg-[#2a2a2a] border border-[#343434] rounded-xl px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-white">{group.name}</p>
+                      <p className="text-xs text-slate-400">
+                        {group.membersCount || 0} members
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleJoin(group._id)}
+                      disabled={joiningId === group._id || group.isMember}
+                      className="text-xs text-blue-300 disabled:opacity-50"
+                    >
+                      {group.isMember ? 'Joined' : joiningId === group._id ? 'Joining...' : 'Join'}
+                    </button>
                   </div>
-                  <button className="text-xs text-blue-300">Join</button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-white">My Groups</h2>
-          {groups.length === 0 ? (
+          {isLoading ? (
+            <div className="text-sm text-slate-400 bg-[#222] border border-[#2e2e2e] rounded-xl p-4">
+              Loading groups...
+            </div>
+          ) : myGroups.length === 0 ? (
             <div className="text-sm text-slate-400 bg-[#222] border border-[#2e2e2e] rounded-xl p-4">
               You have no groups yet. Create one above to get started.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groups.map((group) => (
+              {myGroups.map((group) => (
                 <div
-                  key={group.id}
+                  key={group._id}
                   className="bg-[#222] border border-[#2e2e2e] rounded-xl p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between">
@@ -182,7 +221,9 @@ export default function GroupsPage() {
                   </div>
                   <p className="text-xs text-slate-400 line-clamp-2">{group.description}</p>
                   <p className="text-[11px] text-slate-500">
-                    {group.members} member • {new Date(group.createdAt).toLocaleDateString()}
+                    {group.membersCount || 0} member • {group.createdAt
+                      ? new Date(group.createdAt).toLocaleDateString()
+                      : 'Unknown'}
                   </p>
                 </div>
               ))}

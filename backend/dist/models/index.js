@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Activity = exports.Comment = exports.Leaderboard = exports.GameSession = exports.Game = exports.User = void 0;
+exports.Group = exports.Activity = exports.Comment = exports.Leaderboard = exports.GameSession = exports.Game = exports.User = void 0;
 var User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 var Game_1 = require("./Game");
@@ -13,4 +13,6 @@ var Comment_1 = require("./Comment");
 Object.defineProperty(exports, "Comment", { enumerable: true, get: function () { return Comment_1.Comment; } });
 var Activity_1 = require("./Activity");
 Object.defineProperty(exports, "Activity", { enumerable: true, get: function () { return Activity_1.Activity; } });
+var Group_1 = require("./Group");
+Object.defineProperty(exports, "Group", { enumerable: true, get: function () { return Group_1.Group; } });
 //# sourceMappingURL=index.js.map

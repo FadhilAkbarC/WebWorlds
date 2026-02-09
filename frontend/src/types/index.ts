@@ -17,6 +17,19 @@ export interface User {
   };
 }
 
+export interface UserSearch {
+  _id: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
+  stats?: {
+    gamesCreated?: number;
+    gamesPlayed?: number;
+    followers?: number;
+  };
+  createdAt?: string;
+}
+
 export interface AuthState {
   user: User | null;
   token: string | null;
@@ -158,6 +171,19 @@ export interface GameProject {
   };
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Group {
+  _id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  privacy: 'public' | 'private';
+  owner?: string;
+  membersCount?: number;
+  createdAt?: string;
+  isOwner?: boolean;
+  isMember?: boolean;
 }
 
 // Leaderboard types
