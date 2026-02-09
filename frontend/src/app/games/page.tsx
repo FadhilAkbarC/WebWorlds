@@ -14,7 +14,7 @@ export default function GamesPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
-    fetchGames(page, searchQuery, selectedCategory);
+    fetchGames(page, searchQuery, selectedCategory, 12);
   }, [fetchGames, page, searchQuery, selectedCategory]);
 
   const totalPages = Math.ceil(totalCount / 12);

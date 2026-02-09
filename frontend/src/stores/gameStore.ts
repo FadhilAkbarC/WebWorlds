@@ -4,7 +4,7 @@ import { apiClient } from '@/lib/api';
 import { logger } from '@/utils/logger';
 
 interface GameStoreActions {
-  fetchGames: (page?: number, search?: string, category?: string) => Promise<void>;
+  fetchGames: (page?: number, search?: string, category?: string, limit?: number) => Promise<void>;
   fetchGameById: (id: string) => Promise<void>;
   setCurrentGame: (game: Game | null) => void;
   setPage: (page: number) => void;
@@ -30,14 +30,14 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
   setError: (error) => set({ error }),
   clearCurrentGame: () => set({ currentGame: null }),
 
-  fetchGames: async (page = 1, search = '', category = '') => {
+  fetchGames: async (page = 1, search = '', category = '', limit = 12) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.getGames({
         page,
         search,
         category,
-        limit: 12,
+        limit,
       });
 
       const data = response.data;

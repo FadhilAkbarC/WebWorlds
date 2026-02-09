@@ -22,8 +22,8 @@ export const Footer: React.FC = () => {
             <h4 className="text-white font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/games" className="text-slate-400 hover:text-white transition-colors">
-                  Browse Games
+                <Link href="/search" className="text-slate-400 hover:text-white transition-colors">
+                  Search
                 </Link>
               </li>
               <li>
