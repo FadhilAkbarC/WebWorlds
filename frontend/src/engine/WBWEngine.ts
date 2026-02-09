@@ -172,6 +172,19 @@ const COMMAND_ALIASES: Record<string, string> = {
   vel: 'vel',
   push: 'push',
   sound: 'sound',
+  box: 'rect',
+  solid: 'platform',
+  tile: 'platform',
+  ledge: 'platform',
+  teleport: 'setpos',
+  mix: 'lerp',
+  randi: 'randint',
+  randf: 'randfloat',
+  camfollow: 'camfollow',
+  camlerp: 'camlerp',
+  camoffset: 'camoffset',
+  camclamp: 'camclamp',
+  camreset: 'camreset',
 };
 
 const KNOWN_COMMANDS = new Set<string>([
@@ -220,6 +233,60 @@ const KNOWN_COMMANDS = new Set<string>([
   'speed',
   'gravity',
   'friction',
+  'world',
+  'cam',
+  'camfollow',
+  'camlerp',
+  'camoffset',
+  'camclamp',
+  'camreset',
+  'enemy',
+  'item',
+  'coin',
+  'npc',
+  'setx',
+  'sety',
+  'addx',
+  'addy',
+  'velx',
+  'vely',
+  'pushx',
+  'pushy',
+  'stopx',
+  'stopy',
+  'flipx',
+  'flipy',
+  'bouncex',
+  'bouncey',
+  'sizeof',
+  'colorof',
+  'inc',
+  'dec',
+  'abs',
+  'neg',
+  'sign',
+  'floor',
+  'ceil',
+  'round',
+  'min',
+  'max',
+  'clamp',
+  'pow',
+  'sqrt',
+  'log',
+  'exp',
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'lerp',
+  'swap',
+  'copy',
+  'toggle',
+  'randint',
+  'randfloat',
 ]);
 
 function normalizeKey(key: string): string {
@@ -335,6 +402,24 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+function sanitizeNumber(value: number, fallback: number): number {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  return num;
+}
+
+function sanitizeDimension(value: number, fallback: number): number {
+  const num = sanitizeNumber(value, fallback);
+  if (num <= 0) return fallback;
+  return Math.floor(num);
+}
+
+function sanitizeFps(value: number, fallback: number): number {
+  const num = sanitizeNumber(value, fallback);
+  if (num <= 0) return fallback;
+  return num;
+}
+
 function rectsIntersect(a: WBWEntity, b: WBWEntity): boolean {
   return (
     a.x < b.x + b.w &&
@@ -376,6 +461,15 @@ export class WBWEngine {
   private frame = 0;
   private playerGrounded = false;
   private patrols: WBWPatrol[] = [];
+  private worldWidth = 0;
+  private worldHeight = 0;
+  private cameraX = 0;
+  private cameraY = 0;
+  private cameraTarget: string | null = 'player';
+  private cameraLerp = 1;
+  private cameraOffsetX = 0;
+  private cameraOffsetY = 0;
+  private cameraClamp = true;
 
   private inputBindings: Record<string, CommandLine[]> = {};
   private inputPressBindings: Record<string, CommandLine[]> = {};
@@ -392,10 +486,13 @@ export class WBWEngine {
       throw new Error('Failed to get canvas context');
     }
     this.ctx = ctx;
-    this.width = options.width;
-    this.height = options.height;
-    this.fps = options.fps;
-    this.resize(options.width, options.height);
+    const safeWidth = sanitizeDimension(options.width, 800);
+    const safeHeight = sanitizeDimension(options.height, 600);
+    const safeFps = sanitizeFps(options.fps, 60);
+    this.width = safeWidth;
+    this.height = safeHeight;
+    this.fps = safeFps;
+    this.resize(safeWidth, safeHeight);
   }
 
   setMuted(muted: boolean) {
@@ -423,6 +520,8 @@ export class WBWEngine {
     }
     this.attachListeners();
     this.lastTime = 0;
+    this.updateCamera(true);
+    this.render();
     this.animationId = requestAnimationFrame(this.loop);
   }
 
@@ -441,10 +540,12 @@ export class WBWEngine {
   }
 
   resize(width: number, height: number) {
-    this.width = width;
-    this.height = height;
-    this.canvas.width = width;
-    this.canvas.height = height;
+    const safeWidth = sanitizeDimension(width, this.width || 800);
+    const safeHeight = sanitizeDimension(height, this.height || 600);
+    this.width = safeWidth;
+    this.height = safeHeight;
+    this.canvas.width = safeWidth;
+    this.canvas.height = safeHeight;
   }
 
   getErrors() {
@@ -483,6 +584,15 @@ export class WBWEngine {
     this.frame = 0;
     this.playerGrounded = false;
     this.patrols = [];
+    this.worldWidth = this.width;
+    this.worldHeight = this.height;
+    this.cameraX = 0;
+    this.cameraY = 0;
+    this.cameraTarget = 'player';
+    this.cameraLerp = 1;
+    this.cameraOffsetX = 0;
+    this.cameraOffsetY = 0;
+    this.cameraClamp = true;
     this.inputBindings = {};
     this.inputPressBindings = {};
     this.inputReleaseBindings = {};
@@ -519,6 +629,8 @@ export class WBWEngine {
     this.vars.TIME = Number(this.time.toFixed(3));
     this.vars.FRAME = this.frame;
     this.vars.DT = Number(delta.toFixed(4));
+    this.vars.WORLDW = this.worldWidth;
+    this.vars.WORLDH = this.worldHeight;
 
     const keySet = new Set([
       ...Object.keys(this.inputBindings),
@@ -581,16 +693,16 @@ export class WBWEngine {
         player.x = 0;
         player.vx = 0;
       }
-      if (player.x + player.w > this.width) {
-        player.x = this.width - player.w;
+      if (player.x + player.w > this.worldWidth) {
+        player.x = this.worldWidth - player.w;
         player.vx = 0;
       }
       if (player.y < 0) {
         player.y = 0;
         player.vy = 0;
       }
-      if (player.y + player.h >= this.height) {
-        player.y = this.height - player.h;
+      if (player.y + player.h >= this.worldHeight) {
+        player.y = this.worldHeight - player.h;
         player.vy = 0;
         this.playerGrounded = true;
       }
@@ -606,12 +718,13 @@ export class WBWEngine {
       entity.x += entity.vx * scale;
       entity.y += entity.vy * scale;
       if (entity.type === 'bullet') {
-        return entity.x >= -40 && entity.x <= this.width + 40;
+        return entity.x >= -40 && entity.x <= this.worldWidth + 40;
       }
       return true;
     });
 
     this.runLabel('tick', { speed, gravity, delta, source: 'tick' });
+    this.updateCamera();
     this.handleCollisions();
     this.updateMessages(delta);
 
@@ -628,11 +741,12 @@ export class WBWEngine {
 
     const shakeX = this.shakeTime > 0 ? (Math.random() - 0.5) * this.shakeMagnitude : 0;
     const shakeY = this.shakeTime > 0 ? (Math.random() - 0.5) * this.shakeMagnitude : 0;
-    ctx.save();
-    ctx.translate(shakeX, shakeY);
 
     ctx.fillStyle = this.background;
     ctx.fillRect(0, 0, this.width, this.height);
+
+    ctx.save();
+    ctx.translate(-this.cameraX + shakeX, -this.cameraY + shakeY);
 
     for (const shape of this.shapes) {
       ctx.fillStyle = shape.color;
@@ -705,6 +819,35 @@ export class WBWEngine {
     this.messages = this.messages
       .map((msg) => ({ ...msg, timeLeft: msg.timeLeft - delta }))
       .filter((msg) => msg.timeLeft > 0);
+  }
+
+  private updateCamera(snap = false) {
+    const targetId = this.cameraTarget;
+    let target: WBWEntity | null = null;
+
+    if (targetId === 'player') {
+      target = this.player;
+    } else if (targetId) {
+      target = this.getEntityById(targetId);
+    }
+
+    if (target) {
+      const desiredX = target.x + target.w / 2 - this.width / 2 + this.cameraOffsetX;
+      const desiredY = target.y + target.h / 2 - this.height / 2 + this.cameraOffsetY;
+      const lerp = snap ? 1 : clamp(this.cameraLerp, 0, 1);
+      this.cameraX += (desiredX - this.cameraX) * lerp;
+      this.cameraY += (desiredY - this.cameraY) * lerp;
+    }
+
+    if (this.cameraClamp) {
+      const maxX = Math.max(0, this.worldWidth - this.width);
+      const maxY = Math.max(0, this.worldHeight - this.height);
+      this.cameraX = clamp(this.cameraX, 0, maxX);
+      this.cameraY = clamp(this.cameraY, 0, maxY);
+    }
+
+    this.vars.CAMX = Number(this.cameraX.toFixed(2));
+    this.vars.CAMY = Number(this.cameraY.toFixed(2));
   }
 
   private renderMessages() {
@@ -894,46 +1037,20 @@ export class WBWEngine {
       }
       case 'spawn': {
         const type = (tokens[1] || 'custom').toLowerCase();
-        let index = 2;
-        let id = '';
-        const maybeId = tokens[index];
-        if (maybeId && !isNumberLike(maybeId)) {
-          id = maybeId;
-          index += 1;
-        }
-        const xResult = this.readNumberExpr(tokens, index);
-        index = xResult.nextIndex;
-        const yResult = this.readNumberExpr(tokens, index);
-        index = yResult.nextIndex;
-        const size = type === 'enemy' ? DEFAULTS.enemySize : DEFAULTS.itemSize;
-        let w = size;
-        let h = size;
-        if (tokens[index]) {
-          const wResult = this.readNumberExpr(tokens, index);
-          w = wResult.value;
-          index = wResult.nextIndex;
-        }
-        if (tokens[index]) {
-          const hResult = this.readNumberExpr(tokens, index);
-          h = hResult.value;
-        }
-        const color =
-          type === 'enemy'
-            ? '#f87171'
-            : type === 'item'
-              ? '#facc15'
-              : '#e2e8f0';
-        this.entities.push({
-          id: id || `${type}-${Date.now()}-${Math.random()}`,
-          type: type === 'enemy' || type === 'item' ? (type as WBWEntity['type']) : 'custom',
-          x: xResult.value,
-          y: yResult.value,
-          w,
-          h,
-          vx: 0,
-          vy: 0,
-          color,
-        });
+        this.spawnEntity(type, tokens, 2);
+        break;
+      }
+      case 'enemy': {
+        this.spawnEntity('enemy', tokens, 1);
+        break;
+      }
+      case 'item':
+      case 'coin': {
+        this.spawnEntity('item', tokens, 1);
+        break;
+      }
+      case 'npc': {
+        this.spawnEntity('custom', tokens, 1);
         break;
       }
       case 'patrol': {
@@ -1006,6 +1123,188 @@ export class WBWEngine {
         this.vars[name] = this.getNumberVar(name, 0) % value;
         break;
       }
+      case 'inc': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = tokens[2] ? this.getNumberValue(tokens[2]) : 1;
+        this.vars[name] = this.getNumberVar(name, 0) + value;
+        break;
+      }
+      case 'dec': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = tokens[2] ? this.getNumberValue(tokens[2]) : 1;
+        this.vars[name] = this.getNumberVar(name, 0) - value;
+        break;
+      }
+      case 'abs': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.abs(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'neg': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = -this.getNumberVar(name, 0);
+        break;
+      }
+      case 'sign': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.sign(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'floor': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.floor(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'ceil': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.ceil(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'round': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.round(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'min': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = this.getNumberValue(tokens[2]);
+        this.vars[name] = Math.min(this.getNumberVar(name, 0), value);
+        break;
+      }
+      case 'max': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = this.getNumberValue(tokens[2]);
+        this.vars[name] = Math.max(this.getNumberVar(name, 0), value);
+        break;
+      }
+      case 'clamp': {
+        const name = tokens[1];
+        if (!name) break;
+        const min = this.getNumberValue(tokens[2]);
+        const max = this.getNumberValue(tokens[3]);
+        this.vars[name] = clamp(this.getNumberVar(name, 0), min, max);
+        break;
+      }
+      case 'pow': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = this.getNumberValue(tokens[2]);
+        this.vars[name] = Math.pow(this.getNumberVar(name, 0), value);
+        break;
+      }
+      case 'sqrt': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.sqrt(Math.max(0, this.getNumberVar(name, 0)));
+        break;
+      }
+      case 'log': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.log(Math.max(1e-6, this.getNumberVar(name, 0)));
+        break;
+      }
+      case 'exp': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.exp(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'sin': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.sin(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'cos': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.cos(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'tan': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.tan(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'asin': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.asin(clamp(this.getNumberVar(name, 0), -1, 1));
+        break;
+      }
+      case 'acos': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.acos(clamp(this.getNumberVar(name, 0), -1, 1));
+        break;
+      }
+      case 'atan': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = Math.atan(this.getNumberVar(name, 0));
+        break;
+      }
+      case 'lerp': {
+        const name = tokens[1];
+        if (!name) break;
+        const a = this.getNumberValue(tokens[2]);
+        const b = this.getNumberValue(tokens[3]);
+        const t = clamp(this.getNumberValue(tokens[4]), 0, 1);
+        this.vars[name] = a + (b - a) * t;
+        break;
+      }
+      case 'swap': {
+        const a = tokens[1];
+        const b = tokens[2];
+        if (!a || !b) break;
+        const temp = this.vars[a] ?? 0;
+        this.vars[a] = this.vars[b] ?? 0;
+        this.vars[b] = temp;
+        break;
+      }
+      case 'copy': {
+        const dest = tokens[1];
+        const src = tokens[2];
+        if (!dest || !src) break;
+        this.vars[dest] = this.vars[src] ?? this.getValue(src);
+        break;
+      }
+      case 'toggle': {
+        const name = tokens[1];
+        if (!name) break;
+        const current = this.getNumberVar(name, 0);
+        this.vars[name] = current ? 0 : 1;
+        break;
+      }
+      case 'randint': {
+        const name = tokens[1];
+        if (!name) break;
+        const min = this.getNumberValue(tokens[2] || '0');
+        const max = this.getNumberValue(tokens[3] || '1');
+        const value = Math.floor(Math.random() * (max - min + 1)) + min;
+        this.vars[name] = value;
+        break;
+      }
+      case 'randfloat': {
+        const name = tokens[1];
+        if (!name) break;
+        const min = this.getNumberValue(tokens[2] || '0');
+        const max = this.getNumberValue(tokens[3] || '1');
+        this.vars[name] = Math.random() * (max - min) + min;
+        break;
+      }
       case 'speed': {
         this.vars.SPEED = this.getNumberValue(tokens[1]);
         break;
@@ -1016,6 +1315,66 @@ export class WBWEngine {
       }
       case 'friction': {
         this.vars.FRICTION = this.getNumberValue(tokens[1]);
+        break;
+      }
+      case 'world': {
+        const w = this.getNumberValue(tokens[1]);
+        const h = this.getNumberValue(tokens[2]);
+        if (w > 0) this.worldWidth = w;
+        if (h > 0) this.worldHeight = h;
+        this.vars.WORLDW = this.worldWidth;
+        this.vars.WORLDH = this.worldHeight;
+        break;
+      }
+      case 'cam': {
+        this.cameraX = this.getNumberValue(tokens[1]);
+        this.cameraY = this.getNumberValue(tokens[2]);
+        break;
+      }
+      case 'camfollow': {
+        const target = tokens[1];
+        if (!target) {
+          this.cameraTarget = null;
+        } else {
+          const normalized = target.toLowerCase();
+          if (normalized === 'none' || normalized === 'off') {
+            this.cameraTarget = null;
+          } else if (normalized === 'player') {
+            this.cameraTarget = 'player';
+          } else {
+            this.cameraTarget = target;
+          }
+        }
+        break;
+      }
+      case 'camlerp': {
+        const lerp = this.getNumberValue(tokens[1] || '1');
+        this.cameraLerp = clamp(lerp, 0, 1);
+        break;
+      }
+      case 'camoffset': {
+        this.cameraOffsetX = this.getNumberValue(tokens[1]);
+        this.cameraOffsetY = this.getNumberValue(tokens[2]);
+        break;
+      }
+      case 'camclamp': {
+        const value = tokens[1];
+        if (value === undefined) {
+          this.cameraClamp = true;
+        } else {
+          const normalized = value.toLowerCase();
+          this.cameraClamp = normalized === '1' || normalized === 'true' || normalized === 'on';
+        }
+        break;
+      }
+      case 'camreset': {
+        this.cameraX = 0;
+        this.cameraY = 0;
+        this.cameraTarget = 'player';
+        this.cameraLerp = 1;
+        this.cameraOffsetX = 0;
+        this.cameraOffsetY = 0;
+        this.cameraClamp = true;
         break;
       }
       case 'bg': {
@@ -1204,6 +1563,108 @@ export class WBWEngine {
         const vy = this.getNumberValue(tokens[index + 1]);
         target.vx += vx;
         target.vy += vy;
+        break;
+      }
+      case 'setx': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.x = this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'sety': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.y = this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'addx': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.x += this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'addy': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.y += this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'velx': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vx = this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'vely': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vy = this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'pushx': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vx += this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'pushy': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vy += this.getNumberValue(tokens[index]);
+        break;
+      }
+      case 'stopx': {
+        const { target } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vx = 0;
+        break;
+      }
+      case 'stopy': {
+        const { target } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vy = 0;
+        break;
+      }
+      case 'flipx': {
+        const { target } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vx = -target.vx;
+        break;
+      }
+      case 'flipy': {
+        const { target } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        target.vy = -target.vy;
+        break;
+      }
+      case 'bouncex': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        const factor = tokens[index] ? this.getNumberValue(tokens[index]) : 1;
+        target.vx = -target.vx * factor;
+        break;
+      }
+      case 'bouncey': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        const factor = tokens[index] ? this.getNumberValue(tokens[index]) : 1;
+        target.vy = -target.vy * factor;
+        break;
+      }
+      case 'sizeof': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        const w = this.getNumberValue(tokens[index]);
+        const h = this.getNumberValue(tokens[index + 1] || String(w));
+        if (w > 0) target.w = w;
+        if (h > 0) target.h = h;
+        break;
+      }
+      case 'colorof': {
+        const { target, index } = this.resolveTarget(tokens, 1);
+        if (!target) break;
+        const color = tokens[index];
+        if (color) target.color = color;
         break;
       }
       case 'setpos': {
@@ -1441,6 +1902,49 @@ export class WBWEngine {
   private getEntityById(id: string): WBWEntity | null {
     const entity = this.entities.find((item) => item.id === id);
     return entity || null;
+  }
+
+  private spawnEntity(type: string, tokens: string[], startIndex: number) {
+    let index = startIndex;
+    let id = '';
+    const maybeId = tokens[index];
+    if (maybeId && !isNumberLike(maybeId)) {
+      id = maybeId;
+      index += 1;
+    }
+    const xResult = this.readNumberExpr(tokens, index);
+    index = xResult.nextIndex;
+    const yResult = this.readNumberExpr(tokens, index);
+    index = yResult.nextIndex;
+    const size = type === 'enemy' ? DEFAULTS.enemySize : DEFAULTS.itemSize;
+    let w = size;
+    let h = size;
+    if (tokens[index]) {
+      const wResult = this.readNumberExpr(tokens, index);
+      w = wResult.value;
+      index = wResult.nextIndex;
+    }
+    if (tokens[index]) {
+      const hResult = this.readNumberExpr(tokens, index);
+      h = hResult.value;
+    }
+    const color =
+      type === 'enemy'
+        ? '#f87171'
+        : type === 'item'
+          ? '#facc15'
+          : '#e2e8f0';
+    this.entities.push({
+      id: id || `${type}-${Date.now()}-${Math.random()}`,
+      type: type === 'enemy' || type === 'item' ? (type as WBWEntity['type']) : 'custom',
+      x: xResult.value,
+      y: yResult.value,
+      w,
+      h,
+      vx: 0,
+      vy: 0,
+      color,
+    });
   }
 
   private registerBinding(map: Record<string, CommandLine[]>, key: string, action: string[], lineNumber: number) {

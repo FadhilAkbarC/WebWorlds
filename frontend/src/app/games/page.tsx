@@ -6,7 +6,7 @@ import { GameFilter } from '@/components/GameFilter';
 import { useGameStore } from '@/stores/gameStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const CATEGORIES = ['Action', 'Adventure', 'Puzzle', 'Sports', 'Casual', 'Strategy', 'Multiplayer'];
+const CATEGORIES = ['action', 'adventure', 'puzzle', 'sports', 'other'];
 
 export default function GamesPage() {
   const { games, isLoading, totalCount, page, fetchGames, setPage } = useGameStore();

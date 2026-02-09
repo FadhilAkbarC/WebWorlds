@@ -77,7 +77,7 @@ export const GameFilter: React.FC<GameFilterProps> = ({
                       : 'text-slate-200'
                   }`}
                 >
-                  {category}
+                  <span className="capitalize">{category}</span>
                 </button>
               ))}
             </div>

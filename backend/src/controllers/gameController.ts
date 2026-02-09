@@ -159,6 +159,7 @@ export const gameController = {
       assets,
       category,
       tags,
+      thumbnail,
     } = body;
 
     const game = await Game.findById(id);
@@ -206,6 +207,20 @@ export const gameController = {
         .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
         .filter((tag) => tag.length > 0);
       game.tags = normalizedTags;
+    }
+
+    if (thumbnail !== undefined) {
+      if (thumbnail === null || thumbnail === '') {
+        game.thumbnail = '';
+      } else if (typeof thumbnail !== 'string') {
+        throw new AppError(400, 'Invalid thumbnail');
+      } else {
+        const isDataUrl = thumbnail.startsWith('data:image/');
+        if (!isDataUrl && !validators.url(thumbnail)) {
+          throw new AppError(400, 'Invalid thumbnail URL');
+        }
+        game.thumbnail = thumbnail;
+      }
     }
 
     // Update fields

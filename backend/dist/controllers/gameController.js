@@ -104,7 +104,7 @@ exports.gameController = {
                 }
             })()
             : req.body || {};
-        const { title, description, code, settings, scripts, assets, category, tags, } = body;
+        const { title, description, code, settings, scripts, assets, category, tags, thumbnail, } = body;
         const game = await models_1.Game.findById(id);
         if (!game) {
             throw new errorHandler_1.AppError(404, 'Game not found');
@@ -142,6 +142,21 @@ exports.gameController = {
                 .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
                 .filter((tag) => tag.length > 0);
             game.tags = normalizedTags;
+        }
+        if (thumbnail !== undefined) {
+            if (thumbnail === null || thumbnail === '') {
+                game.thumbnail = '';
+            }
+            else if (typeof thumbnail !== 'string') {
+                throw new errorHandler_1.AppError(400, 'Invalid thumbnail');
+            }
+            else {
+                const isDataUrl = thumbnail.startsWith('data:image/');
+                if (!isDataUrl && !validation_1.validators.url(thumbnail)) {
+                    throw new errorHandler_1.AppError(400, 'Invalid thumbnail URL');
+                }
+                game.thumbnail = thumbnail;
+            }
         }
         if (title)
             game.title = title;

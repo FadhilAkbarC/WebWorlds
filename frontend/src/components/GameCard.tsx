@@ -19,6 +19,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
   const isUnsplash =
     typeof game.thumbnail === 'string' &&
     /(images|plus)\.unsplash\.com/i.test(game.thumbnail);
+  const isDataUrl = typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
+  const likes = game.likes ?? game.stats?.likes ?? 0;
+  const plays = game.plays ?? game.stats?.plays ?? 0;
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -54,7 +57,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
               fill
               sizes="(max-width: 1024px) 100vw, 33vw"
               priority={Boolean(game.featured)}
-              unoptimized={isUnsplash}
+              unoptimized={isUnsplash || isDataUrl}
               className="object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
@@ -108,7 +111,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <Play size={14} />
-                <span>{game.plays}</span>
+                <span>{plays}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Heart
@@ -116,7 +119,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
                   fill={isLiked ? 'currentColor' : 'none'}
                   className={isLiked ? 'text-red-500' : ''}
                 />
-                <span>{game.likes}</span>
+                <span>{likes}</span>
               </div>
             </div>
             <div className="flex items-center gap-1 text-slate-500">

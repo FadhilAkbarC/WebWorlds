@@ -1,90 +1,115 @@
-export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v3 - Mega Platformer
+export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v4 - Mega Platformer Showcase
 // Short, readable, ultra-light WBW syntax.
-// Core: player/spawn/platform/rect/circle/line/tri/text/hud
-// Control: on/onpress/onrelease + move/jump/shoot/vel/push
-// Logic: set/add/sub/mul/div/mod/rand, if/goto/loop/end
-// Events: msg/shake/stop + checkpoint/respawn/patrol
-// Built-in vars: PX PY VX VY TIME FRAME DT GROUND
+// Core: player/spawn/enemy/item/coin/npc/platform/box/solid/tile/ledge/rect/circle/line/tri
+// Camera: world/cam/camfollow/camlerp/camoffset/camclamp/camreset
+// Control: on/onpress/onrelease + move/jump/shoot/vel/push + setx/sety/addx/addy/velx/vely/pushx/pushy
+// Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp
+// Math: pow/sqrt/log/exp/sin/cos/tan/asin/acos/atan/lerp/mix/swap/copy/toggle
+// Events: msg/shake/stop + checkpoint/respawn/patrol + colorof/sizeof/remove
+// Built-in vars: PX PY VX VY TIME FRAME DT GROUND WORLDW WORLDH CAMX CAMY
 
 bg #0b1120
-color #22d3ee
-speed 2.4
-gravity 0.7
-friction 0.08
-size 18 22
+world 2400 1200
+cam 0 0
+camfollow player
+camlerp 0.12
+camoffset 0 -80
+camclamp on
+
+speed 2.8
+gravity 0.75
+friction 0.06
+size 18 24
+pcolor #38bdf8
 textsize 16
 
 set SCORE 0
-set HP 3
+set HP 5
+set COINS 0
 set STAGE 1
+set WAVE 0
 set CHECK 0
+set FLAG 0
+set ANG 0.5
+goto math_lab
 
 // World
 color #1e293b
-platform 0 560 960 40
-platform 120 480 180 14
-platform 360 420 160 14
-platform 560 360 160 14
-platform 760 300 140 14
-platform 240 260 140 14
-platform 40 340 120 12
+solid 0 1100 2400 100
+tile 180 980 240 16
+ledge 520 900 180 16
+box 900 820 240 18
+platform 1300 760 220 18
+platform 1700 680 200 18
+platform 1980 600 180 18
+platform 2200 520 160 18
+platform 520 680 160 14
 
 // Decor
 color #0ea5e9
-rect 20 520 30 30
-circle 860 120 26
-line 0 560 960 560
-tri 420 560 460 520 500 560
+rect 60 1040 40 40
+circle 1880 200 28
+line 0 1100 2400 1100
+tri 1220 1100 1260 1060 1300 1100
 
 // Player
-pcolor #38bdf8
-player 80 520
+player 120 1040
 
 // Enemies + items
-spawn enemy bat1 420 520 18 18
-patrol bat1 360 520 1.3
-spawn enemy bot2 620 340 18 18
-patrol bot2 560 720 1.6
-spawn item gem1 720 520 12 12
-spawn item gem2 260 230 12 12
-spawn custom gate 900 520 18 40
+enemy bat1 640 1040 18 18
+patrol bat1 540 760 1.4
+enemy bot2 1380 740 18 18
+patrol bot2 1320 1560 1.6
+item gem1 1020 780 12 12
+coin coin1 300 940 10 10
+npc gate 2280 1040 24 48
+sizeof gate 28 64
+colorof gate #fbbf24
+setx gate 2290
+sety gate 1030
 
-loop 4
-  spawn item rand 160 880 rand 220 520 10 10
+loop 6
+  item rand 160 2200 rand 760 1020 10 10
 end
 
 // HUD
 color #f8fafc
 hud "SCORE" SCORE 20 24
 hud "HP" HP 20 46
-hud "STAGE" STAGE 20 68
-hud "WBW MEGA PLATFORMER" 520 24
+hud "COINS" COINS 20 68
+hud "STAGE" STAGE 20 90
+hud "WBW MEGA PLATFORMER" 620 24
 
 // Controls
 on left  move -1 0
 on right move 1 0
 onpress up jump 10
 onpress space shoot 1
-onpress z push 4 0
-onpress c setpos player 120 520
-onrelease left vel 0 0
-onrelease right vel 0 0
-onpress r respawn
+onpress z pushx player 3
+onpress x pushy player -3
+onpress q velx player 4
+onpress e vely player -6
+onpress c teleport player 140 1040
+onpress v camreset
+onrelease left stopx
+onrelease right stopx
+onrelease up stopy
 
 // Runtime logic
 tick:
   if CHECK == 0 goto maybe_checkpoint
-  if PY > 620 goto fall
-  if PX > 920 goto next_stage
+  if PY > 1180 goto fall
+  if PX > 2320 goto next_stage
+  addx gate 0
 end
 
 maybe_checkpoint:
-  if PX > 560 goto set_checkpoint
+  if PX > 980 goto set_checkpoint
 end
 
 set_checkpoint:
   set CHECK 1
-  checkpoint 560 320
+  checkpoint 980 820
   msg "Checkpoint!" 1.2
 end
 
@@ -98,6 +123,7 @@ end
 
 boss:
   msg "Final Zone!" 2
+  shake 6 0.4
 end
 
 fall:
@@ -109,16 +135,19 @@ end
 
 enemy_hit:
   sub HP 1
-  vel player -3 -2
-  shake 10 0.25
+  bouncex player 0.8
+  bouncey player 0.8
+  flipx player
+  flipy player
   msg "Ouch!" 1
   if HP <= 0 goto gameover
 end
 
 item_pick:
-  rand BONUS 3 7
+  randfloat BONUS 3 7
   mul BONUS 2
   add SCORE BONUS
+  inc COINS 1
   msg "Item +" BONUS 1
   if SCORE > 200 goto open_gate
 end
@@ -137,5 +166,39 @@ end
 gameover:
   msg "Game Over" 3
   stop
+end
+
+// Math lab - use all numeric helpers once
+math_lab:
+  randint DICE 1 6
+  randfloat NOISE 0 1
+  set A 5
+  set B -3
+  inc A 2
+  dec A 1
+  abs B
+  neg B
+  sign B
+  floor NOISE
+  ceil NOISE
+  round NOISE
+  min A 10
+  max A 1
+  clamp A 0 20
+  pow A 2
+  sqrt A
+  log A
+  exp A
+  sin ANG
+  cos ANG
+  tan ANG
+  asin NOISE
+  acos NOISE
+  atan NOISE
+  lerp MIX 0 100 0.25
+  mix MIX2 0 1 0.5
+  swap MIX MIX2
+  copy BONUS MIX
+  toggle FLAG
 end
 `;
