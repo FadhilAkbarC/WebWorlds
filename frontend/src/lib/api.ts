@@ -1,48 +1,128 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Get backend URL from environment, default to localhost for development
+// Backend URL configuration
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+/**
+ * Token Manager - keeps token in memory to avoid localStorage parsing on every request
+ * Only reads/writes localStorage on auth state changes
+ */
+class TokenManager {
+  private token: string | null = null;
+  private isInitialized = false;
+
+  /**
+   * Initialize token from localStorage (called once on app startup)
+   */
+  initialize(): void {
+    if (typeof window === 'undefined' || this.isInitialized) return;
+
+    try {
+      const authState = localStorage.getItem('auth-storage');
+      if (authState) {
+        const parsed = JSON.parse(authState);
+        this.token = parsed.state?.token || parsed.token || null;
+      }
+    } catch {
+      // Silently fail if localStorage is not available or parsing fails
+    }
+
+    this.isInitialized = true;
+  }
+
+  /**
+   * Get current token from memory (no localStorage parsing)
+   */
+  getToken(): string | null {
+    return this.token;
+  }
+
+  /**
+   * Set token in both memory and localStorage
+   */
+  setToken(token: string | null): void {
+    this.token = token;
+
+    if (typeof window === 'undefined') return;
+
+    try {
+      if (token) {
+        // Update localStorage with new token
+        const authState = localStorage.getItem('auth-storage');
+        if (authState) {
+          const parsed = JSON.parse(authState);
+          parsed.state = parsed.state || {};
+          parsed.state.token = token;
+          localStorage.setItem('auth-storage', JSON.stringify(parsed));
+        }
+      } else {
+        // Clear token from localStorage
+        localStorage.removeItem('auth-storage');
+      }
+    } catch {
+      // Silently fail - localStorage is optional
+    }
+  }
+
+  /**
+   * Clear token
+   */
+  clear(): void {
+    this.token = null;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('auth-storage');
+      } catch {
+        // Silently fail
+      }
+    }
+  }
+}
+
+// Global token manager instance
+const tokenManager = new TokenManager();
+
+// Initialize on module load (client-side only)
+if (typeof window !== 'undefined') {
+  tokenManager.initialize();
+}
+
+// Create API instance with optimal config
 const baseConfig = {
   baseURL: BACKEND_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 };
 
 export const api: AxiosInstance = axios.create(baseConfig);
 
-// Interceptor to add token to requests
+/**
+ * Request interceptor - adds token from memory (incredibly fast)
+ */
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
-      try {
-        const authState = localStorage.getItem('auth-storage');
-        if (authState) {
-          const parsed = JSON.parse(authState);
-          const token = parsed.state?.token || parsed.token;
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to read auth token:', error);
-      }
+    const token = tokenManager.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor to handle responses
+/**
+ * Response interceptor - handles 401 and redirects to login
+ */
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      tokenManager.clear();
+
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth-storage');
         window.location.href = '/login';
       }
     }
@@ -50,63 +130,72 @@ api.interceptors.response.use(
   }
 );
 
-// Helper functions for common API operations
+/**
+ * Helper functions for common API operations
+ */
 export const apiClient = {
+  // Authentication
+  login: (email: string, password: string) =>
+    api.post('/auth/login', { email, password }),
+
+  register: (username: string, email: string, password: string) =>
+    api.post('/auth/register', { username, email, password }),
+
   // Games
   getGames: (params?: Record<string, unknown>) =>
     api.get('/games', { params }),
 
   getGame: (id: string) => api.get(`/games/${id}`),
 
-  createGame: (data: FormData) =>
-    api.post('/games', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  createGame: (data: Record<string, unknown>) =>
+    api.post('/games', data),
 
   updateGame: (id: string, data: Record<string, unknown>) =>
     api.put(`/games/${id}`, data),
 
   deleteGame: (id: string) => api.delete(`/games/${id}`),
 
+  publishGame: (id: string) => api.post(`/games/${id}/publish`),
+
   likeGame: (id: string) => api.post(`/games/${id}/like`),
 
   unlikeGame: (id: string) => api.post(`/games/${id}/unlike`),
 
-  // Users
-  getUser: (id: string) => api.get(`/users/${id}`),
+  getGameLikeStatus: (id: string) => api.get(`/games/${id}/like-status`),
 
+  getGamesByCreator: (creatorId: string, params?: Record<string, unknown>) =>
+    api.get(`/games/creator/${creatorId}`, { params }),
+
+  // Users
   getCurrentUser: () => api.get('/auth/me'),
 
+  getUser: (id: string) => api.get(`/auth/profile/${id}`),
+
   updateProfile: (data: Record<string, unknown>) =>
-    api.put('/users/profile', data),
-
-  getLeaderboard: (gameId: string) =>
-    api.get(`/games/${gameId}/leaderboard`),
-
-  // Sessions
-  createSession: (gameId: string) =>
-    api.post('/sessions', { gameId }),
-
-  endSession: (sessionId: string, data: Record<string, unknown>) =>
-    api.put(`/sessions/${sessionId}`, data),
-
-  // Search & Discovery
-  search: (query: string, filters?: Record<string, unknown>) =>
-    api.get('/search', { params: { q: query, ...filters } }),
-
-  getTrending: () => api.get('/games/trending'),
-
-  getFeaturedGames: () => api.get('/games/featured'),
-
-  // Categories
-  getCategories: () => api.get('/categories'),
+    api.put('/auth/profile', data),
 
   // Comments
-  getGameComments: (gameId: string) =>
-    api.get(`/games/${gameId}/comments`),
+  getGameComments: (gameId: string, params?: Record<string, unknown>) =>
+    api.get(`/comments`, { params: { gameId, ...params } }),
 
   postComment: (gameId: string, comment: string) =>
-    api.post(`/games/${gameId}/comments`, { comment }),
+    api.post(`/comments`, { gameId, comment }),
 
   deleteComment: (commentId: string) => api.delete(`/comments/${commentId}`),
+
+  // Activities
+  getActivities: (params?: Record<string, unknown>) =>
+    api.get('/activities', { params }),
+
+  // Discovery
+  getTrending: (params?: Record<string, unknown>) =>
+    api.get('/games', { params: { ...params, sort: 'trending' } }),
+
+  search: (query: string, params?: Record<string, unknown>) =>
+    api.get('/games', { params: { ...params, search: query } }),
 };
+
+/**
+ * Export token manager for use in auth stores
+ */
+export { tokenManager };

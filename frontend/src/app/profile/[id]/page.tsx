@@ -79,7 +79,7 @@ export default function PublicProfilePage() {
           },
         });
       } else {
-        const response = await api.get(`/users/${userId}`);
+        const response = await api.get(`/auth/profile/${userId}`);
         setProfile(response.data);
       }
       setError(null);

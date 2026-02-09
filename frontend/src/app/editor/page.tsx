@@ -25,6 +25,8 @@ export default function EditorPage() {
     saveProject,
     addScript,
     removeScript,
+    loadProject,
+    setActiveTab,
   } = useEditorStore();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -46,9 +48,32 @@ export default function EditorPage() {
 
   // --- Effects ---
   useEffect(() => {
-    if (!project._id) {
-      createNewProject();
-    }
+    // On first load, replace scripts with single WBW template from public folder
+    (async () => {
+      try {
+        const template = await fetch('/wbw-template.wbw').then((r) => r.text());
+        const projectData = {
+          ...project,
+          title: 'WBW Template',
+          description: 'Start with the official WBW template',
+          assets: [],
+          scripts: [
+            {
+              id: 'template',
+              name: 'template.wbw',
+              code: template,
+              language: 'wbw' as const,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        };
+        loadProject(projectData as any);
+        setActiveTab('template');
+      } catch (err) {
+        // Fallback to creating a new project if template fetch fails
+        createNewProject();
+      }
+    })();
   }, []);
 
   // --- Handlers ---
@@ -215,14 +240,10 @@ export default function EditorPage() {
                 {project.scripts.map((script) => (
                   <div
                     key={script.id}
+                    onClick={() => setActiveTab(script.id)}
                     className={`flex items-center justify-between p-2 rounded cursor-pointer text-sm transition-colors ${activeTabId === script.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                   >
-                    <span
-                      onClick={() => updateProject({ /*...activeTabId: script.id */ })}
-                      className="flex-1"
-                    >
-                      {script.name}
-                    </span>
+                    <span className="flex-1">{script.name}</span>
                     {script.id !== 'main' && (
                       <button
                         onClick={(e) => {

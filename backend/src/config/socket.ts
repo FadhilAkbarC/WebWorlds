@@ -1,20 +1,14 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { config } from './env';
-
-interface GameRoom {
-  players: Map<string, { userId: string; socketId: string; score: number }>;
-  gameId: string;
-  createdAt: Date;
-}
-
-const gameRooms = new Map<string, GameRoom>();
+import { sessionManager } from '../services';
+import { logger } from '../utils/logger';
 
 export function setupSocket(httpServer: HTTPServer): SocketIOServer {
-  const corsOrigins = process.env.NODE_ENV === 'production' ? 
-    (process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || []) : 
-    [config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
-  
+  const corsOrigins = process.env.NODE_ENV === 'production'
+    ? (process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) || [])
+    : [config.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'];
+
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: corsOrigins,
@@ -27,6 +21,9 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
     pingTimeout: 20000,
   });
 
+  // Initialize session manager for cleanup
+  sessionManager.initialize();
+
   // Middleware: authenticate socket connections
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
@@ -35,60 +32,67 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
   });
 
   io.on('connection', (socket: Socket) => {
-    console.log(`🔌 Socket connected: ${socket.id}`);
+    logger.debug('Socket connected', { socketId: socket.id });
 
     /**
      * Join a game room
      */
-    socket.on('join-game', (data: { roomId: string; userId: string; playerName: string }) => {
-      const { roomId, userId, playerName } = data;
+    socket.on('join-game', (data: { roomId: string; userId: string; playerName: string; gameId: string; maxPlayers?: number }) => {
+      const { roomId, userId, playerName, gameId, maxPlayers } = data;
       socket.join(roomId);
 
-      // Get or create room
-      if (!gameRooms.has(roomId)) {
-        gameRooms.set(roomId, {
-          players: new Map(),
-          gameId: roomId,
-          createdAt: new Date(),
-        });
-      }
+      // Get or create room via session manager
+      const room = sessionManager.getOrCreateRoom(roomId, gameId, maxPlayers);
 
-      const room = gameRooms.get(roomId)!;
-      room.players.set(socket.id, {
+      // Add player
+      const playerAdded = sessionManager.addPlayer(roomId, {
         userId,
         socketId: socket.id,
+        playerName,
         score: 0,
+        connected: true,
       });
 
-      // Notify others
+      if (!playerAdded) {
+        logger.warn('Failed to add player - room full', { roomId, playerId: userId });
+        socket.emit('error', { message: 'Room is full' });
+        return;
+      }
+
+      // Notify all players in room
+      const roomPlayers = sessionManager.getPlayers(roomId);
       io.to(roomId).emit('player-joined', {
         userId,
         playerName,
-        playersInRoom: room.players.size,
-        timestamp: new Date(),
+        playersInRoom: roomPlayers.length,
+        timestamp: new Date().toISOString(),
       });
 
       // Send room state to new player
       socket.emit('room-state', {
-        players: Array.from(room.players.values()),
-        playerCount: room.players.size,
+        players: roomPlayers,
+        playerCount: roomPlayers.length,
       });
 
-      console.log(`✅ Player ${userId} joined room ${roomId} (${room.players.size} total)`);
+      logger.debug('Player joined room', {
+        roomId,
+        userId,
+        playerCount: roomPlayers.length,
+      });
     });
 
     /**
      * Game state update (broadcast to all in room)
      */
-    socket.on('game-update', (data: { roomId: string; state: any; timestamp: number }) => {
+    socket.on('game-update', (data: { roomId: string; state: Record<string, any> }) => {
       const { roomId, state } = data;
       io.to(roomId).emit('game-state', state);
     });
 
     /**
-     * Player action (forward to others)
+     * Player action (forward to others in room)
      */
-    socket.on('player-action', (data: { roomId: string; action: any }) => {
+    socket.on('player-action', (data: { roomId: string; action: Record<string, any> }) => {
       const { roomId, action } = data;
       socket.to(roomId).emit('player-action', action);
     });
@@ -98,47 +102,38 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
      */
     socket.on('update-score', (data: { roomId: string; userId: string; score: number }) => {
       const { roomId, userId, score } = data;
-      const room = gameRooms.get(roomId);
+      sessionManager.updatePlayerScore(roomId, socket.id, score);
 
-      if (room) {
-        for (const player of room.players.values()) {
-          if (player.userId === userId) {
-            player.score = score;
-          }
-        }
-
-        io.to(roomId).emit('scores-updated', {
-          userId,
-          score,
-          leaderboard: Array.from(room.players.values())
-            .sort((a, b) => b.score - a.score),
-        });
-      }
+      const roomPlayers = sessionManager.getPlayers(roomId);
+      io.to(roomId).emit('scores-updated', {
+        userId,
+        score,
+        leaderboard: roomPlayers.sort((a, b) => b.score - a.score),
+      });
     });
 
     /**
-     * Leave game room
+     * Leave game room explicitly
      */
     socket.on('leave-game', (data: { roomId: string; userId: string }) => {
       const { roomId, userId } = data;
       socket.leave(roomId);
 
-      const room = gameRooms.get(roomId);
-      if (room) {
-        room.players.delete(socket.id);
+      sessionManager.removePlayer(roomId, socket.id);
+      const remainingPlayers = sessionManager.getPlayers(roomId);
 
-        if (room.players.size === 0) {
-          gameRooms.delete(roomId);
-          console.log(`🗑️  Room ${roomId} cleaned up (empty)`);
-        } else {
-          io.to(roomId).emit('player-left', {
-            userId,
-            playersInRoom: room.players.size,
-          });
-        }
+      if (remainingPlayers.length > 0) {
+        io.to(roomId).emit('player-left', {
+          userId,
+          playersInRoom: remainingPlayers.length,
+        });
       }
 
-      console.log(`👋 Player ${userId} left room ${roomId}`);
+      logger.debug('Player left room', {
+        roomId,
+        userId,
+        remainingPlayers: remainingPlayers.length,
+      });
     });
 
     /**
@@ -146,32 +141,45 @@ export function setupSocket(httpServer: HTTPServer): SocketIOServer {
      */
     socket.on('chat', (data: { roomId: string; userId: string; message: string; username: string }) => {
       const { roomId, message, username } = data;
+
+      // Validate message length
+      if (!message || message.length > 500) {
+        logger.warn('Invalid chat message', { roomId, userId });
+        return;
+      }
+
       io.to(roomId).emit('chat', {
         username,
         message,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       });
     });
 
     /**
-     * Disconnect
+     * Disconnect handler
      */
     socket.on('disconnect', () => {
-      // Clean up rooms
-      for (const [roomId, room] of gameRooms.entries()) {
-        if (room.players.has(socket.id)) {
-          room.players.delete(socket.id);
-          if (room.players.size === 0) {
-            gameRooms.delete(roomId);
-          }
-        }
+      // Try to find and remove player from all rooms
+      const rooms = io.sockets.adapter.rooms;
+      for (const roomId of rooms.keys()) {
+        sessionManager.removePlayer(roomId, socket.id);
       }
-      console.log(`❌ Socket disconnected: ${socket.id}`);
+
+      logger.debug('Socket disconnected', { socketId: socket.id });
     });
 
+    /**
+     * Error handler
+     */
     socket.on('error', (error) => {
-      console.error(`⚠️  Socket error [${socket.id}]:`, error);
+      logger.error('Socket error', error, { socketId: socket.id });
     });
+  });
+
+  // Graceful shutdown handler
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM received, shutting down session manager');
+    sessionManager.shutdown();
   });
 
   return io;

@@ -2,79 +2,129 @@ import dotenv from 'dotenv';
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
+
 import http from 'http';
 import { createApp } from './app';
-import { connectDatabase } from './config/database';
+import { connectDatabase, disconnectDatabase } from './config/database';
 import { setupSocket } from './config/socket';
 import { config, validateConfig } from './config/env';
+import { logger } from './utils/logger';
+import { sessionManager } from './services';
+
+let httpServer: http.Server;
 
 async function main() {
   try {
     // ============ Validate Configuration ============
-    console.log('\n🔍 Validating configuration...');
+    logger.info('Validating configuration...');
     validateConfig();
 
     // ============ Connect Database ============
-    console.log('🔌 Connecting to MongoDB...');
+    logger.info('Connecting to MongoDB...');
     await connectDatabase();
 
     // ============ Create Express App ============
     const app = createApp();
 
     // ============ Create HTTP Server ============
-    const httpServer = http.createServer(app);
+    httpServer = http.createServer(app);
 
     // ============ Setup WebSocket ============
-    console.log('📡 Setting up Socket.io...');
+    logger.info('Setting up Socket.io...');
     const io = setupSocket(httpServer);
 
     // ============ Start Server ============
     await new Promise<void>((resolve) => {
       httpServer.listen(config.PORT, config.HOST, () => {
-        console.log('\n' + '='.repeat(50));
-        console.log('🚀 WebWorlds Backend Server Running');
-        console.log('='.repeat(50));
-        console.log(`📍 Host: ${config.HOST}`);
-        console.log(`📍 Port: ${config.PORT}`);
-        console.log(`📍 Environment: ${config.NODE_ENV}`);
-        console.log(`📍 Database: MongoDB`);
-        console.log(`📍 WebSocket: Socket.io enabled`);
-        console.log('='.repeat(50));
-        console.log('\n📚 API Documentation: http://localhost:${config.PORT}/api');
-        console.log('❤️  Health Check: http://localhost:${config.PORT}/health\n');
+        const startupLog = [
+          '',
+          '='.repeat(50),
+          '🚀 WebWorlds Backend Server Running',
+          '='.repeat(50),
+          `📍 Host: ${config.HOST}`,
+          `📍 Port: ${config.PORT}`,
+          `📍 Environment: ${config.NODE_ENV}`,
+          `📍 Database: MongoDB`,
+          `📍 WebSocket: Socket.io enabled`,
+          '='.repeat(50),
+          `📚 API Docs: http://${config.HOST}:${config.PORT}/api`,
+          `❤️  Health: http://${config.HOST}:${config.PORT}/health`,
+          '',
+        ];
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log(startupLog.join('\n'));
+        } else {
+          logger.info('Server started', {
+            host: config.HOST,
+            port: config.PORT,
+            environment: config.NODE_ENV,
+          });
+        }
 
         resolve();
       });
     });
 
     // ============ Graceful Shutdown ============
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
+    setupGracefulShutdown();
+  } catch (error) {
+    logger.error('Failed to start server', error);
+    process.exit(1);
+  }
+}
 
-    async function gracefulShutdown() {
-      console.log('\n\n🛑 Shutdown signal received...');
-      console.log('🔄 Closing connections gracefully...');
+/**
+ * Setup graceful shutdown handlers
+ */
+function setupGracefulShutdown() {
+  let shutdown = false;
 
+  const shutdown_handler = async () => {
+    if (shutdown) return; // Prevent multiple shutdowns
+    shutdown = true;
+
+    logger.info('Shutdown signal received');
+
+    // Close server
+    if (httpServer) {
       httpServer.close(async () => {
-        console.log('✅ HTTP server closed');
-        const { disconnectDatabase } = await import('./config/database');
+        logger.info('HTTP server closed');
+
+        // Close database
         await disconnectDatabase();
-        console.log('✅ Database disconnected');
-        console.log('👋 Server shut down complete.\n');
+
+        // Cleanup session manager
+        sessionManager.shutdown();
+
+        logger.info('Server shutdown complete');
         process.exit(0);
       });
 
-      // Force close after 10 seconds
+      // Force close after 30 seconds
       setTimeout(() => {
-        console.error('❌ Forced shutdown after timeout');
+        logger.error('Forced shutdown - timeout exceeded');
         process.exit(1);
-      }, 10000);
+      }, 30000);
+    } else {
+      process.exit(0);
     }
-  } catch (error) {
-    console.error('\n❌ Failed to start server:');
-    console.error(error);
-    process.exit(1);
-  }
+  };
+
+  process.on('SIGTERM', shutdown_handler);
+  process.on('SIGINT', shutdown_handler);
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught exception', error);
+    shutdown_handler();
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled rejection', reason instanceof Error ? reason : new Error(String(reason)));
+    shutdown_handler();
+  });
 }
 
 // Run server

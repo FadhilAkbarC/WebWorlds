@@ -167,6 +167,21 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
 
 /**
  * Selectors for optimal re-rendering
+ * Only subscribe to the specific data you need
  */
 export const selectGames = (state: GameState & GameStoreActions) => state.games;
 export const selectCurrentGame = (state: GameState & GameStoreActions) => state.currentGame;
+export const selectIsLoading = (state: GameState & GameStoreActions) => state.isLoading;
+export const selectError = (state: GameState & GameStoreActions) => state.error;
+export const selectPagination = (state: GameState & GameStoreActions) => ({
+  page: state.page,
+  totalCount: state.totalCount,
+});
+
+/**
+ * Usage example:
+ * const games = useGameStore(selectGames);
+ * const { page, totalCount } = useGameStore(selectPagination);
+ *
+ * This prevents re-renders when other parts of the store update
+ */
