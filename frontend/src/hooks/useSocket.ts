@@ -238,5 +238,3 @@ export const disconnectSocket = () => {
     globalSocket = null;
   }
 };
-
-export { socket };
