@@ -82,7 +82,6 @@ export default async function Home() {
     page: 1,
     limit: 50,
     revalidate: 30,
-    timeoutMs: 2500,
   });
   const games = response.success ? response.data ?? [] : [];
   const fetchFailed = !response.success;

@@ -14,7 +14,6 @@ export default async function MobileHomePage() {
     page: 1,
     limit: HOME_LIMIT,
     revalidate: 30,
-    timeoutMs: 2500,
   });
   const games = response.success ? response.data ?? [] : [];
   const fetchFailed = !response.success;

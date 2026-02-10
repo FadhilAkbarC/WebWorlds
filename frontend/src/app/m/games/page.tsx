@@ -8,7 +8,6 @@ export default async function MobileGamesPage() {
     page: 1,
     limit: 8,
     revalidate: 30,
-    timeoutMs: 3500,
   });
   const games = response.success ? response.data ?? [] : [];
   const total = response.meta?.pagination?.total ?? games.length;

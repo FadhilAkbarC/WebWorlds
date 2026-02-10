@@ -8,7 +8,6 @@ export default async function GamesPage() {
     page: 1,
     limit: 12,
     revalidate: 30,
-    timeoutMs: 3500,
   });
   const games = response.success ? response.data ?? [] : [];
   const total = response.meta?.pagination?.total ?? games.length;

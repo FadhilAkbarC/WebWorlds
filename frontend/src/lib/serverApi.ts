@@ -28,8 +28,12 @@ const API_BASE =
 
 const withTimeout = (ms: number) => AbortSignal.timeout(ms);
 
+const normalizeBase = (base: string) => (base.endsWith('/') ? base : `${base}/`);
+const normalizePath = (path: string) => (path.startsWith('/') ? path.slice(1) : path);
+
 const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
-  const url = new URL(path, API_BASE);
+  const base = normalizeBase(API_BASE);
+  const url = new URL(normalizePath(path), base);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value === undefined || value === '') return;
