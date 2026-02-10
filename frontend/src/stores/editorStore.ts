@@ -1,7 +1,8 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { GameProject, GameAsset, GameScript } from '@/types';
 import { api } from '@/lib/api';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
+import { shallow } from 'zustand/shallow';
 
 interface EditorStore {
   project: GameProject;
@@ -51,7 +52,8 @@ const defaultProject: GameProject = {
   },
 };
 
-export const useEditorStore = create<EditorStore>((set, get) => ({
+export const useEditorStore = createWithEqualityFn<EditorStore>()(
+  (set, get) => ({
   project: defaultProject,
   isModified: false,
   activeTabId: 'main',
@@ -205,4 +207,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setSaving: (saving) => {
     set({ isSaving: saving });
   },
-}));
+  }),
+  shallow
+);

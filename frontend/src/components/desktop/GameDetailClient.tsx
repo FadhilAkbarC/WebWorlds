@@ -10,6 +10,7 @@ import { Play, Heart, Share2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
+import { shallow } from 'zustand/shallow';
 import type { Game } from '@/types';
 
 const CommentsSection = dynamic(
@@ -35,8 +36,11 @@ type GameDetailClientProps = {
 
 export default function GameDetailClient({ gameId, initialGame }: GameDetailClientProps) {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { likeGame, unlikeGame } = useGameStore();
+  const user = useAuthStore((state) => state.user);
+  const { likeGame, unlikeGame } = useGameStore(
+    (state) => ({ likeGame: state.likeGame, unlikeGame: state.unlikeGame }),
+    shallow
+  );
   const [game, setGame] = useState<Game | null>(initialGame);
   const [isLoading, setIsLoading] = useState(!initialGame);
   const [error, setError] = useState<string | null>(null);

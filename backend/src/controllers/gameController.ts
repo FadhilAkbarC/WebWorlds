@@ -26,7 +26,7 @@ export const gameController = {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } },
+        { tags: { $regex: search, $options: 'i' } },
       ];
     }
 

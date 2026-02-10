@@ -4,7 +4,7 @@ import React from 'react';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function HomeUserHeader() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const initial = user?.username?.slice(0, 1)?.toUpperCase() || 'U';
 
   return (
@@ -21,4 +21,3 @@ export default function HomeUserHeader() {
     </div>
   );
 }
-

@@ -4,12 +4,16 @@ import React, { useMemo, useState } from 'react';
 import AppLink from '@/components/shared/AppLink';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
+import { shallow } from 'zustand/shallow';
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuthStore(
+    (state) => ({ user: state.user, logout: state.logout }),
+    shallow
+  );
   const [query, setQuery] = useState('');
 
   const navLinks = useMemo(

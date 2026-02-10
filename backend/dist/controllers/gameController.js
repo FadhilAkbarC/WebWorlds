@@ -17,18 +17,31 @@ exports.gameController = {
         const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 12));
         const search = req.query.search?.trim() || '';
         const category = req.query.category?.trim() || '';
+        const sortParam = req.query.sort?.trim().toLowerCase() || '';
         const query = { published: true };
         if (search) {
             query.$or = [
                 { title: { $regex: search, $options: 'i' } },
                 { description: { $regex: search, $options: 'i' } },
-                { tags: { $in: [new RegExp(search, 'i')] } },
+                { tags: { $regex: search, $options: 'i' } },
             ];
         }
         if (category && validation_1.validators.category(category)) {
             query.category = category;
         }
-        const result = await services_1.db.getGames(query, page, limit);
+        const sortMap = {
+            trending: { 'stats.plays': -1 },
+            plays: { 'stats.plays': -1 },
+            '-plays': { 'stats.plays': -1 },
+            likes: { 'stats.likes': -1 },
+            '-likes': { 'stats.likes': -1 },
+            newest: { createdAt: -1 },
+            recent: { createdAt: -1 },
+            '-created': { createdAt: -1 },
+            created: { createdAt: -1 },
+        };
+        const sort = sortMap[sortParam] || { createdAt: -1 };
+        const result = await services_1.db.getGames(query, page, limit, { sort });
         res.json((0, response_1.successResponse)(result.games, result.pagination));
     }),
     get: (0, errorHandler_1.asyncHandler)(async (req, res) => {

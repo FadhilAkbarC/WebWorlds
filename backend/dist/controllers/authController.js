@@ -114,8 +114,7 @@ exports.authController = {
     getProfile: (0, errorHandler_1.asyncHandler)(async (req, res) => {
         const { id } = req.params;
         const user = await models_1.User.findById(id)
-            .select('-passwordHash')
-            .populate('createdGames', 'title thumbnail stats')
+            .select('username email bio avatar stats createdAt followers following')
             .lean();
         if (!user) {
             throw new errorHandler_1.AppError(404, 'User not found');

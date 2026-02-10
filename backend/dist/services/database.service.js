@@ -12,6 +12,9 @@ const CACHE_TIMES = {
     STATS: 60000,
 };
 class DatabaseService {
+    constructor() {
+        this.listFields = 'title description thumbnail stats category tags creator createdAt updatedAt published';
+    }
     async getUserById(userId, options) {
         if (!options?.noCache) {
             const cached = cache_1.cache.get(`user:${userId}`);
@@ -66,7 +69,8 @@ class DatabaseService {
         }
     }
     async getGames(query = { published: true }, page = 1, limit = 12, options) {
-        const cacheKey = `games:${JSON.stringify({ query, page, limit })}`;
+        const sort = options?.sort || { createdAt: -1 };
+        const cacheKey = `games:${JSON.stringify({ query, page, limit, sort })}`;
         if (!options?.noCache) {
             const cached = cache_1.cache.get(cacheKey);
             if (cached) {
@@ -78,10 +82,11 @@ class DatabaseService {
             const skip = (page - 1) * limit;
             const [games, total] = await Promise.all([
                 models_1.Game.find(query)
+                    .select(this.listFields)
                     .populate('creator', 'username avatar')
                     .skip(skip)
                     .limit(limit)
-                    .sort({ createdAt: -1 })
+                    .sort(sort)
                     .lean(),
                 models_1.Game.countDocuments(query),
             ]);
@@ -113,6 +118,7 @@ class DatabaseService {
             const skip = (page - 1) * limit;
             const [games, total] = await Promise.all([
                 models_1.Game.find({ creator: creatorId })
+                    .select(this.listFields)
                     .skip(skip)
                     .limit(limit)
                     .sort({ createdAt: -1 })

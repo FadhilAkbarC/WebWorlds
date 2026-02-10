@@ -1,4 +1,5 @@
 declare class DatabaseService {
+    private readonly listFields;
     getUserById(userId: string, options?: {
         noCache?: boolean;
     }): Promise<any>;
@@ -11,6 +12,7 @@ declare class DatabaseService {
     }): Promise<any>;
     getGames(query?: Record<string, any>, page?: number, limit?: number, options?: {
         noCache?: boolean;
+        sort?: Record<string, 1 | -1>;
     }): Promise<any>;
     getUserGames(creatorId: string, page?: number, limit?: number): Promise<any>;
     invalidateGameCache(gameId: string): void;

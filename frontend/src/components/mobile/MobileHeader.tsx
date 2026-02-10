@@ -8,7 +8,7 @@ import MobileLink from '@/components/mobile/MobileLink';
 
 const MobileHeader: React.FC = () => {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
 
   if (pathname.startsWith('/play/')) return null;
 

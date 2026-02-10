@@ -1,11 +1,14 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { Game, GameState } from '@/types';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/utils/logger';
+import { shallow } from 'zustand/shallow';
 
 interface GameStoreState extends GameState {
   hasHydrated: boolean;
   hydratedKey: string | null;
+  lastFetchKey: string | null;
+  inFlightKey: string | null;
 }
 
 interface GameStoreActions {
@@ -27,7 +30,8 @@ interface GameStoreActions {
   clearCurrentGame: () => void;
 }
 
-export const useGameStore = create<GameStoreState & GameStoreActions>((set, get) => ({
+export const useGameStore = createWithEqualityFn<GameStoreState & GameStoreActions>()(
+  (set, get) => ({
   games: [],
   currentGame: null,
   isLoading: false,
@@ -36,6 +40,8 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
   page: 1,
   hasHydrated: false,
   hydratedKey: null,
+  lastFetchKey: null,
+  inFlightKey: null,
 
   setCurrentGame: (game) => set({ currentGame: game }),
   setPage: (page) => set({ page }),
@@ -60,7 +66,18 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
     }),
 
   fetchGames: async (page = 1, search = '', category = '', limit = 12) => {
-    set({ isLoading: true, error: null });
+    const fetchKey = JSON.stringify({ page, search, category, limit });
+    const { lastFetchKey, inFlightKey, games, error } = get();
+
+    if (inFlightKey === fetchKey) {
+      return;
+    }
+
+    if (lastFetchKey === fetchKey && games.length > 0 && !error) {
+      return;
+    }
+
+    set({ isLoading: true, error: null, inFlightKey: fetchKey });
     try {
       const response = await apiClient.getGames({
         page,
@@ -77,6 +94,8 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
           totalCount: data.meta?.pagination?.total || 0,
           page,
           isLoading: false,
+          lastFetchKey: fetchKey,
+          inFlightKey: null,
         });
       } else {
         throw new Error('API did not return success');
@@ -107,6 +126,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
       set({
         error: errorMsg,
         isLoading: false,
+        inFlightKey: null,
       });
 
       logger.error('Failed to fetch games', errorMsg);
@@ -213,7 +233,9 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
           : state.currentGame,
     }));
   },
-}));
+  }),
+  shallow
+);
 
 /**
  * Selectors for optimal re-rendering

@@ -167,8 +167,7 @@ export const authController = {
     const { id } = req.params;
 
     const user = await User.findById(id)
-      .select('-passwordHash')
-      .populate('createdGames', 'title thumbnail stats')
+      .select('username email bio avatar stats createdAt followers following')
       .lean();
 
     if (!user) {

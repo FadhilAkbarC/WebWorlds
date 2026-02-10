@@ -7,14 +7,18 @@ import Image from 'next/image';
 import { Heart, Play, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
+import { shallow } from 'zustand/shallow';
 
 interface GameCardProps {
   game: Game;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game }) => {
-  const { user } = useAuthStore();
-  const { likeGame, unlikeGame } = useGameStore();
+const GameCardComponent: React.FC<GameCardProps> = ({ game }) => {
+  const user = useAuthStore((state) => state.user);
+  const { likeGame, unlikeGame } = useGameStore(
+    (state) => ({ likeGame: state.likeGame, unlikeGame: state.unlikeGame }),
+    shallow
+  );
   const [isLiked, setIsLiked] = React.useState(false);
   const isUnsplash =
     typeof game.thumbnail === 'string' &&
@@ -44,6 +48,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
       console.error('Failed to toggle like:', error);
     }
   };
+
+  const creatorName =
+    typeof game.creator === 'object' && game.creator?.username
+      ? game.creator.username
+      : game.creatorName || 'Unknown';
 
   return (
     <AppLink href={`/games/${game._id}`}>
@@ -124,7 +133,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
             </div>
             <div className="flex items-center gap-1 text-slate-500">
               <User size={14} />
-              <span className="text-xs truncate max-w-24">{game.creatorName || 'Unknown'}</span>
+              <span className="text-xs truncate max-w-24">{creatorName}</span>
             </div>
           </div>
         </div>
@@ -147,3 +156,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
     </AppLink>
   );
 };
+
+export const GameCard = React.memo(GameCardComponent);
+GameCard.displayName = 'GameCard';

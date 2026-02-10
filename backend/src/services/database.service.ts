@@ -16,6 +16,8 @@ const CACHE_TIMES = {
 } as const;
 
 class DatabaseService {
+  private readonly listFields =
+    'title description thumbnail stats category tags creator createdAt updatedAt published';
   /**
    * Get user by ID with caching
    */
@@ -105,6 +107,7 @@ class DatabaseService {
       const skip = (page - 1) * limit;
       const [games, total] = await Promise.all([
         Game.find(query)
+          .select(this.listFields)
           .populate('creator', 'username avatar')
           .skip(skip)
           .limit(limit)
@@ -147,6 +150,7 @@ class DatabaseService {
       const skip = (page - 1) * limit;
       const [games, total] = await Promise.all([
         Game.find({ creator: creatorId })
+          .select(this.listFields)
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 })

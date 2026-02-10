@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileHomeHero() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
 
   return (
     <div className="mb-4 rounded-2xl border border-[#222] bg-gradient-to-br from-blue-600/20 via-[#151515] to-[#111] p-4">
@@ -33,4 +33,3 @@ export default function MobileHomeHero() {
     </div>
   );
 }
-

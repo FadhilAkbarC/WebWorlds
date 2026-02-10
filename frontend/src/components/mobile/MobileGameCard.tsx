@@ -7,14 +7,18 @@ import { Game } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import MobileLink from '@/components/mobile/MobileLink';
+import { shallow } from 'zustand/shallow';
 
 interface MobileGameCardProps {
   game: Game;
 }
 
-const MobileGameCard: React.FC<MobileGameCardProps> = ({ game }) => {
-  const { user } = useAuthStore();
-  const { likeGame, unlikeGame } = useGameStore();
+const MobileGameCardComponent: React.FC<MobileGameCardProps> = ({ game }) => {
+  const user = useAuthStore((state) => state.user);
+  const { likeGame, unlikeGame } = useGameStore(
+    (state) => ({ likeGame: state.likeGame, unlikeGame: state.unlikeGame }),
+    shallow
+  );
   const [isLiked, setIsLiked] = React.useState(false);
 
   const isUnsplash =
@@ -96,6 +100,9 @@ const MobileGameCard: React.FC<MobileGameCardProps> = ({ game }) => {
     </MobileLink>
   );
 };
+
+const MobileGameCard = React.memo(MobileGameCardComponent);
+MobileGameCard.displayName = 'MobileGameCard';
 
 export default MobileGameCard;
 

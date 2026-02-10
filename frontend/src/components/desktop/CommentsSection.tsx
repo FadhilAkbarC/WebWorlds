@@ -12,7 +12,7 @@ interface CommentsProps {
 }
 
 export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newComment, setNewComment] = useState('');

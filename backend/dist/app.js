@@ -7,6 +7,7 @@ exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
+const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const env_1 = require("./config/env");
 const logger_1 = require("./utils/logger");
@@ -19,7 +20,12 @@ const users_1 = __importDefault(require("./routes/users"));
 const errorHandler_1 = require("./middleware/errorHandler");
 function createApp() {
     const app = (0, express_1.default)();
+    app.set('etag', 'weak');
+    app.disable('x-powered-by');
     app.use((0, helmet_1.default)());
+    app.use((0, compression_1.default)({
+        threshold: 1024,
+    }));
     const allowedOrigins = env_1.config.CORS_ORIGIN
         .split(',')
         .map((origin) => origin.trim())

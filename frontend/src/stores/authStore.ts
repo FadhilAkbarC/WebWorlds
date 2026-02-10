@@ -1,7 +1,8 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 import { User, AuthState } from '@/types';
 import { api, apiClient, tokenManager } from '@/lib/api';
+import { shallow } from 'zustand/shallow';
 
 interface AuthStore extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -19,7 +20,7 @@ const normalizeUser = (user: any): User => ({
   _id: user?._id || user?.id,
 });
 
-export const useAuthStore = create<AuthStore>()(
+export const useAuthStore = createWithEqualityFn<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
@@ -122,5 +123,6 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
       }),
     }
-  )
+  ),
+  shallow
 );
