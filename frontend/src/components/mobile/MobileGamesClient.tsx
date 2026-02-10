@@ -25,28 +25,38 @@ export default function MobileGamesClient({
   const {
     games,
     isLoading,
+    error,
     totalCount,
     page,
     fetchGames,
     setPage,
     hydrateFromServer,
-    hasHydrated,
+    hydratedKey,
   } = useGameStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const hydrateKey = `mobile:games:page:${initialPage}`;
 
   useEffect(() => {
-    if (!hasHydrated) {
+    if (hydratedKey !== hydrateKey) {
       hydrateFromServer({
+        key: hydrateKey,
         games: initialGames,
         totalCount: initialTotal,
         page: initialPage,
       });
     }
-  }, [hasHydrated, hydrateFromServer, initialGames, initialPage, initialTotal]);
+  }, [
+    hydrateFromServer,
+    hydrateKey,
+    hydratedKey,
+    initialGames,
+    initialPage,
+    initialTotal,
+  ]);
 
   useEffect(() => {
-    if (!hasHydrated) return;
+    if (hydratedKey !== hydrateKey) return;
 
     if (
       initialSuccess &&
@@ -63,12 +73,15 @@ export default function MobileGamesClient({
     page,
     searchQuery,
     selectedCategory,
-    hasHydrated,
     initialSuccess,
     initialPage,
+    hydrateKey,
+    hydratedKey,
   ]);
 
   const totalPages = Math.max(1, Math.ceil((totalCount || 0) / PAGE_SIZE));
+  const showError = !isLoading && (Boolean(error) || (!initialSuccess && games.length === 0));
+  const showEmpty = !isLoading && !showError && games.length === 0;
 
   return (
     <div className="bg-[#0f0f10] px-4 pt-4">
@@ -94,7 +107,17 @@ export default function MobileGamesClient({
           [...Array(4)].map((_, i) => (
             <div key={i} className="h-32 rounded-2xl bg-[#1b1b1b] animate-pulse" />
           ))
-        ) : games.length === 0 ? (
+        ) : showError ? (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-center text-xs text-red-200">
+            <p className="mb-3">{error || 'Failed to load games. Try again.'}</p>
+            <button
+              onClick={() => fetchGames(1, searchQuery, selectedCategory, PAGE_SIZE)}
+              className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white"
+            >
+              Retry
+            </button>
+          </div>
+        ) : showEmpty ? (
           <div className="rounded-2xl border border-[#222] bg-[#141414] p-6 text-center text-sm text-slate-400">
             No games found.
           </div>
@@ -127,4 +150,3 @@ export default function MobileGamesClient({
     </div>
   );
 }
-

@@ -26,28 +26,38 @@ export default function GamesClient({
   const {
     games,
     isLoading,
+    error,
     totalCount,
     page,
     fetchGames,
     setPage,
     hydrateFromServer,
-    hasHydrated,
+    hydratedKey,
   } = useGameStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const hydrateKey = `desktop:games:page:${initialPage}`;
 
   useEffect(() => {
-    if (!hasHydrated) {
+    if (hydratedKey !== hydrateKey) {
       hydrateFromServer({
+        key: hydrateKey,
         games: initialGames,
         totalCount: initialTotal,
         page: initialPage,
       });
     }
-  }, [hasHydrated, hydrateFromServer, initialGames, initialPage, initialTotal]);
+  }, [
+    hydrateFromServer,
+    hydrateKey,
+    hydratedKey,
+    initialGames,
+    initialPage,
+    initialTotal,
+  ]);
 
   useEffect(() => {
-    if (!hasHydrated) return;
+    if (hydratedKey !== hydrateKey) return;
 
     if (
       initialSuccess &&
@@ -64,12 +74,15 @@ export default function GamesClient({
     page,
     searchQuery,
     selectedCategory,
-    hasHydrated,
     initialSuccess,
     initialPage,
+    hydrateKey,
+    hydratedKey,
   ]);
 
   const totalPages = Math.ceil((totalCount || 0) / PAGE_SIZE);
+  const showError = !isLoading && (Boolean(error) || (!initialSuccess && games.length === 0));
+  const showEmpty = !isLoading && !showError && games.length === 0;
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -108,7 +121,19 @@ export default function GamesClient({
               ></div>
             ))}
           </div>
-        ) : games.length === 0 ? (
+        ) : showError ? (
+          <div className="text-center py-12">
+            <p className="text-red-400 text-lg mb-3">
+              {error || 'Failed to load games. Please try again.'}
+            </p>
+            <button
+              onClick={() => fetchGames(1, searchQuery, selectedCategory, PAGE_SIZE)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+            >
+              Retry
+            </button>
+          </div>
+        ) : showEmpty ? (
           <div className="text-center py-12">
             <p className="text-slate-400 text-lg mb-4">No games found</p>
             <p className="text-slate-500">Try adjusting your filters</p>
@@ -178,4 +203,3 @@ export default function GamesClient({
     </div>
   );
 }
-

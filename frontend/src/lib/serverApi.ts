@@ -46,13 +46,15 @@ async function fetchApi<T>(
     revalidate?: number;
     cache?: RequestCache;
     tags?: string[];
+    timeoutMs?: number;
   } = {}
 ): Promise<ApiResponse<T>> {
   try {
+    const timeoutMs = options.timeoutMs ?? 5000;
     const response = await fetch(buildUrl(path, options.params), {
       cache: options.cache ?? 'force-cache',
       next: { revalidate: options.revalidate ?? 30, tags: options.tags },
-      signal: withTimeout(8000),
+      signal: withTimeout(timeoutMs),
     });
 
     if (!response.ok) {
@@ -78,6 +80,7 @@ export async function getGamesList(params?: {
   category?: string;
   sort?: string;
   revalidate?: number;
+  timeoutMs?: number;
 }): Promise<ApiResponse<Game[]>> {
   return fetchApi<Game[]>('/games', {
     params: {
@@ -88,24 +91,27 @@ export async function getGamesList(params?: {
       sort: params?.sort ?? '',
     },
     revalidate: params?.revalidate ?? 30,
+    timeoutMs: params?.timeoutMs,
     tags: ['games'],
   });
 }
 
-export async function getGameById(gameId: string, revalidate = 60) {
+export async function getGameById(gameId: string, revalidate = 60, timeoutMs = 6000) {
   return fetchApi<Game>(`/games/${gameId}`, {
     revalidate,
+    timeoutMs,
     tags: ['game', `game:${gameId}`],
   });
 }
 
-export async function getTrendingGames(limit = 12, revalidate = 45) {
+export async function getTrendingGames(limit = 12, revalidate = 45, timeoutMs = 5000) {
   return fetchApi<Game[]>('/games', {
     params: {
       sort: 'trending',
       limit,
     },
     revalidate,
+    timeoutMs,
     tags: ['games', 'trending'],
   });
 }

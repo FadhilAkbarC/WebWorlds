@@ -78,8 +78,17 @@ function SectionHeader({ title }: { title: React.ReactNode }) {
 export const revalidate = 30;
 
 export default async function Home() {
-  const response = await getGamesList({ page: 1, limit: 50, revalidate: 30 });
+  const response = await getGamesList({
+    page: 1,
+    limit: 50,
+    revalidate: 30,
+    timeoutMs: 2500,
+  });
   const games = response.success ? response.data ?? [] : [];
+  const fetchFailed = !response.success;
+  const emptyMessage = fetchFailed
+    ? 'Unable to load games right now. Please refresh.'
+    : 'No games yet.';
 
   const recent = games.slice(0, RECENT_LIMIT);
   const recommended = games.slice(RECENT_LIMIT, RECENT_LIMIT + RECOMMENDED_LIMIT);
@@ -138,13 +147,8 @@ export default async function Home() {
             <section className="space-y-3">
               <SectionHeader title="My Recent" />
               {recent.length === 0 ? (
-                <div className="flex gap-3 overflow-hidden">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-[170px] h-[110px] bg-[#2a2a2a] rounded-lg animate-pulse"
-                    />
-                  ))}
+                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                  {emptyMessage}
                 </div>
               ) : (
                 <div className="flex gap-4 overflow-x-auto pb-2">
@@ -158,13 +162,8 @@ export default async function Home() {
             <section className="space-y-3">
               <SectionHeader title="Recommended For You" />
               {recommended.length === 0 ? (
-                <div className="flex gap-3 overflow-hidden">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-[170px] h-[110px] bg-[#2a2a2a] rounded-lg animate-pulse"
-                    />
-                  ))}
+                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                  {emptyMessage}
                 </div>
               ) : (
                 <div className="flex gap-4 overflow-x-auto pb-2">
@@ -178,13 +177,8 @@ export default async function Home() {
             <section className="space-y-3">
               <SectionHeader title="Community Creations" />
               {community.length === 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {[...Array(8)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-[120px] bg-[#2a2a2a] rounded-lg animate-pulse"
-                    />
-                  ))}
+                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                  {emptyMessage}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

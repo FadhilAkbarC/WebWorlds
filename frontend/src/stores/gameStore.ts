@@ -5,6 +5,7 @@ import { logger } from '@/utils/logger';
 
 interface GameStoreState extends GameState {
   hasHydrated: boolean;
+  hydratedKey: string | null;
 }
 
 interface GameStoreActions {
@@ -15,6 +16,7 @@ interface GameStoreActions {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   hydrateFromServer: (payload: {
+    key: string;
     games: Game[];
     totalCount?: number;
     page?: number;
@@ -33,6 +35,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
   totalCount: 0,
   page: 1,
   hasHydrated: false,
+  hydratedKey: null,
 
   setCurrentGame: (game) => set({ currentGame: game }),
   setPage: (page) => set({ page }),
@@ -41,7 +44,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
   clearCurrentGame: () => set({ currentGame: null }),
   hydrateFromServer: (payload) =>
     set((state) => {
-      if (state.hasHydrated && state.page === (payload.page ?? state.page)) {
+      if (state.hydratedKey === payload.key) {
         return state;
       }
       return {
@@ -52,6 +55,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set, get)
         isLoading: false,
         error: null,
         hasHydrated: true,
+        hydratedKey: payload.key,
       };
     }),
 

@@ -45,7 +45,7 @@ export default function MobileGameDetailClient({
   const fetchGameDetail = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/games/${gameId}`);
+      const response = await api.get(`/games/${gameId}`, { timeout: 5000 });
       const gameData = response.data.data || response.data;
       setGame(gameData);
       setError(null);
@@ -60,7 +60,7 @@ export default function MobileGameDetailClient({
   const fetchLikeStatus = useCallback(async () => {
     if (!user) return;
     try {
-      const likeCheckResponse = await api.get(`/games/${gameId}/like-status`);
+      const likeCheckResponse = await api.get(`/games/${gameId}/like-status`, { timeout: 3000 });
       setIsLiked(Boolean(likeCheckResponse.data?.data?.isLiked));
     } catch {
       setIsLiked(false);
@@ -227,4 +227,3 @@ export default function MobileGameDetailClient({
     </div>
   );
 }
-

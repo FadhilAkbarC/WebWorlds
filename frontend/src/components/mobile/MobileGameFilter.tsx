@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 
 interface MobileGameFilterProps {
@@ -19,6 +19,14 @@ const MobileGameFilter: React.FC<MobileGameFilterProps> = ({
 
   const sortedCategories = useMemo(() => ['all', ...categories], [categories]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(query.trim());
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [query, onSearchChange]);
+
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -28,7 +36,6 @@ const MobileGameFilter: React.FC<MobileGameFilterProps> = ({
           onChange={(e) => {
             const value = e.target.value;
             setQuery(value);
-            onSearchChange(value);
           }}
           placeholder="Search games"
           className="w-full rounded-2xl border border-[#2b2b2b] bg-[#141414] px-9 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"

@@ -10,8 +10,17 @@ const HOME_LIMIT = 16;
 export const revalidate = 30;
 
 export default async function MobileHomePage() {
-  const response = await getGamesList({ page: 1, limit: HOME_LIMIT, revalidate: 30 });
+  const response = await getGamesList({
+    page: 1,
+    limit: HOME_LIMIT,
+    revalidate: 30,
+    timeoutMs: 2500,
+  });
   const games = response.success ? response.data ?? [] : [];
+  const fetchFailed = !response.success;
+  const emptyMessage = fetchFailed
+    ? 'Unable to load games. Pull to refresh.'
+    : 'No games yet.';
 
   const featured = games.slice(0, 4);
   const more = games.slice(4, 12);
@@ -30,10 +39,8 @@ export default async function MobileHomePage() {
           </MobileLink>
         </div>
         {featured.length === 0 ? (
-          <div className="grid grid-cols-1 gap-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-36 rounded-2xl bg-[#1b1b1b] animate-pulse" />
-            ))}
+          <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 text-xs text-slate-400">
+            {emptyMessage}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">
@@ -51,10 +58,8 @@ export default async function MobileHomePage() {
           </h2>
         </div>
         {more.length === 0 ? (
-          <div className="grid grid-cols-1 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 rounded-2xl bg-[#1b1b1b] animate-pulse" />
-            ))}
+          <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 text-xs text-slate-400">
+            {emptyMessage}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">

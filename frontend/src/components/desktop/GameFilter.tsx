@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 
 interface GameFilterProps {
@@ -18,10 +18,17 @@ export const GameFilter: React.FC<GameFilterProps> = ({
   const [selectedCategory, setSelectedCategory] = React.useState('');
   const [isOpen, setIsOpen] = React.useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(searchQuery.trim());
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, onSearchChange]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    onSearchChange(query);
   };
 
   const handleCategoryChange = (category: string) => {
