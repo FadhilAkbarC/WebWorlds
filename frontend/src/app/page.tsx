@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { UserPlus, Heart, Play } from 'lucide-react';
 import type { Game } from '@/types';
 import { getGamesList } from '@/lib/serverApi';
+import { shouldUseNextImage } from '@/lib/imageUtils';
 
 const FRIEND_SLOTS = 12;
 const RECENT_LIMIT = 10;
@@ -16,24 +17,36 @@ function RailCard({ game }: { game: Game }) {
   const isUnsplash =
     typeof game.thumbnail === 'string' &&
     /(images|plus)\.unsplash\.com/i.test(game.thumbnail);
-  const isDataUrl = typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
+  const isDataUrl =
+    typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
   const likes = game.likes ?? game.stats?.likes ?? 0;
   const plays = game.plays ?? game.stats?.plays ?? 0;
+  const useNextImage =
+    typeof game.thumbnail === 'string' && shouldUseNextImage(game.thumbnail);
 
   return (
     <AppLink href={`/games/${game._id}`} className="min-w-[170px]">
       <div className="flex flex-col gap-2">
         <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#2a2a2a] border border-[#343434]">
           {game.thumbnail ? (
-            <Image
-              src={game.thumbnail}
-              alt={game.title}
-              fill
-              sizes="180px"
-              loading="lazy"
-              unoptimized={isUnsplash || isDataUrl}
-              className="object-cover"
-            />
+            useNextImage ? (
+              <Image
+                src={game.thumbnail}
+                alt={game.title}
+                fill
+                sizes="180px"
+                loading="lazy"
+                unoptimized={isUnsplash || isDataUrl}
+                className="object-cover"
+              />
+            ) : (
+              <img
+                src={game.thumbnail}
+                alt={game.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/70 text-xs">
               No Image

@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import { shallow } from 'zustand/shallow';
 import type { Game } from '@/types';
+import { shouldUseNextImage } from '@/lib/imageUtils';
 
 const CommentsSection = dynamic(
   lazyWithRetry(() =>
@@ -138,6 +139,10 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
   const isUnsplash =
     typeof game.thumbnail === 'string' &&
     /(images|plus)\\.unsplash\\.com/i.test(game.thumbnail);
+  const isDataUrl =
+    typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
+  const useNextImage =
+    typeof game.thumbnail === 'string' && shouldUseNextImage(game.thumbnail);
 
   const plays = game.plays ?? game.stats?.plays ?? 0;
   const likes = game.likes ?? game.stats?.likes ?? 0;
@@ -153,15 +158,23 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
           <div className="lg:col-span-2 space-y-8">
             <div className="w-full aspect-video bg-slate-800 rounded-lg overflow-hidden border border-slate-700 relative">
               {game.thumbnail ? (
-                <Image
-                  src={game.thumbnail}
-                  alt={game.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                  priority
-                  unoptimized={isUnsplash}
-                />
+                useNextImage ? (
+                  <Image
+                    src={game.thumbnail}
+                    alt={game.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 66vw"
+                    priority
+                    unoptimized={isUnsplash || isDataUrl}
+                  />
+                ) : (
+                  <img
+                    src={game.thumbnail}
+                    alt={game.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900">
                   <Play size={64} className="text-slate-500" />

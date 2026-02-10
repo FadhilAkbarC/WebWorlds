@@ -12,6 +12,7 @@ import type { Game } from '@/types';
 import MobileLink from '@/components/mobile/MobileLink';
 import dynamic from 'next/dynamic';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import { shouldUseNextImage } from '@/lib/imageUtils';
 
 const MobileCommentsSection = dynamic(
   lazyWithRetry(() => import('@/components/mobile/MobileCommentsSection')),
@@ -136,6 +137,10 @@ export default function MobileGameDetailClient({
 
   const isUnsplash =
     typeof game.thumbnail === 'string' && /(images|plus)\\.unsplash\\.com/i.test(game.thumbnail);
+  const isDataUrl =
+    typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
+  const useNextImage =
+    typeof game.thumbnail === 'string' && shouldUseNextImage(game.thumbnail);
 
   const plays = game.plays ?? game.stats?.plays ?? 0;
   const likes = game.likes ?? game.stats?.likes ?? 0;
@@ -149,14 +154,23 @@ export default function MobileGameDetailClient({
       <div className="mt-4 space-y-4">
         <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-[#1b1b1b]">
           {game.thumbnail ? (
-            <Image
-              src={game.thumbnail}
-              alt={game.title}
-              fill
-              sizes="100vw"
-              unoptimized={isUnsplash}
-              className="object-cover"
-            />
+            useNextImage ? (
+              <Image
+                src={game.thumbnail}
+                alt={game.title}
+                fill
+                sizes="100vw"
+                unoptimized={isUnsplash || isDataUrl}
+                className="object-cover"
+              />
+            ) : (
+              <img
+                src={game.thumbnail}
+                alt={game.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-500">
               <Play size={36} />

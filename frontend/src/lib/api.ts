@@ -34,12 +34,12 @@ const BACKEND_URL = (() => {
     }
   }
 
-  return envUrl || 'http://localhost:5000/api';
+  return envUrl || '/api';
 })();
 
 // Validate URL format
-if (BACKEND_URL && !BACKEND_URL.startsWith('http')) {
-  console.error('❌ BACKEND_URL must start with http:// or https://', BACKEND_URL);
+if (BACKEND_URL && !BACKEND_URL.startsWith('http') && !BACKEND_URL.startsWith('/')) {
+  console.error('❌ BACKEND_URL must start with http://, https://, or /api', BACKEND_URL);
 }
 
 /**

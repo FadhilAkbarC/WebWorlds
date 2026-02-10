@@ -8,6 +8,7 @@ import { Heart, Play, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import { shallow } from 'zustand/shallow';
+import { shouldUseNextImage } from '@/lib/imageUtils';
 
 interface GameCardProps {
   game: Game;
@@ -26,6 +27,8 @@ const GameCardComponent: React.FC<GameCardProps> = ({ game }) => {
   const isDataUrl = typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
   const likes = game.likes ?? game.stats?.likes ?? 0;
   const plays = game.plays ?? game.stats?.plays ?? 0;
+  const useNextImage =
+    typeof game.thumbnail === 'string' && shouldUseNextImage(game.thumbnail);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,15 +63,24 @@ const GameCardComponent: React.FC<GameCardProps> = ({ game }) => {
         {/* Thumbnail */}
         <div className="relative w-full aspect-video bg-slate-700 overflow-hidden">
           {game.thumbnail ? (
-            <Image
-              src={game.thumbnail}
-              alt={game.title}
-              fill
-              sizes="(max-width: 1024px) 100vw, 33vw"
-              priority={Boolean(game.featured)}
-              unoptimized={isUnsplash || isDataUrl}
-              className="object-cover group-hover:scale-110 transition-transform duration-300"
-            />
+            useNextImage ? (
+              <Image
+                src={game.thumbnail}
+                alt={game.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                priority={Boolean(game.featured)}
+                unoptimized={isUnsplash || isDataUrl}
+                className="object-cover group-hover:scale-110 transition-transform duration-300"
+              />
+            ) : (
+              <img
+                src={game.thumbnail}
+                alt={game.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-300"
+              />
+            )
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
               <Play size={48} className="text-white opacity-50" />

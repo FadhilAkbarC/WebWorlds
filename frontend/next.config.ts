@@ -59,6 +59,23 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async rewrites() {
+    const rawTarget = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL;
+    if (!rawTarget) return [];
+
+    const normalizedTarget = rawTarget.replace(/\/+$/, '');
+    const apiTarget = normalizedTarget.endsWith('/api')
+      ? normalizedTarget
+      : `${normalizedTarget}/api`;
+
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiTarget}/:path*`,
+      },
+    ];
+  },
+
   // Experimental features
   experimental: {
     optimizePackageImports: ['lucide-react'],

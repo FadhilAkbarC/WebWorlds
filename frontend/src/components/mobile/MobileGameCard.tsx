@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import MobileLink from '@/components/mobile/MobileLink';
 import { shallow } from 'zustand/shallow';
+import { shouldUseNextImage } from '@/lib/imageUtils';
 
 interface MobileGameCardProps {
   game: Game;
@@ -26,6 +27,8 @@ const MobileGameCardComponent: React.FC<MobileGameCardProps> = ({ game }) => {
   const isDataUrl = typeof game.thumbnail === 'string' && game.thumbnail.startsWith('data:image/');
   const likes = game.likes ?? game.stats?.likes ?? 0;
   const plays = game.plays ?? game.stats?.plays ?? 0;
+  const useNextImage =
+    typeof game.thumbnail === 'string' && shouldUseNextImage(game.thumbnail);
 
   const handleLike = async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -54,14 +57,23 @@ const MobileGameCardComponent: React.FC<MobileGameCardProps> = ({ game }) => {
       <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl overflow-hidden">
         <div className="relative w-full aspect-[16/9] bg-[#222]">
           {game.thumbnail ? (
-            <Image
-              src={game.thumbnail}
-              alt={game.title}
-              fill
-              sizes="100vw"
-              unoptimized={isUnsplash || isDataUrl}
-              className="object-cover"
-            />
+            useNextImage ? (
+              <Image
+                src={game.thumbnail}
+                alt={game.title}
+                fill
+                sizes="100vw"
+                unoptimized={isUnsplash || isDataUrl}
+                className="object-cover"
+              />
+            ) : (
+              <img
+                src={game.thumbnail}
+                alt={game.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-400">
               <Play size={28} />
