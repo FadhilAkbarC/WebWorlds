@@ -5,24 +5,34 @@ import MobileLink from '@/components/mobile/MobileLink';
 import MobileHomeHero from '@/components/mobile/MobileHomeHero';
 import { getGamesList } from '@/lib/serverApi';
 
-const HOME_LIMIT = 16;
+const HOME_LIMIT = 12;
 
 export const revalidate = 30;
 
 export default async function MobileHomePage() {
-  const response = await getGamesList({
-    page: 1,
-    limit: HOME_LIMIT,
-    revalidate: 30,
-  });
-  const games = response.success ? response.data ?? [] : [];
-  const fetchFailed = !response.success;
-  const emptyMessage = fetchFailed
-    ? 'Unable to load games. Pull to refresh.'
-    : 'No games yet.';
+  const [trendingResponse, freshResponse] = await Promise.all([
+    getGamesList({
+      page: 1,
+      limit: 4,
+      sort: 'trending',
+      revalidate: 60,
+    }),
+    getGamesList({
+      page: 1,
+      limit: HOME_LIMIT,
+      sort: 'newest',
+      revalidate: 30,
+    }),
+  ]);
 
-  const featured = games.slice(0, 4);
-  const more = games.slice(4, 12);
+  const trending = trendingResponse.success ? trendingResponse.data ?? [] : [];
+  const fresh = freshResponse.success ? freshResponse.data ?? [] : [];
+  const trendingMessage = trendingResponse.success
+    ? 'No trending games yet.'
+    : 'Unable to load trending games. Pull to refresh.';
+  const freshMessage = freshResponse.success
+    ? 'No fresh games yet.'
+    : 'Unable to load games. Pull to refresh.';
 
   return (
     <div className="bg-[#0f0f10] px-4 pt-4">
@@ -37,13 +47,13 @@ export default async function MobileHomePage() {
             View all <ArrowRight size={12} />
           </MobileLink>
         </div>
-        {featured.length === 0 ? (
+        {trending.length === 0 ? (
           <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 text-xs text-slate-400">
-            {emptyMessage}
+            {trendingMessage}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">
-            {featured.map((game) => (
+            {trending.map((game) => (
               <MobileGameCard key={game._id} game={game} />
             ))}
           </div>
@@ -56,13 +66,13 @@ export default async function MobileHomePage() {
             <Gamepad2 size={14} className="text-purple-300" /> Fresh picks
           </h2>
         </div>
-        {more.length === 0 ? (
+        {fresh.length === 0 ? (
           <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 text-xs text-slate-400">
-            {emptyMessage}
+            {freshMessage}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">
-            {more.map((game) => (
+            {fresh.map((game) => (
               <MobileGameCard key={game._id} game={game} />
             ))}
           </div>

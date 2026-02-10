@@ -3,15 +3,7 @@ import AppLink from '@/components/shared/AppLink';
 import HomeUserHeader from '@/components/desktop/HomeUserHeader';
 import HomeFollowersCount from '@/components/desktop/HomeFollowersCount';
 import Image from 'next/image';
-import {
-  Home as HomeIcon,
-  Users,
-  MessageSquare,
-  Compass,
-  UserPlus,
-  Heart,
-  Play,
-} from 'lucide-react';
+import { UserPlus, Heart, Play } from 'lucide-react';
 import type { Game } from '@/types';
 import { getGamesList } from '@/lib/serverApi';
 
@@ -49,9 +41,7 @@ function RailCard({ game }: { game: Game }) {
           )}
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-white line-clamp-1">
-            {game.title}
-          </p>
+          <p className="text-sm font-semibold text-white line-clamp-1">{game.title}</p>
           <div className="flex items-center gap-3 text-[11px] text-slate-400">
             <span className="flex items-center gap-1">
               <Heart size={12} /> {likes}
@@ -78,117 +68,125 @@ function SectionHeader({ title }: { title: React.ReactNode }) {
 export const revalidate = 30;
 
 export default async function Home() {
-  const response = await getGamesList({
-    page: 1,
-    limit: 50,
-    revalidate: 30,
-  });
-  const games = response.success ? response.data ?? [] : [];
-  const fetchFailed = !response.success;
-  const emptyMessage = fetchFailed
-    ? 'Unable to load games right now. Please refresh.'
-    : 'No games yet.';
+  const [recentResponse, recommendedResponse, communityResponse] = await Promise.all([
+    getGamesList({
+      page: 1,
+      limit: RECENT_LIMIT,
+      sort: 'newest',
+      revalidate: 30,
+    }),
+    getGamesList({
+      page: 1,
+      limit: RECOMMENDED_LIMIT,
+      sort: 'likes',
+      revalidate: 60,
+    }),
+    getGamesList({
+      page: 1,
+      limit: COMMUNITY_LIMIT,
+      sort: 'trending',
+      revalidate: 60,
+    }),
+  ]);
 
-  const recent = games.slice(0, RECENT_LIMIT);
-  const recommended = games.slice(RECENT_LIMIT, RECENT_LIMIT + RECOMMENDED_LIMIT);
-  const community = games.slice(0, COMMUNITY_LIMIT);
+  const recent = recentResponse.success ? recentResponse.data ?? [] : [];
+  const recommendedRaw = recommendedResponse.success ? recommendedResponse.data ?? [] : [];
+  const community = communityResponse.success ? communityResponse.data ?? [] : [];
+  const recommended =
+    recommendedRaw.length > 0 ? recommendedRaw : recent.slice(0, RECOMMENDED_LIMIT);
 
   const friendList = Array.from({ length: FRIEND_SLOTS }, (_, i) => `Friend ${i + 1}`);
+  const recentMessage = recentResponse.success
+    ? 'No games yet.'
+    : 'Unable to load recent games. Please refresh.';
+  const recommendedMessage = recommendedResponse.success
+    ? 'No recommendations yet.'
+    : 'Unable to load recommendations. Please refresh.';
+  const communityMessage = communityResponse.success
+    ? 'No community games yet.'
+    : 'Unable to load community games. Please refresh.';
 
   return (
     <div className="min-h-screen bg-[#1b1b1b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[68px_1fr] gap-5">
-          <aside className="hidden lg:flex flex-col gap-3">
-            {[HomeIcon, Compass, Users, MessageSquare].map((Icon, index) => (
-              <div
-                key={index}
-                className="w-12 h-12 rounded-2xl bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-slate-300"
+        <main className="space-y-6">
+          <HomeUserHeader />
+
+          <section className="space-y-3">
+            <SectionHeader
+              title={
+                <span>
+                  Friends (<HomeFollowersCount />)
+                </span>
+              }
+            />
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              <AppLink
+                href="/search?tab=people"
+                className="min-w-[110px] flex flex-col items-center gap-2"
               >
-                <Icon size={20} />
+                <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-slate-200">
+                  <UserPlus size={20} />
+                </div>
+                <p className="text-xs text-slate-400">Add Friends</p>
+              </AppLink>
+
+              {friendList.map((name) => (
+                <div key={name} className="min-w-[110px] flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-white">
+                    {name.slice(0, 1)}
+                  </div>
+                  <p className="text-xs text-slate-300 line-clamp-1">{name}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <SectionHeader title="My Recent" />
+            {recent.length === 0 ? (
+              <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                {recentMessage}
               </div>
-            ))}
-          </aside>
-
-          <main className="space-y-6">
-            <HomeUserHeader />
-
-            <section className="space-y-3">
-              <SectionHeader
-                title={
-                  <span>
-                    Friends (<HomeFollowersCount />)
-                  </span>
-                }
-              />
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                <AppLink
-                  href="/search?tab=people"
-                  className="min-w-[110px] flex flex-col items-center gap-2"
-                >
-                  <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-slate-200">
-                    <UserPlus size={20} />
-                  </div>
-                  <p className="text-xs text-slate-400">Add Friends</p>
-                </AppLink>
-
-                {friendList.map((name) => (
-                  <div key={name} className="min-w-[110px] flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-white">
-                      {name.slice(0, 1)}
-                    </div>
-                    <p className="text-xs text-slate-300 line-clamp-1">{name}</p>
-                  </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {recent.map((game) => (
+                  <RailCard key={game._id} game={game} />
                 ))}
               </div>
-            </section>
+            )}
+          </section>
 
-            <section className="space-y-3">
-              <SectionHeader title="My Recent" />
-              {recent.length === 0 ? (
-                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
-                  {emptyMessage}
-                </div>
-              ) : (
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {recent.map((game) => (
-                    <RailCard key={game._id} game={game} />
-                  ))}
-                </div>
-              )}
-            </section>
+          <section className="space-y-3">
+            <SectionHeader title="Recommended For You" />
+            {recommended.length === 0 ? (
+              <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                {recommendedMessage}
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {recommended.map((game) => (
+                  <RailCard key={game._id} game={game} />
+                ))}
+              </div>
+            )}
+          </section>
 
-            <section className="space-y-3">
-              <SectionHeader title="Recommended For You" />
-              {recommended.length === 0 ? (
-                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
-                  {emptyMessage}
-                </div>
-              ) : (
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {recommended.map((game) => (
-                    <RailCard key={game._id} game={game} />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="space-y-3">
-              <SectionHeader title="Community Creations" />
-              {community.length === 0 ? (
-                <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
-                  {emptyMessage}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {community.map((game) => (
-                    <RailCard key={game._id} game={game} />
-                  ))}
-                </div>
-              )}
-            </section>
-          </main>
-        </div>
+          <section className="space-y-3">
+            <SectionHeader title="Community Creations" />
+            {community.length === 0 ? (
+              <div className="rounded-lg border border-[#343434] bg-[#232323] px-4 py-3 text-sm text-slate-400">
+                {communityMessage}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {community.map((game) => (
+                  <RailCard key={game._id} game={game} />
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
       </div>
     </div>
   );

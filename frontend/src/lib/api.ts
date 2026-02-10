@@ -230,10 +230,10 @@ export const apiClient = {
 
   // Comments
   getGameComments: (gameId: string, params?: Record<string, unknown>) =>
-    api.get(`/comments`, { params: { gameId, ...params } }),
+    api.get(`/games/${gameId}/comments`, { params }),
 
   postComment: (gameId: string, comment: string) =>
-    api.post(`/comments`, { gameId, comment }),
+    api.post(`/games/${gameId}/comments`, { text: comment }),
 
   deleteComment: (commentId: string) => api.delete(`/comments/${commentId}`),
 
