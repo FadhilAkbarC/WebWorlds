@@ -52,11 +52,17 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
     try {
       setIsLoading(true);
       const response = await api.get(`/games/${gameId}`, { timeout: 5000 });
-      const gameData = response.data.data || response.data;
+      if (response.data?.success === false) {
+        throw new Error(response.data?.error || 'Game not found');
+      }
+      const gameData = response.data?.data ?? response.data;
+      if (!gameData?._id) {
+        throw new Error('Game not found');
+      }
       setGame(gameData);
       setError(null);
     } catch (err) {
-      setError('Failed to load game details');
+      setError(err instanceof Error ? err.message : 'Failed to load game details');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -151,7 +157,7 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <AppLink href="/games" className="text-blue-400 hover:text-blue-300 mb-8 inline-block">
-          â† Back to Games
+          Back to Games
         </AppLink>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -304,7 +310,7 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 text-sm">Status</span>
                 <span className="text-green-400 font-semibold">
-                  {game.featured ? 'â­ Featured' : 'Public'}
+                  {game.featured ? '* Featured' : 'Public'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -328,3 +334,4 @@ export default function GameDetailClient({ gameId, initialGame }: GameDetailClie
     </div>
   );
 }
+

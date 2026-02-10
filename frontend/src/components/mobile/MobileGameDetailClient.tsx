@@ -51,11 +51,17 @@ export default function MobileGameDetailClient({
     try {
       setIsLoading(true);
       const response = await api.get(`/games/${gameId}`, { timeout: 5000 });
-      const gameData = response.data.data || response.data;
+      if (response.data?.success === false) {
+        throw new Error(response.data?.error || 'Game not found');
+      }
+      const gameData = response.data?.data ?? response.data;
+      if (!gameData?._id) {
+        throw new Error('Game not found');
+      }
       setGame(gameData);
       setError(null);
     } catch (err) {
-      setError('Failed to load game details');
+      setError(err instanceof Error ? err.message : 'Failed to load game details');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -148,7 +154,7 @@ export default function MobileGameDetailClient({
   return (
     <div className="min-h-screen bg-[#0f0f10] px-4 pt-4">
       <MobileLink href="/games" className="text-xs text-blue-300">
-        ? Back
+        Back
       </MobileLink>
 
       <div className="mt-4 space-y-4">
@@ -245,3 +251,4 @@ export default function MobileGameDetailClient({
     </div>
   );
 }
+

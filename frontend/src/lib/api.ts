@@ -5,41 +5,52 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 // Examples:
 // - Production: https://web-production-3dc36.up.railway.app/api
 // - Development: http://localhost:5000/api
+const normalizeApiBase = (value?: string) => {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  if (trimmed.startsWith('/')) {
+    if (trimmed === '/api' || trimmed.startsWith('/api/')) {
+      return trimmed.replace(/\/+$/, '');
+    }
+    return '/api';
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (!url.pathname || url.pathname === '/') {
+      url.pathname = '/api';
+    } else if (!url.pathname.startsWith('/api')) {
+      url.pathname = `${url.pathname.replace(/\/$/, '')}/api`;
+    }
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return trimmed;
+  }
+};
+
 const BACKEND_URL = (() => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  const normalized = normalizeApiBase(envUrl);
 
-  // Validate that URL is set and not localhost in production
   if (typeof window !== 'undefined') {
     const isProduction = !window.location.hostname.includes('localhost');
-    
-    if (!envUrl) {
-      console.error(
-        '❌ CRITICAL: NEXT_PUBLIC_API_URL is not set. API calls will fail. ' +
-        'Set in Vercel Environment: NEXT_PUBLIC_API_URL=https://your-backend-api.com/api'
-      );
-      
-      // Fallback: try to infer from window location (last resort)
-      if (isProduction) {
-        // In production, don't guess - fail explicitly
-        return '';
-      }
-    }
 
-    // Warn if using localhost in production
-    if (isProduction && envUrl?.includes('localhost')) {
+    if (isProduction && normalized.includes('localhost')) {
       console.warn(
-        '⚠️  WARNING: Frontend is using localhost API in production. ' +
+        'WARNING: Frontend is using localhost API in production. ' +
         'Update NEXT_PUBLIC_API_URL to your production backend.'
       );
     }
   }
 
-  return envUrl || '/api';
+  return normalized || '/api';
 })();
 
 // Validate URL format
 if (BACKEND_URL && !BACKEND_URL.startsWith('http') && !BACKEND_URL.startsWith('/')) {
-  console.error('❌ BACKEND_URL must start with http://, https://, or /api', BACKEND_URL);
+  console.error('BACKEND_URL must start with http://, https://, or /api', BACKEND_URL);
 }
 
 /**
@@ -253,3 +264,4 @@ export const apiClient = {
  * Export token manager for use in auth stores
  */
 export { tokenManager };
+

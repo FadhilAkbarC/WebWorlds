@@ -23,11 +23,6 @@ export default function MobileLoginPage() {
       return;
     }
 
-    if (!process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL.includes('localhost')) {
-      setLocalError('API URL is not configured for mobile. Please use a production URL.');
-      return;
-    }
-
     try {
       await login(email, password);
       router.push('/m');

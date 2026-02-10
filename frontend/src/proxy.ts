@@ -7,7 +7,7 @@ const UI_COOKIE = 'ww-ui';
 const isMobileUserAgent = (ua: string) =>
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   if (
@@ -24,7 +24,19 @@ export function proxy(request: NextRequest) {
 
   const uiParam = searchParams.get('ui');
   if (uiParam === 'mobile' || uiParam === 'desktop') {
-    const response = NextResponse.next();
+    const responseUrl = request.nextUrl.clone();
+    responseUrl.searchParams.delete('ui');
+
+    if (uiParam === 'mobile') {
+      if (!pathname.startsWith(MOBILE_PREFIX)) {
+        responseUrl.pathname = `${MOBILE_PREFIX}${pathname}`;
+      }
+    } else if (pathname.startsWith(MOBILE_PREFIX)) {
+      const stripped = pathname.slice(MOBILE_PREFIX.length) || '/';
+      responseUrl.pathname = stripped;
+    }
+
+    const response = NextResponse.redirect(responseUrl);
     response.cookies.set(UI_COOKIE, uiParam, {
       path: '/',
       maxAge: 60 * 60 * 24 * 30,

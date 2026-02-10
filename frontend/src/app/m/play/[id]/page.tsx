@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { X, Volume2, VolumeX } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -19,30 +19,38 @@ export default function MobilePlayGamePage() {
   const [wbwErrors, setWbwErrors] = useState<WBWError[]>([]);
   const [isMuted, setIsMuted] = useState(false);
 
-  useEffect(() => {
+  const fetchAndPlayGame = useCallback(async () => {
     if (!gameId) {
       setError('Game ID not provided');
       setIsLoading(false);
       return;
     }
 
-    const fetchAndPlayGame = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get(`/games/${gameId}`);
-        const gameData = response.data.data || response.data;
-        setGame(gameData);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load game:', err);
-        setError('Failed to load game. Please try again.');
-      } finally {
-        setIsLoading(false);
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/games/${gameId}`, { timeout: 8000 });
+      if (response.data?.success === false) {
+        throw new Error(response.data?.error || 'Game not found');
       }
-    };
-
-    fetchAndPlayGame();
+      const gameData = response.data?.data ?? response.data;
+      if (!gameData?._id) {
+        throw new Error('Game not found');
+      }
+      setGame(gameData);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load game:', err);
+      const message =
+        err instanceof Error ? err.message : 'Failed to load game. Please try again.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   }, [gameId]);
+
+  useEffect(() => {
+    void fetchAndPlayGame();
+  }, [fetchAndPlayGame]);
 
   useEffect(() => {
     if (!game || !canvasRef.current) return;
@@ -127,12 +135,20 @@ export default function MobilePlayGamePage() {
                 ))}
               </div>
             )}
-            <button
-              onClick={() => router.back()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-            >
-              Back to Game
-            </button>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => fetchAndPlayGame()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => router.back()}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs"
+              >
+                Back
+              </button>
+            </div>
           </div>
         )}
 

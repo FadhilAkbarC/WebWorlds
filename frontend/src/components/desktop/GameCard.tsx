@@ -69,7 +69,6 @@ const GameCardComponent: React.FC<GameCardProps> = ({ game }) => {
                 alt={game.title}
                 fill
                 sizes="(max-width: 1024px) 100vw, 33vw"
-                priority={Boolean(game.featured)}
                 unoptimized={isUnsplash || isDataUrl}
                 className="object-cover group-hover:scale-110 transition-transform duration-300"
               />

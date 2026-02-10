@@ -112,7 +112,7 @@ export const useGameStore = createWithEqualityFn<GameStoreState & GameStoreActio
           (error as any).response?.status === 0
         ) {
           errorMsg =
-            '❌ API Connection Error: Check backend CORS settings and NEXT_PUBLIC_API_URL environment variable. ' +
+            'API Connection Error: Check backend CORS settings and NEXT_PUBLIC_API_URL environment variable. ' +
             'Verify backend is running and accessible from your frontend domain.';
           logger.error('CORS/Network Error:', {
             originalError: error.message,
@@ -242,3 +242,4 @@ export const useGameStore = createWithEqualityFn<GameStoreState & GameStoreActio
  */
 export const selectGames = (state: GameStoreState & GameStoreActions) => state.games;
 export const selectCurrentGame = (state: GameStoreState & GameStoreActions) => state.currentGame;
+

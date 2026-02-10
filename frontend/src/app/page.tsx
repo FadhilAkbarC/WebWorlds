@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import AppLink from '@/components/shared/AppLink';
 import HomeUserHeader from '@/components/desktop/HomeUserHeader';
 import HomeFollowersCount from '@/components/desktop/HomeFollowersCount';
@@ -73,7 +73,7 @@ function SectionHeader({ title }: { title: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
       <h2 className="text-base sm:text-lg font-semibold text-white">{title}</h2>
-      <span className="text-xs text-slate-400">â†’</span>
+      <span className="text-xs text-slate-400">{'->'}</span>
     </div>
   );
 }
@@ -204,3 +204,4 @@ export default async function Home() {
     </div>
   );
 }
+
