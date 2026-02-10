@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileChangePasswordPage() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function MobileChangePasswordPage() {
 
   React.useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/m/login');
     }
   }, [user, router]);
 
@@ -60,7 +60,7 @@ export default function MobileChangePasswordPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSuccess('Password changed successfully!');
       setTimeout(() => {
-        router.push('/profile');
+        router.push('/m/profile');
       }, 1500);
     } catch (err) {
       setError('Failed to change password');
@@ -76,9 +76,9 @@ export default function MobileChangePasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f10] px-4 pt-4">
-      <AppLink href="/profile/edit" className="text-xs text-blue-300">
+      <MobileLink href="/profile/edit" className="text-xs text-blue-300">
         ? Back to Edit Profile
-      </AppLink>
+      </MobileLink>
 
       <div className="mt-4 rounded-2xl border border-[#232323] bg-[#161616] p-4 space-y-4">
         <h1 className="text-lg font-semibold text-white">Change Password</h1>
@@ -144,3 +144,5 @@ export default function MobileChangePasswordPage() {
     </div>
   );
 }
+
+

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileLoginPage() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function MobileLoginPage() {
 
     try {
       await login(email, password);
-      router.push('/');
+      router.push('/m');
     } catch (err: any) {
       if (err?.message?.includes('Network Error')) {
         setLocalError('Network error: Check your connection or API URL.');
@@ -102,15 +102,17 @@ export default function MobileLoginPage() {
           </form>
 
           <div className="flex items-center justify-between text-xs text-slate-400">
-            <AppLink href="/forgot-password" className="hover:text-white">
+            <MobileLink href="/forgot-password" className="hover:text-white">
               Forgot password?
-            </AppLink>
-            <AppLink href="/signup" className="text-blue-300">
+            </MobileLink>
+            <MobileLink href="/signup" className="text-blue-300">
               Sign up
-            </AppLink>
+            </MobileLink>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+

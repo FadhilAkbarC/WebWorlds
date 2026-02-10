@@ -5,7 +5,7 @@ import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from '
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
 import { Game } from '@/types';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 interface Badge {
   name: string;
@@ -117,9 +117,9 @@ export default function MobileProfilePage() {
       <div className="min-h-screen bg-[#0f0f10] flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-400 mb-4 text-sm">Please login to view your profile</p>
-          <AppLink href="/login" className="text-blue-400 text-sm">
+          <MobileLink href="/login" className="text-blue-400 text-sm">
             Go to login
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
     );
@@ -166,18 +166,18 @@ export default function MobileProfilePage() {
         </div>
 
         <div className="mt-4 flex gap-2">
-          <AppLink
+          <MobileLink
             href="/profile/edit"
             className="flex-1 rounded-full bg-blue-600 py-2 text-center text-xs font-semibold text-white"
           >
             Edit Profile
-          </AppLink>
-          <AppLink
+          </MobileLink>
+          <MobileLink
             href="/settings"
             className="flex-1 rounded-full border border-[#2b2b2b] py-2 text-center text-xs text-slate-200"
           >
             Settings
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ export default function MobileProfilePage() {
           ) : userGames.length > 0 ? (
             <div className="space-y-2">
               {userGames.map((game) => (
-                <AppLink
+                <MobileLink
                   key={game._id}
                   href={`/games/${game._id}`}
                   className="block rounded-2xl border border-[#232323] bg-[#161616] p-3"
@@ -257,7 +257,7 @@ export default function MobileProfilePage() {
                       </p>
                     </div>
                   </div>
-                </AppLink>
+                </MobileLink>
               ))}
             </div>
           ) : (
@@ -279,3 +279,5 @@ export default function MobileProfilePage() {
     </div>
   );
 }
+
+

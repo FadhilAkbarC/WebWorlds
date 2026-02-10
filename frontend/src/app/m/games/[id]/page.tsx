@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import { Game } from '@/types';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 import dynamic from 'next/dynamic';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
@@ -103,9 +103,9 @@ export default function MobileGameDetailPage() {
       <div className="min-h-screen bg-[#0f0f10] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 mb-4 text-sm">{error || 'Game not found'}</p>
-          <AppLink href="/games" className="text-blue-400 text-sm">
+          <MobileLink href="/games" className="text-blue-400 text-sm">
             Back to games
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
     );
@@ -116,9 +116,9 @@ export default function MobileGameDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f10] px-4 pt-4">
-      <AppLink href="/games" className="text-xs text-blue-300">
+      <MobileLink href="/games" className="text-xs text-blue-300">
         ? Back
-      </AppLink>
+      </MobileLink>
 
       <div className="mt-4 space-y-4">
         <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-[#1b1b1b]">
@@ -147,7 +147,7 @@ export default function MobileGameDetailPage() {
 
         <div className="flex gap-3">
           <button
-            onClick={() => router.push(`/play/${gameId}`)}
+            onClick={() => router.push(`/m/play/${gameId}`)}
             className="flex-1 rounded-full bg-blue-600 py-2 text-xs font-semibold"
           >
             <span className="inline-flex items-center gap-2">
@@ -205,3 +205,5 @@ export default function MobileGameDetailPage() {
     </div>
   );
 }
+
+

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -80,11 +80,13 @@ export default function MobileForgotPasswordPage() {
             </p>
           )}
 
-          <AppLink href="/login" className="text-xs text-blue-300">
+          <MobileLink href="/login" className="text-xs text-blue-300">
             Back to login
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
     </div>
   );
 }
+
+

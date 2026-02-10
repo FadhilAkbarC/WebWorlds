@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileSignupPage() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export default function MobileSignupPage() {
 
     try {
       await register(username, email, password);
-      router.push('/');
+      router.push('/m');
     } catch (err) {
       setLocalError(error || 'Registration failed');
     }
@@ -141,13 +141,13 @@ export default function MobileSignupPage() {
               />
               <span>
                 I agree to the{' '}
-                <AppLink href="/terms" className="text-blue-300">
+                <MobileLink href="/terms" className="text-blue-300">
                   Terms of Service
-                </AppLink>{' '}
+                </MobileLink>{' '}
                 and{' '}
-                <AppLink href="/privacy" className="text-blue-300">
+                <MobileLink href="/privacy" className="text-blue-300">
                   Privacy Policy
-                </AppLink>
+                </MobileLink>
               </span>
             </label>
 
@@ -162,12 +162,14 @@ export default function MobileSignupPage() {
 
           <p className="text-center text-xs text-slate-400">
             Already have an account?{' '}
-            <AppLink href="/login" className="text-blue-300">
+            <MobileLink href="/login" className="text-blue-300">
               Login
-            </AppLink>
+            </MobileLink>
           </p>
         </div>
       </div>
     </div>
   );
 }
+
+

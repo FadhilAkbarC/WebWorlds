@@ -192,7 +192,7 @@ export default function MobileEditorPage() {
         });
         alert('Game published successfully! Redirecting to games page...');
         setTimeout(() => {
-          router.push('/games');
+          router.push('/m/games');
         }, 1000);
       }
     } catch (error: any) {
@@ -430,3 +430,5 @@ export default function MobileEditorPage() {
     </div>
   );
 }
+
+

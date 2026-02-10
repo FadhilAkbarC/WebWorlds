@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { HelpCircle, Mail, MessageSquare, ExternalLink } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileHelpPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
@@ -95,12 +95,14 @@ export default function MobileHelpPage() {
       <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 text-xs text-slate-300">
         <p className="font-semibold text-white mb-2">Resources</p>
         <div className="flex flex-col gap-2">
-          <AppLink href="/docs" className="text-blue-300">Documentation</AppLink>
-          <AppLink href="/about" className="text-blue-300">About WebWorlds</AppLink>
-          <AppLink href="/privacy" className="text-blue-300">Privacy Policy</AppLink>
-          <AppLink href="/terms" className="text-blue-300">Terms of Service</AppLink>
+          <MobileLink href="/docs" className="text-blue-300">Documentation</MobileLink>
+          <MobileLink href="/about" className="text-blue-300">About WebWorlds</MobileLink>
+          <MobileLink href="/privacy" className="text-blue-300">Privacy Policy</MobileLink>
+          <MobileLink href="/terms" className="text-blue-300">Terms of Service</MobileLink>
         </div>
       </div>
     </div>
   );
 }
+
+

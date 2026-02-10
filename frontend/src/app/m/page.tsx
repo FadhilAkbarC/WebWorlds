@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight, Gamepad2 } from 'lucide-react';
 import { useGameStore } from '@/stores/gameStore';
 import { useAuthStore } from '@/stores/authStore';
 import MobileGameCard from '@/components/mobile/MobileGameCard';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 const HOME_LIMIT = 16;
 
@@ -31,18 +31,18 @@ export default function MobileHomePage() {
           Fast loads, lighter UI, and instant play.
         </p>
         <div className="mt-4 flex gap-3">
-          <AppLink
+          <MobileLink
             href="/games"
             className="flex-1 rounded-full bg-blue-600 px-4 py-2 text-center text-xs font-semibold"
           >
             Browse games
-          </AppLink>
-          <AppLink
+          </MobileLink>
+          <MobileLink
             href="/editor"
             className="flex-1 rounded-full border border-blue-500/50 px-4 py-2 text-center text-xs font-semibold text-blue-200"
           >
             Create
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
 
@@ -51,9 +51,9 @@ export default function MobileHomePage() {
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
             <Sparkles size={14} className="text-blue-300" /> Trending now
           </h2>
-          <AppLink href="/games" className="text-xs text-blue-300 flex items-center gap-1">
+          <MobileLink href="/games" className="text-xs text-blue-300 flex items-center gap-1">
             View all <ArrowRight size={12} />
-          </AppLink>
+          </MobileLink>
         </div>
         {isLoading ? (
           <div className="grid grid-cols-1 gap-3">
@@ -93,3 +93,5 @@ export default function MobileHomePage() {
     </div>
   );
 }
+
+

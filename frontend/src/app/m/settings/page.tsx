@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { Bell, Lock, Trash2, LogOut } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileSettingsPage() {
   const router = useRouter();
@@ -17,14 +17,14 @@ export default function MobileSettingsPage() {
 
   React.useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/m/login');
     }
   }, [user, router]);
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
       logout();
-      router.push('/');
+      router.push('/m');
     }
   };
 
@@ -40,9 +40,9 @@ export default function MobileSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f10] px-4 pt-4 space-y-4">
-      <AppLink href="/profile" className="text-xs text-blue-300">
+      <MobileLink href="/profile" className="text-xs text-blue-300">
         ? Back to Profile
-      </AppLink>
+      </MobileLink>
 
       <div className="rounded-2xl border border-[#232323] bg-[#161616] p-4 space-y-4">
         <h1 className="text-lg font-semibold text-white">Settings</h1>
@@ -73,12 +73,12 @@ export default function MobileSettingsPage() {
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
             <Lock size={16} /> Security
           </h2>
-          <AppLink
+          <MobileLink
             href="/change-password"
             className="block rounded-full border border-[#2b2b2b] px-4 py-2 text-center text-xs text-slate-200"
           >
             Change Password
-          </AppLink>
+          </MobileLink>
         </section>
 
         <section className="space-y-3">
@@ -110,3 +110,5 @@ export default function MobileSettingsPage() {
     </div>
   );
 }
+
+

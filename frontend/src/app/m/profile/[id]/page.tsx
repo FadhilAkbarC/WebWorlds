@@ -5,7 +5,7 @@ import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from '
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Game } from '@/types';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 interface Profile {
   _id: string;
@@ -146,9 +146,9 @@ export default function MobilePublicProfilePage() {
       <div className="min-h-screen bg-[#0f0f10] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 mb-4 text-sm">{error || 'Profile not found'}</p>
-          <AppLink href="/games" className="text-blue-400 text-sm">
+          <MobileLink href="/games" className="text-blue-400 text-sm">
             Back to games
-          </AppLink>
+          </MobileLink>
         </div>
       </div>
     );
@@ -255,7 +255,7 @@ export default function MobilePublicProfilePage() {
           ) : userGames.length > 0 ? (
             <div className="space-y-2">
               {userGames.map((game) => (
-                <AppLink
+                <MobileLink
                   key={game._id}
                   href={`/games/${game._id}`}
                   className="block rounded-2xl border border-[#232323] bg-[#161616] p-3"
@@ -271,7 +271,7 @@ export default function MobilePublicProfilePage() {
                       </p>
                     </div>
                   </div>
-                </AppLink>
+                </MobileLink>
               ))}
             </div>
           ) : (
@@ -282,3 +282,5 @@ export default function MobilePublicProfilePage() {
     </div>
   );
 }
+
+

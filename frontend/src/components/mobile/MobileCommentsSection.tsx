@@ -5,7 +5,7 @@ import { Heart, Trash2, MessageSquare } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Comment } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 interface CommentsProps {
   gameId: string;
@@ -156,9 +156,9 @@ const MobileCommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
         </form>
       ) : (
         <div className="mb-4 rounded-xl border border-[#2b2b2b] bg-[#141414] p-3 text-center text-xs text-slate-300">
-          <AppLink href="/login" className="font-semibold text-blue-300">
+          <MobileLink href="/login" className="font-semibold text-blue-300">
             Login
-          </AppLink>{' '}
+          </MobileLink>{' '}
           to comment.
         </div>
       )}
@@ -216,3 +216,4 @@ const MobileCommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
 };
 
 export default MobileCommentsSection;
+

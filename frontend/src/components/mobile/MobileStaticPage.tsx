@@ -17,3 +17,4 @@ const MobileStaticPage: React.FC<MobileStaticPageProps> = ({ title, children }) 
 };
 
 export default MobileStaticPage;
+

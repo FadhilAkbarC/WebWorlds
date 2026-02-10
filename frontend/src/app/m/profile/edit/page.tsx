@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { Save } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 export default function MobileEditProfilePage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function MobileEditProfilePage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/m/login');
       return;
     }
 
@@ -56,7 +56,7 @@ export default function MobileEditProfilePage() {
       setUser(updatedUser as any);
       setSuccess('Profile updated successfully!');
       setTimeout(() => {
-        router.push('/profile');
+        router.push('/m/profile');
       }, 1500);
     } catch (err) {
       setError('Failed to update profile');
@@ -72,9 +72,9 @@ export default function MobileEditProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f10] px-4 pt-4">
-      <AppLink href="/profile" className="text-xs text-blue-300">
+      <MobileLink href="/profile" className="text-xs text-blue-300">
         ? Back to Profile
-      </AppLink>
+      </MobileLink>
 
       <div className="mt-4 rounded-2xl border border-[#232323] bg-[#161616] p-4 space-y-4">
         <h1 className="text-lg font-semibold text-white">Edit Profile</h1>
@@ -116,18 +116,18 @@ export default function MobileEditProfilePage() {
           </div>
 
           <div className="flex gap-2">
-            <AppLink
+            <MobileLink
               href="/change-password"
               className="flex-1 rounded-full border border-[#2b2b2b] py-2 text-center text-xs text-slate-200"
             >
               Change Password
-            </AppLink>
-            <AppLink
+            </MobileLink>
+            <MobileLink
               href="/settings"
               className="flex-1 rounded-full border border-[#2b2b2b] py-2 text-center text-xs text-slate-200"
             >
               Settings
-            </AppLink>
+            </MobileLink>
           </div>
 
           <button
@@ -142,3 +142,5 @@ export default function MobileEditProfilePage() {
     </div>
   );
 }
+
+

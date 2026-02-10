@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Home, Grid, Search, PlusSquare, User } from 'lucide-react';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 const tabs = [
   { href: '/', label: 'Home', icon: Home },
@@ -30,7 +30,7 @@ const MobileTabBar: React.FC = () => {
           const Icon = tab.icon;
           const active = isActivePath(pathname, tab.href);
           return (
-            <AppLink
+            <MobileLink
               key={tab.href}
               href={tab.href}
               className={`flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold transition-colors ${
@@ -39,7 +39,7 @@ const MobileTabBar: React.FC = () => {
             >
               <Icon size={18} />
               {tab.label}
-            </AppLink>
+            </MobileLink>
           );
         })}
       </div>
@@ -48,3 +48,4 @@ const MobileTabBar: React.FC = () => {
 };
 
 export default MobileTabBar;
+

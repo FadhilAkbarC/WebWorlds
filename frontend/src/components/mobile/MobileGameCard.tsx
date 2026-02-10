@@ -6,7 +6,7 @@ import { Heart, Play } from 'lucide-react';
 import { Game } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
-import AppLink from '@/components/shared/AppLink';
+import MobileLink from '@/components/mobile/MobileLink';
 
 interface MobileGameCardProps {
   game: Game;
@@ -46,7 +46,7 @@ const MobileGameCard: React.FC<MobileGameCardProps> = ({ game }) => {
   };
 
   return (
-    <AppLink href={`/games/${game._id}`} className="block">
+    <MobileLink href={`/games/${game._id}`} className="block">
       <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl overflow-hidden">
         <div className="relative w-full aspect-[16/9] bg-[#222]">
           {game.thumbnail ? (
@@ -93,8 +93,9 @@ const MobileGameCard: React.FC<MobileGameCardProps> = ({ game }) => {
           </div>
         </div>
       </div>
-    </AppLink>
+    </MobileLink>
   );
 };
 
 export default MobileGameCard;
+
