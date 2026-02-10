@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -78,10 +78,10 @@ export default function EditProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Back Button */}
-        <Link href="/profile" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-8">
+        <AppLink href="/profile" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-8">
           <ArrowLeft size={20} />
           Back to Profile
-        </Link>
+        </AppLink>
 
         {/* Card */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 shadow-xl">
@@ -147,24 +147,24 @@ export default function EditProfilePage() {
             <div className="border-t border-slate-700 pt-6">
               <h3 className="text-lg font-semibold text-white mb-4">Security</h3>
               <div className="space-y-3">
-                <Link
+                <AppLink
                   href="/change-password"
                   className="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
                 >
                   Change Password
-                </Link>
+                </AppLink>
               </div>
             </div>
 
             {/* Settings Section */}
             <div className="border-t border-slate-700 pt-6">
               <h3 className="text-lg font-semibold text-white mb-4">More</h3>
-              <Link
+              <AppLink
                 href="/settings"
                 className="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
               >
                 Go to Settings
-              </Link>
+              </AppLink>
             </div>
 
             {/* Buttons */}
@@ -177,12 +177,12 @@ export default function EditProfilePage() {
                 <Save size={20} />
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
-              <Link
+              <AppLink
                 href="/profile"
                 className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg text-center transition-colors"
               >
                 Cancel
-              </Link>
+              </AppLink>
             </div>
           </form>
         </div>

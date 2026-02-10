@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Heart, Trash2, MessageSquare } from 'lucide-react';
+import AppLink from '@/components/shared/AppLink';
 import { api } from '@/lib/api';
 import { Comment } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
@@ -165,9 +166,9 @@ export const CommentsSection: React.FC<CommentsProps> = ({ gameId }) => {
       ) : (
         <div className="mb-6 p-4 bg-slate-700 rounded-lg text-center">
           <p className="text-slate-300">
-            <a href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
+            <AppLink href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
               Login
-            </a>
+            </AppLink>
             {' '}to leave a comment
           </p>
         </div>

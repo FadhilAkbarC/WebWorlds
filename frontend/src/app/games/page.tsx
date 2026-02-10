@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { GameCard } from '@/components/GameCard';
-import { GameFilter } from '@/components/GameFilter';
+import { GameCard } from '@/components/desktop/GameCard';
+import { GameFilter } from '@/components/desktop/GameFilter';
 import { useGameStore } from '@/stores/gameStore';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 

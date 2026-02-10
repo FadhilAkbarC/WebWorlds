@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -156,9 +156,9 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error || 'Profile not found'}</p>
-          <Link href="/games" className="text-blue-400 hover:text-blue-300 font-semibold">
+          <AppLink href="/games" className="text-blue-400 hover:text-blue-300 font-semibold">
             Back to games
-          </Link>
+          </AppLink>
         </div>
       </div>
     );
@@ -284,7 +284,7 @@ export default function PublicProfilePage() {
             ) : userGames.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userGames.map((game) => (
-                  <Link
+                  <AppLink
                     key={game._id}
                     href={`/games/${game._id}`}
                     className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden hover:border-blue-500 transition-colors"
@@ -298,7 +298,7 @@ export default function PublicProfilePage() {
                         {game.description || 'No description'}
                       </p>
                     </div>
-                  </Link>
+                  </AppLink>
                 ))}
               </div>
             ) : (

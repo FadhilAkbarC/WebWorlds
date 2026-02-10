@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -110,13 +110,13 @@ export default function ForgotPasswordPage() {
 
           {/* Back to Login */}
           <div className="mt-8 pt-8 border-t border-slate-700">
-            <Link
+            <AppLink
               href="/login"
               className="flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
               Back to Login
-            </Link>
+            </AppLink>
           </div>
         </div>
       </div>

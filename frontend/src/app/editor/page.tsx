@@ -1,16 +1,24 @@
 'use client';
 import React, { useRef, useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/Tabs';
 import dynamic from 'next/dynamic';
 import { WBWEngine, type WBWError } from '@/engine/WBWEngine';
 import { useEditorStore } from '@/stores/editorStore';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
-import WBWEditor from '@/components/WBWEditor';
+import WBWEditor from '@/components/shared/WBWEditor';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
-const ManageGamesTab = dynamic(() => import('./ManageGamesTab'), { ssr: false });
+const ManageGamesTab = dynamic(lazyWithRetry(() => import('./ManageGamesTab')), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-12 text-slate-400">
+      Loading your games...
+    </div>
+  ),
+});
 
 // --- Component ---
 export default function EditorPage() {

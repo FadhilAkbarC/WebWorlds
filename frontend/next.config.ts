@@ -26,30 +26,15 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Preload optimization to fix warnings
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
-
   // Headers for better caching
   async headers() {
     return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, stale-while-revalidate=86400',
-          },
-        ],
-      },
       {
         source: '/api/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            value: 'no-store, max-age=0',
           },
         ],
       },
@@ -59,6 +44,15 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/image',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, stale-while-revalidate=86400',
           },
         ],
       },
@@ -75,6 +69,14 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       '@': './src',
     },
+  },
+
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': require('path').resolve(__dirname, 'src'),
+    };
+    return config;
   },
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/lib/api';
@@ -118,9 +118,9 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-400 mb-4">Please login to view your profile</p>
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
+          <AppLink href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
             Go to login
-          </Link>
+          </AppLink>
         </div>
       </div>
     );
@@ -169,12 +169,12 @@ export default function ProfilePage() {
               <p className="text-2xl font-bold">{user.stats?.followers ?? 0}</p>
               <p className="text-xs text-slate-400">Followers</p>
             </div>
-            <Link
+            <AppLink
               href="/profile/edit"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-semibold"
             >
               Edit Profile
-            </Link>
+            </AppLink>
           </div>
         </div>
 
@@ -249,7 +249,7 @@ export default function ProfilePage() {
             ) : userGames.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userGames.map((game) => (
-                  <Link
+                  <AppLink
                     key={game._id}
                     href={`/games/${game._id}`}
                     className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden hover:border-blue-500 transition-colors"
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                         {game.description || 'No description'}
                       </p>
                     </div>
-                  </Link>
+                  </AppLink>
                 ))}
               </div>
             ) : (

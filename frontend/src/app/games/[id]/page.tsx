@@ -2,14 +2,30 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
+import dynamic from 'next/dynamic';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 import Image from 'next/image';
 import { Play, Heart, Share2, User, MessageSquare, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import { Game } from '@/types';
-import { CommentsSection } from '@/components/CommentsSection';
+const CommentsSection = dynamic(
+  lazyWithRetry(() =>
+    import('@/components/desktop/CommentsSection').then((mod) => ({
+      default: mod.CommentsSection,
+    }))
+  ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 text-slate-400">
+        Loading comments...
+      </div>
+    ),
+  }
+);
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -92,9 +108,9 @@ export default function GameDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error || 'Game not found'}</p>
-          <Link href="/games" className="text-blue-400 hover:text-blue-300 font-semibold">
+          <AppLink href="/games" className="text-blue-400 hover:text-blue-300 font-semibold">
             Back to games
-          </Link>
+          </AppLink>
         </div>
       </div>
     );
@@ -108,9 +124,9 @@ export default function GameDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
-        <Link href="/games" className="text-blue-400 hover:text-blue-300 mb-8 inline-block">
+        <AppLink href="/games" className="text-blue-400 hover:text-blue-300 mb-8 inline-block">
           ← Back to Games
-        </Link>
+        </AppLink>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -247,12 +263,12 @@ export default function GameDetailPage() {
                   </p>
                 </div>
               </div>
-              <Link
+              <AppLink
                 href={`/profile/${typeof game.creator === 'object' ? game.creator?._id : game.creatorId}`}
                 className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 rounded-lg text-center transition-colors block"
               >
                 View Profile
-              </Link>
+              </AppLink>
             </div>
 
             {/* Actions */}

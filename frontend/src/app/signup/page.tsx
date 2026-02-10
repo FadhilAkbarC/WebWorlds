@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
@@ -213,13 +213,13 @@ export default function SignupPage() {
               />
               <label htmlFor="terms" className="text-sm text-slate-400 cursor-pointer">
                 I agree to the{' '}
-                <Link href="/terms" className="text-blue-400 hover:text-blue-300">
+                <AppLink href="/terms" className="text-blue-400 hover:text-blue-300">
                   Terms of Service
-                </Link>{' '}
+                </AppLink>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-blue-400 hover:text-blue-300">
+                <AppLink href="/privacy" className="text-blue-400 hover:text-blue-300">
                   Privacy Policy
-                </Link>
+                </AppLink>
               </label>
             </div>
 
@@ -237,9 +237,9 @@ export default function SignupPage() {
           {/* Sign In Link */}
           <p className="text-center text-slate-400 text-sm mt-6">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
+            <AppLink href="/login" className="text-blue-400 hover:text-blue-300 font-semibold">
               Login
-            </Link>
+            </AppLink>
           </p>
         </div>
       </div>

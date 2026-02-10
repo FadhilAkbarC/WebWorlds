@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
@@ -141,16 +141,16 @@ export default function LoginPage() {
           {/* Sign Up Link */}
           <p className="text-center text-slate-400 text-sm mt-6">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold">
+            <AppLink href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold">
               Sign up
-            </Link>
+            </AppLink>
           </p>
 
           {/* Forgot Password */}
           <p className="text-center text-slate-400 text-sm mt-2">
-            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-400">
+            <AppLink href="/forgot-password" className="text-slate-500 hover:text-slate-400">
               Forgot password?
-            </Link>
+            </AppLink>
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { GameCard } from '@/components/GameCard';
+import { GameCard } from '@/components/desktop/GameCard';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Game } from '@/types';

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
@@ -35,14 +35,14 @@ export const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 bg-[#1f1f1f] border-b border-[#2a2a2a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2">
+          <AppLink href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white text-black rounded-md flex items-center justify-center font-bold text-lg">
               W
             </div>
             <span className="text-lg font-bold text-white hidden sm:inline">
               WebWorlds
             </span>
-          </Link>
+          </AppLink>
 
           <div className="hidden md:flex flex-1 justify-center">
             <div className="relative w-full max-w-xl">
@@ -63,21 +63,21 @@ export const Navbar: React.FC = () => {
             <button className="hidden sm:inline-flex w-9 h-9 items-center justify-center rounded-full bg-[#2a2a2a] border border-[#343434] text-slate-300">
               <Bell size={18} />
             </button>
-            <Link
+            <AppLink
               href="/settings"
               className="hidden sm:inline-flex w-9 h-9 items-center justify-center rounded-full bg-[#2a2a2a] border border-[#343434] text-slate-300"
             >
               <Settings size={18} />
-            </Link>
+            </AppLink>
             {user ? (
               <>
-                <Link
+                <AppLink
                   href="/profile"
                   className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-[#2a2a2a] border border-[#343434] text-white text-sm"
                 >
                   <User size={16} />
                   <span className="max-w-24 truncate">{user.username}</span>
-                </Link>
+                </AppLink>
                 <button
                   onClick={logout}
                   className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm"
@@ -88,18 +88,18 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Link
+                <AppLink
                   href="/login"
                   className="px-3 py-2 text-sm text-slate-200 hover:text-white"
                 >
                   Login
-                </Link>
-                <Link
+                </AppLink>
+                <AppLink
                   href="/signup"
                   className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full"
                 >
                   Sign Up
-                </Link>
+                </AppLink>
               </div>
             )}
           </div>
@@ -124,10 +124,9 @@ export const Navbar: React.FC = () => {
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <Link
+              <AppLink
                 key={link.href}
                 href={link.href}
-                prefetch={false}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                   isActive
                     ? 'bg-white text-black'
@@ -135,7 +134,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 {link.label}
-              </Link>
+              </AppLink>
             );
           })}
         </div>

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Game } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Trash2, Edit, Eye, Search, Loader2, ImagePlus, XCircle } from 'lucide-react';
 
 type IconState = {
@@ -240,18 +240,18 @@ export default function ManageGamesTab() {
                 </div>
 
                 <div className="flex gap-2 mt-auto">
-                  <Link
+                  <AppLink
                     href={`/games/${game._id}`}
                     className="px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white rounded text-xs flex items-center gap-1"
                   >
                     <Eye size={14} /> View
-                  </Link>
-                  <Link
+                  </AppLink>
+                  <AppLink
                     href={`/editor?edit=${game._id}`}
                     className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs flex items-center gap-1"
                   >
                     <Edit size={14} /> Edit
-                  </Link>
+                  </AppLink>
                   <button
                     onClick={() => handleDelete(game._id)}
                     className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white rounded text-xs flex items-center gap-1 disabled:opacity-50"

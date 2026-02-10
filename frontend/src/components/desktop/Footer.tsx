@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { Github, Twitter, Mail } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -22,24 +22,24 @@ export const Footer: React.FC = () => {
             <h4 className="text-white font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/search" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/search" className="text-slate-400 hover:text-white transition-colors">
                   Search
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href="/groups" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/groups" className="text-slate-400 hover:text-white transition-colors">
                   Groups
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href="/editor" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/editor" className="text-slate-400 hover:text-white transition-colors">
                   Create Game
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href="/trending" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/trending" className="text-slate-400 hover:text-white transition-colors">
                   Trending
-                </Link>
+                </AppLink>
               </li>
             </ul>
           </div>
@@ -49,19 +49,19 @@ export const Footer: React.FC = () => {
             <h4 className="text-white font-semibold mb-4">Community</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/docs" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/docs" className="text-slate-400 hover:text-white transition-colors">
                   Documentation
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/about" className="text-slate-400 hover:text-white transition-colors">
                   About Us
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">
+                <AppLink href="/privacy" className="text-slate-400 hover:text-white transition-colors">
                   Privacy
-                </Link>
+                </AppLink>
               </li>
             </ul>
           </div>
@@ -100,12 +100,12 @@ export const Footer: React.FC = () => {
         <div className="border-t border-slate-700 pt-8 flex flex-col sm:flex-row justify-between items-center text-sm text-slate-400">
           <p>&copy; 2026 WebWorlds. All rights reserved.</p>
           <div className="flex gap-4 mt-4 sm:mt-0">
-            <Link href="/terms" className="hover:text-white transition-colors">
+            <AppLink href="/terms" className="hover:text-white transition-colors">
               Terms of Service
-            </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            </AppLink>
+            <AppLink href="/privacy" className="hover:text-white transition-colors">
               Privacy Policy
-            </Link>
+            </AppLink>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Game } from '@/types';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import Image from 'next/image';
 import { Heart, Play, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -46,7 +46,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
   };
 
   return (
-    <Link href={`/games/${game._id}`}>
+    <AppLink href={`/games/${game._id}`}>
       <div className="group bg-slate-800 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col hover:scale-105">
         {/* Thumbnail */}
         <div className="relative w-full aspect-video bg-slate-700 overflow-hidden">
@@ -144,6 +144,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
           </button>
         </div>
       </div>
-    </Link>
+    </AppLink>
   );
 };

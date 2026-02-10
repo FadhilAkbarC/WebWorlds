@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import Image from 'next/image';
 import {
   Home as HomeIcon,
@@ -30,7 +30,7 @@ function RailCard({ game }: { game: Game }) {
   const plays = game.plays ?? game.stats?.plays ?? 0;
 
   return (
-    <Link href={`/games/${game._id}`} prefetch={false} className="min-w-[170px]">
+    <AppLink href={`/games/${game._id}`} className="min-w-[170px]">
       <div className="flex flex-col gap-2">
         <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#2a2a2a] border border-[#343434]">
           {game.thumbnail ? (
@@ -63,7 +63,7 @@ function RailCard({ game }: { game: Game }) {
           </div>
         </div>
       </div>
-    </Link>
+    </AppLink>
   );
 }
 
@@ -127,16 +127,15 @@ export default function Home() {
             <section className="space-y-3">
               <SectionHeader title={`Friends (${user?.stats?.followers ?? 0})`} />
               <div className="flex gap-3 overflow-x-auto pb-2">
-                <Link
+                <AppLink
                   href="/search?tab=people"
-                  prefetch={false}
                   className="min-w-[110px] flex flex-col items-center gap-2"
                 >
                   <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-slate-200">
                     <UserPlus size={20} />
                   </div>
                   <p className="text-xs text-slate-400">Add Friends</p>
-                </Link>
+                </AppLink>
 
                 {friendList.map((name) => (
                   <div key={name} className="min-w-[110px] flex flex-col items-center gap-2">

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/copy-standalone-static.mjs",
     "start": "next start",
     "lint": "eslint .",
     "analyze": "ANALYZE=true next build"

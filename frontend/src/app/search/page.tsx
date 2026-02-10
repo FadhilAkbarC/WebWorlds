@@ -2,8 +2,8 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { GameCard } from '@/components/GameCard';
-import { GameFilter } from '@/components/GameFilter';
+import { GameCard } from '@/components/desktop/GameCard';
+import { GameFilter } from '@/components/desktop/GameFilter';
 import { useGameStore } from '@/stores/gameStore';
 import { Users, Search, UsersRound } from 'lucide-react';
 import { apiClient } from '@/lib/api';

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '@/components/shared/AppLink';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Bell, Lock, Trash2, LogOut } from 'lucide-react';
@@ -41,10 +41,10 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <Link href="/profile" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-8">
+        <AppLink href="/profile" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-8">
           <ArrowLeft size={20} />
           Back to Profile
-        </Link>
+        </AppLink>
 
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 shadow-xl space-y-8">
           <div>
@@ -88,12 +88,12 @@ export default function SettingsPage() {
               Security
             </h2>
             <div className="space-y-3">
-              <Link
+              <AppLink
                 href="/change-password"
                 className="block w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-center"
               >
                 Change Password
-              </Link>
+              </AppLink>
               <p className="text-slate-400 text-sm">
                 Last password change: Never
               </p>

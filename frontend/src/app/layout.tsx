@@ -1,7 +1,9 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
+import { Navbar } from '@/components/desktop/Navbar';
+import { Footer } from '@/components/desktop/Footer';
+import ChunkRecovery from '@/components/shared/ChunkRecovery';
+import SlowConnectionNotice from '@/components/shared/SlowConnectionNotice';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,11 +30,13 @@ export default function RootLayout({
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230ea5e9'/><text x='50' y='75' font-size='70' font-weight='bold' fill='white' text-anchor='middle'>W</text></svg>" />
       </head>
       <body className="bg-slate-950 text-white">
+        <SlowConnectionNotice />
         <Navbar />
         <main className="min-h-screen">
           {children}
         </main>
         <Footer />
+        <ChunkRecovery />
       </body>
     </html>
   );
