@@ -88,9 +88,10 @@ class DatabaseService {
     query: Record<string, any> = { published: true },
     page: number = 1,
     limit: number = 12,
-    options?: { noCache?: boolean }
+    options?: { noCache?: boolean; sort?: Record<string, 1 | -1> }
   ) {
-    const cacheKey = `games:${JSON.stringify({ query, page, limit })}`;
+    const sort = options?.sort || { createdAt: -1 };
+    const cacheKey = `games:${JSON.stringify({ query, page, limit, sort })}`;
 
     if (!options?.noCache) {
       const cached = cache.get<any>(cacheKey);
@@ -107,7 +108,7 @@ class DatabaseService {
           .populate('creator', 'username avatar')
           .skip(skip)
           .limit(limit)
-          .sort({ createdAt: -1 })
+          .sort(sort)
           .lean(),
         Game.countDocuments(query),
       ]);

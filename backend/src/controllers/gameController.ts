@@ -17,6 +17,7 @@ export const gameController = {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 12));
     const search = (req.query.search as string)?.trim() || '';
     const category = (req.query.category as string)?.trim() || '';
+    const sortParam = (req.query.sort as string)?.trim().toLowerCase() || '';
 
     // Build query
     const query: any = { published: true };
@@ -33,8 +34,22 @@ export const gameController = {
       query.category = category;
     }
 
+    const sortMap: Record<string, Record<string, 1 | -1>> = {
+      trending: { 'stats.plays': -1 },
+      plays: { 'stats.plays': -1 },
+      '-plays': { 'stats.plays': -1 },
+      likes: { 'stats.likes': -1 },
+      '-likes': { 'stats.likes': -1 },
+      newest: { createdAt: -1 },
+      recent: { createdAt: -1 },
+      '-created': { createdAt: -1 },
+      created: { createdAt: -1 },
+    };
+
+    const sort = sortMap[sortParam] || { createdAt: -1 };
+
     // Use cached DB service
-    const result = await db.getGames(query, page, limit);
+    const result = await db.getGames(query, page, limit, { sort });
 
     res.json(successResponse(result.games, result.pagination));
   }),

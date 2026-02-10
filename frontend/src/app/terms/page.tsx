@@ -1,5 +1,3 @@
-'use client';
-
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 py-12 px-4">

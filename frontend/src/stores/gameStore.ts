@@ -3,6 +3,10 @@ import { Game, GameState } from '@/types';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/utils/logger';
 
+interface GameStoreState extends GameState {
+  hasHydrated: boolean;
+}
+
 interface GameStoreActions {
   fetchGames: (page?: number, search?: string, category?: string, limit?: number) => Promise<void>;
   fetchGameById: (id: string) => Promise<void>;
@@ -10,25 +14,46 @@ interface GameStoreActions {
   setPage: (page: number) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  hydrateFromServer: (payload: {
+    games: Game[];
+    totalCount?: number;
+    page?: number;
+  }) => void;
   likeGame: (gameId: string) => Promise<void>;
   unlikeGame: (gameId: string) => Promise<void>;
   updateGameStats: (gameId: string, stats: Partial<Game>) => void;
   clearCurrentGame: () => void;
 }
 
-export const useGameStore = create<GameState & GameStoreActions>((set, get) => ({
+export const useGameStore = create<GameStoreState & GameStoreActions>((set, get) => ({
   games: [],
   currentGame: null,
   isLoading: false,
   error: null,
   totalCount: 0,
   page: 1,
+  hasHydrated: false,
 
   setCurrentGame: (game) => set({ currentGame: game }),
   setPage: (page) => set({ page }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
   clearCurrentGame: () => set({ currentGame: null }),
+  hydrateFromServer: (payload) =>
+    set((state) => {
+      if (state.hasHydrated && state.page === (payload.page ?? state.page)) {
+        return state;
+      }
+      return {
+        ...state,
+        games: payload.games,
+        totalCount: payload.totalCount ?? state.totalCount,
+        page: payload.page ?? state.page,
+        isLoading: false,
+        error: null,
+        hasHydrated: true,
+      };
+    }),
 
   fetchGames: async (page = 1, search = '', category = '', limit = 12) => {
     set({ isLoading: true, error: null });
@@ -189,5 +214,5 @@ export const useGameStore = create<GameState & GameStoreActions>((set, get) => (
 /**
  * Selectors for optimal re-rendering
  */
-export const selectGames = (state: GameState & GameStoreActions) => state.games;
-export const selectCurrentGame = (state: GameState & GameStoreActions) => state.currentGame;
+export const selectGames = (state: GameStoreState & GameStoreActions) => state.games;
+export const selectCurrentGame = (state: GameStoreState & GameStoreActions) => state.currentGame;

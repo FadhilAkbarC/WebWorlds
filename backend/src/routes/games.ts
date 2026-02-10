@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import gameController from '../controllers/gameController';
 import { authenticateToken, optionalAuth } from '../middleware/auth';
+import { cacheResponse } from '../middleware/responseCache';
 
 const router = Router();
 
@@ -9,11 +10,40 @@ const router = Router();
  * List published games with pagination, search, and filtering
  * Query: ?page=1&limit=12&search=term&category=action
  */
-router.get('/', optionalAuth, gameController.list);
+router.get(
+  '/',
+  optionalAuth,
+  cacheResponse({
+    ttlMs: 20000,
+    maxAgeSeconds: 30,
+    staleWhileRevalidateSeconds: 300,
+  }),
+  gameController.list
+);
 
 /**
  * GET /api/games/:id
  * Get game details
+ */
+/**
+ * GET /api/games/creator/:creatorId
+ * Get all games by creator
+ */
+router.get(
+  '/creator/:creatorId',
+  optionalAuth,
+  cacheResponse({
+    ttlMs: 20000,
+    maxAgeSeconds: 30,
+    staleWhileRevalidateSeconds: 300,
+  }),
+  gameController.getByCreator
+);
+
+/**
+ * GET /api/games/:id
+ * Get game details
+ * NOTE: Avoid response-level caching to preserve play count tracking.
  */
 router.get('/:id', optionalAuth, gameController.get);
 
@@ -66,11 +96,5 @@ router.post('/:id/like', authenticateToken, gameController.like);
  * Requires: Authentication
  */
 router.post('/:id/unlike', authenticateToken, gameController.unlike);
-
-/**
- * GET /api/games/creator/:creatorId
- * Get all games by creator
- */
-router.get('/creator/:creatorId', optionalAuth, gameController.getByCreator);
 
 export default router;

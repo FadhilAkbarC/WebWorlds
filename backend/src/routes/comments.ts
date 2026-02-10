@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import commentController from '../controllers/commentController';
 import { authenticateToken, optionalAuth } from '../middleware/auth';
+import { cacheResponse } from '../middleware/responseCache';
 
 const router = Router();
 
@@ -10,7 +11,16 @@ const router = Router();
  * Params: gameId
  * Query: ?page=1&limit=10
  */
-router.get('/games/:gameId/comments', optionalAuth, commentController.getGameComments);
+router.get(
+  '/games/:gameId/comments',
+  optionalAuth,
+  cacheResponse({
+    ttlMs: 10000,
+    maxAgeSeconds: 10,
+    staleWhileRevalidateSeconds: 60,
+  }),
+  commentController.getGameComments
+);
 
 /**
  * POST /api/games/:gameId/comments

@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { config } from './config/env';
 import { logger } from './utils/logger';
@@ -15,8 +16,19 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 export function createApp(): Express {
   const app = express();
 
+  // Strong ETags for client-side caching and conditional requests
+  app.set('etag', 'weak');
+  app.disable('x-powered-by');
+
   // ============ Security Middleware ============
   app.use(helmet());
+
+  // ============ Response Compression ============
+  app.use(
+    compression({
+      threshold: 1024,
+    })
+  );
 
   // ============ CORS Configuration ============
   // Parse allowed origins from environment (comma-separated)

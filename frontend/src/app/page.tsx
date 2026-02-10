@@ -1,7 +1,7 @@
-'use client';
-
-import React, { useEffect, useMemo } from 'react';
+﻿import React from 'react';
 import AppLink from '@/components/shared/AppLink';
+import HomeUserHeader from '@/components/desktop/HomeUserHeader';
+import HomeFollowersCount from '@/components/desktop/HomeFollowersCount';
 import Image from 'next/image';
 import {
   Home as HomeIcon,
@@ -12,9 +12,8 @@ import {
   Heart,
   Play,
 } from 'lucide-react';
-import { useGameStore } from '@/stores/gameStore';
-import { useAuthStore } from '@/stores/authStore';
 import type { Game } from '@/types';
+import { getGamesList } from '@/lib/serverApi';
 
 const FRIEND_SLOTS = 12;
 const RECENT_LIMIT = 10;
@@ -67,34 +66,26 @@ function RailCard({ game }: { game: Game }) {
   );
 }
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title }: { title: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
       <h2 className="text-base sm:text-lg font-semibold text-white">{title}</h2>
-      <span className="text-xs text-slate-400">→</span>
+      <span className="text-xs text-slate-400">â†’</span>
     </div>
   );
 }
 
-export default function Home() {
-  const { fetchGames, games, isLoading } = useGameStore();
-  const { user } = useAuthStore();
+export const revalidate = 30;
 
-  useEffect(() => {
-    fetchGames(1, '', '', 50);
-  }, [fetchGames]);
+export default async function Home() {
+  const response = await getGamesList({ page: 1, limit: 50, revalidate: 30 });
+  const games = response.success ? response.data ?? [] : [];
 
-  const recent = useMemo(() => games.slice(0, RECENT_LIMIT), [games]);
-  const recommended = useMemo(
-    () => games.slice(RECENT_LIMIT, RECENT_LIMIT + RECOMMENDED_LIMIT),
-    [games]
-  );
-  const community = useMemo(() => games.slice(0, COMMUNITY_LIMIT), [games]);
+  const recent = games.slice(0, RECENT_LIMIT);
+  const recommended = games.slice(RECENT_LIMIT, RECENT_LIMIT + RECOMMENDED_LIMIT);
+  const community = games.slice(0, COMMUNITY_LIMIT);
 
-  const friendList = useMemo(
-    () => Array.from({ length: FRIEND_SLOTS }, (_, i) => `Friend ${i + 1}`),
-    []
-  );
+  const friendList = Array.from({ length: FRIEND_SLOTS }, (_, i) => `Friend ${i + 1}`);
 
   return (
     <div className="min-h-screen bg-[#1b1b1b]">
@@ -112,20 +103,16 @@ export default function Home() {
           </aside>
 
           <main className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#2a2a2a] border border-[#343434] flex items-center justify-center text-slate-300">
-                {user?.username?.slice(0, 1) || 'U'}
-              </div>
-              <div>
-                <p className="text-sm text-slate-400">Home</p>
-                <p className="text-lg font-semibold text-white">
-                  {user?.username || 'Guest'}
-                </p>
-              </div>
-            </div>
+            <HomeUserHeader />
 
             <section className="space-y-3">
-              <SectionHeader title={`Friends (${user?.stats?.followers ?? 0})`} />
+              <SectionHeader
+                title={
+                  <span>
+                    Friends (<HomeFollowersCount />)
+                  </span>
+                }
+              />
               <div className="flex gap-3 overflow-x-auto pb-2">
                 <AppLink
                   href="/search?tab=people"
@@ -150,7 +137,7 @@ export default function Home() {
 
             <section className="space-y-3">
               <SectionHeader title="My Recent" />
-              {isLoading ? (
+              {recent.length === 0 ? (
                 <div className="flex gap-3 overflow-hidden">
                   {[...Array(6)].map((_, i) => (
                     <div
@@ -170,7 +157,7 @@ export default function Home() {
 
             <section className="space-y-3">
               <SectionHeader title="Recommended For You" />
-              {isLoading ? (
+              {recommended.length === 0 ? (
                 <div className="flex gap-3 overflow-hidden">
                   {[...Array(6)].map((_, i) => (
                     <div
@@ -190,7 +177,7 @@ export default function Home() {
 
             <section className="space-y-3">
               <SectionHeader title="Community Creations" />
-              {isLoading ? (
+              {community.length === 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {[...Array(8)].map((_, i) => (
                     <div
