@@ -3,10 +3,12 @@ export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v4 - Mega Platformer S
 // Core: player/spawn/enemy/item/coin/npc/platform/box/solid/tile/ledge/rect/circle/line/tri
 // Camera: world/cam/camfollow/camlerp/camoffset/camclamp/camreset
 // Control: on/onpress/onrelease + move/jump/shoot/vel/push + setx/sety/addx/addy/velx/vely/pushx/pushy
+// UI: uirect/uicircle/uiline/button/onui/onhoverui/uivisible/uienable/uicolor/removeui/clearui
 // Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp
+// Timer: after/every/canceltimer/cleartimers
 // Math: pow/sqrt/log/exp/sin/cos/tan/asin/acos/atan/lerp/mix/swap/copy/toggle
 // Events: msg/shake/stop + checkpoint/respawn/patrol + colorof/sizeof/remove
-// Built-in vars: PX PY VX VY TIME FRAME DT GROUND WORLDW WORLDH CAMX CAMY
+// Built-in vars: PX PY VX VY TIME FRAME DT GROUND WORLDW WORLDH CAMX CAMY MX MY MOUSEDOWN UIHOVER UICLICK
 
 bg #0b1120
 world 2400 1200
@@ -201,4 +203,13 @@ math_lab:
   copy BONUS MIX
   toggle FLAG
 end
+
+// UI game snippet (menu / quiz / clicker):
+// clearui
+// uicolor #1e293b #334155 #f8fafc
+// uirect 250 140 700 420
+// button start 430 300 340 64 "Start"
+// onui start goto start_game
+// every blink 0.8 goto blink_tick
+// after 2 goto splash_done
 `;

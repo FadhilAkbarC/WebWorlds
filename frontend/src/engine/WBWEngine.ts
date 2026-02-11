@@ -83,6 +83,65 @@ interface WBWPatrol {
   speed: number;
 }
 
+type WBWUIShape =
+  | {
+      kind: 'rect';
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      color: string;
+    }
+  | {
+      kind: 'circle';
+      x: number;
+      y: number;
+      r: number;
+      color: string;
+    }
+  | {
+      kind: 'line';
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      color: string;
+    };
+
+interface WBWUIButton {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  textTokens: string[];
+  color: string;
+  hoverColor: string;
+  textColor: string;
+  visible: boolean;
+  enabled: boolean;
+}
+
+interface WBWTimer {
+  id: string;
+  label: string;
+  remaining: number;
+  interval: number;
+  repeat: boolean;
+}
+
+type WBWCommandSource = 'init' | 'input' | 'tick' | 'ui';
+
+type WBWExecutionContext = {
+  speed?: number;
+  gravity?: number;
+  delta?: number;
+  key?: string;
+  source?: WBWCommandSource;
+  mouseX?: number;
+  mouseY?: number;
+};
+
 const DEFAULTS = {
   background: '#0b1120',
   color: '#38bdf8',
@@ -94,6 +153,9 @@ const DEFAULTS = {
   gravity: 0.6,
   friction: 0.08,
   textSize: 14,
+  uiButtonColor: '#1e293b',
+  uiButtonHoverColor: '#334155',
+  uiButtonTextColor: '#e2e8f0',
 };
 
 const KEY_ALIASES: Record<string, string> = {
@@ -185,6 +247,25 @@ const COMMAND_ALIASES: Record<string, string> = {
   camoffset: 'camoffset',
   camclamp: 'camclamp',
   camreset: 'camreset',
+  btn: 'button',
+  button: 'button',
+  panel: 'uirect',
+  uibox: 'uirect',
+  uirow: 'uiline',
+  onclick: 'onui',
+  onui: 'onui',
+  onhover: 'onhoverui',
+  uihover: 'onhoverui',
+  onhoverui: 'onhoverui',
+  removeui: 'removeui',
+  uirm: 'removeui',
+  clearui: 'clearui',
+  wait: 'after',
+  delay: 'after',
+  interval: 'every',
+  repeat: 'every',
+  stoptimer: 'canceltimer',
+  stoptimers: 'cleartimers',
 };
 
 const KNOWN_COMMANDS = new Set<string>([
@@ -240,6 +321,21 @@ const KNOWN_COMMANDS = new Set<string>([
   'camoffset',
   'camclamp',
   'camreset',
+  'uirect',
+  'uicircle',
+  'uiline',
+  'button',
+  'onui',
+  'onhoverui',
+  'uivisible',
+  'uienable',
+  'uicolor',
+  'removeui',
+  'clearui',
+  'after',
+  'every',
+  'canceltimer',
+  'cleartimers',
   'enemy',
   'item',
   'coin',
@@ -446,6 +542,8 @@ export class WBWEngine {
   private player: WBWEntity | null = null;
   private entities: WBWEntity[] = [];
   private shapes: WBWShape[] = [];
+  private uiShapes: WBWUIShape[] = [];
+  private uiButtons: WBWUIButton[] = [];
   private texts: WBWText[] = [];
   private hudTexts: WBWText[] = [];
   private messages: WBWMessage[] = [];
@@ -470,10 +568,20 @@ export class WBWEngine {
   private cameraOffsetX = 0;
   private cameraOffsetY = 0;
   private cameraClamp = true;
+  private uiButtonColor = DEFAULTS.uiButtonColor;
+  private uiButtonHoverColor = DEFAULTS.uiButtonHoverColor;
+  private uiButtonTextColor = DEFAULTS.uiButtonTextColor;
+  private hoveredUiId: string | null = null;
+  private pointerX = 0;
+  private pointerY = 0;
+  private pointerDown = false;
+  private timers: WBWTimer[] = [];
 
   private inputBindings: Record<string, CommandLine[]> = {};
   private inputPressBindings: Record<string, CommandLine[]> = {};
   private inputReleaseBindings: Record<string, CommandLine[]> = {};
+  private uiClickBindings: Record<string, CommandLine[]> = {};
+  private uiHoverBindings: Record<string, CommandLine[]> = {};
   private keys: Record<string, boolean> = {};
   private prevKeys: Record<string, boolean> = {};
 
@@ -566,9 +674,13 @@ export class WBWEngine {
 
   private resetState() {
     this.vars = {};
+    this.vars.UIHOVER = '';
+    this.vars.UICLICK = '';
     this.player = null;
     this.entities = [];
     this.shapes = [];
+    this.uiShapes = [];
+    this.uiButtons = [];
     this.texts = [];
     this.hudTexts = [];
     this.messages = [];
@@ -593,9 +705,19 @@ export class WBWEngine {
     this.cameraOffsetX = 0;
     this.cameraOffsetY = 0;
     this.cameraClamp = true;
+    this.uiButtonColor = DEFAULTS.uiButtonColor;
+    this.uiButtonHoverColor = DEFAULTS.uiButtonHoverColor;
+    this.uiButtonTextColor = DEFAULTS.uiButtonTextColor;
+    this.hoveredUiId = null;
+    this.pointerX = 0;
+    this.pointerY = 0;
+    this.pointerDown = false;
+    this.timers = [];
     this.inputBindings = {};
     this.inputPressBindings = {};
     this.inputReleaseBindings = {};
+    this.uiClickBindings = {};
+    this.uiHoverBindings = {};
     this.keys = {};
     this.prevKeys = {};
     this.labelStack = [];
@@ -631,6 +753,10 @@ export class WBWEngine {
     this.vars.DT = Number(delta.toFixed(4));
     this.vars.WORLDW = this.worldWidth;
     this.vars.WORLDH = this.worldHeight;
+    this.vars.MX = Number(this.pointerX.toFixed(2));
+    this.vars.MY = Number(this.pointerY.toFixed(2));
+    this.vars.MOUSEDOWN = this.pointerDown ? 1 : 0;
+    this.vars.UIHOVER = this.hoveredUiId ?? '';
 
     const keySet = new Set([
       ...Object.keys(this.inputBindings),
@@ -660,6 +786,8 @@ export class WBWEngine {
         }
       }
     }
+
+    this.updateTimers(delta, { speed, gravity });
 
     for (const patrol of this.patrols) {
       const entity = this.getEntityById(patrol.id);
@@ -800,6 +928,7 @@ export class WBWEngine {
       ctx.fillText(this.resolveText(hudItem.tokens), hudItem.x, hudItem.y);
     }
 
+    this.renderUi();
     this.renderMessages();
   }
 
@@ -819,6 +948,81 @@ export class WBWEngine {
     this.messages = this.messages
       .map((msg) => ({ ...msg, timeLeft: msg.timeLeft - delta }))
       .filter((msg) => msg.timeLeft > 0);
+  }
+
+  private updateTimers(delta: number, baseContext: { speed: number; gravity: number }) {
+    if (this.timers.length === 0) return;
+
+    const expired: WBWTimer[] = [];
+    for (let i = this.timers.length - 1; i >= 0; i -= 1) {
+      const timer = this.timers[i];
+      timer.remaining -= delta;
+      if (timer.remaining > 0) continue;
+
+      expired.push({ ...timer });
+      if (timer.repeat) {
+        timer.remaining += Math.max(timer.interval, 1 / 60);
+      } else {
+        this.timers.splice(i, 1);
+      }
+    }
+
+    expired.reverse().forEach((timer) => {
+      this.runLabel(timer.label, {
+        speed: baseContext.speed,
+        gravity: baseContext.gravity,
+        delta,
+        source: 'tick',
+      });
+    });
+  }
+
+  private renderUi() {
+    const ctx = this.ctx;
+
+    for (const shape of this.uiShapes) {
+      if (shape.kind === 'rect') {
+        ctx.fillStyle = shape.color;
+        ctx.fillRect(shape.x, shape.y, shape.w, shape.h);
+      }
+      if (shape.kind === 'circle') {
+        ctx.fillStyle = shape.color;
+        ctx.beginPath();
+        ctx.arc(shape.x, shape.y, shape.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (shape.kind === 'line') {
+        ctx.strokeStyle = shape.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(shape.x1, shape.y1);
+        ctx.lineTo(shape.x2, shape.y2);
+        ctx.stroke();
+      }
+    }
+
+    for (const button of this.uiButtons) {
+      if (!button.visible) continue;
+
+      const hovered = button.enabled && this.hoveredUiId === button.id;
+      ctx.save();
+      ctx.globalAlpha = button.enabled ? 1 : 0.55;
+      ctx.fillStyle = hovered ? button.hoverColor : button.color;
+      ctx.fillRect(button.x, button.y, button.w, button.h);
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(button.x, button.y, button.w, button.h);
+      ctx.fillStyle = button.textColor;
+      ctx.font = `${Math.max(12, Math.floor(button.h * 0.42))}px Fira Mono, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(
+        this.resolveText(button.textTokens),
+        button.x + button.w / 2,
+        button.y + button.h / 2
+      );
+      ctx.restore();
+    }
   }
 
   private updateCamera(snap = false) {
@@ -942,7 +1146,7 @@ export class WBWEngine {
 
   private executeLines(
     lines: CommandLine[],
-    context?: { speed?: number; gravity?: number; delta?: number; key?: string; source?: 'init' | 'input' | 'tick' }
+    context?: WBWExecutionContext
   ) {
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i];
@@ -988,7 +1192,7 @@ export class WBWEngine {
   private executeCommand(
     tokens: string[],
     lineNumber: number,
-    context?: { speed?: number; gravity?: number; delta?: number; key?: string; source?: 'init' | 'input' | 'tick' }
+    context?: WBWExecutionContext
   ) {
     const command = normalizeCommand(tokens[0]);
 
@@ -1385,6 +1589,143 @@ export class WBWEngine {
         this.color = tokens[1] || DEFAULTS.color;
         break;
       }
+      case 'uicolor': {
+        if (tokens[1]) this.uiButtonColor = tokens[1];
+        if (tokens[2]) this.uiButtonHoverColor = tokens[2];
+        if (tokens[3]) this.uiButtonTextColor = tokens[3];
+        break;
+      }
+      case 'uirect': {
+        let index = 1;
+        const xResult = this.readNumberExpr(tokens, index);
+        index = xResult.nextIndex;
+        const yResult = this.readNumberExpr(tokens, index);
+        index = yResult.nextIndex;
+        const wResult = this.readNumberExpr(tokens, index);
+        index = wResult.nextIndex;
+        const hResult = this.readNumberExpr(tokens, index);
+        this.uiShapes.push({
+          kind: 'rect',
+          x: xResult.value,
+          y: yResult.value,
+          w: wResult.value,
+          h: hResult.value,
+          color: this.color,
+        });
+        break;
+      }
+      case 'uicircle': {
+        let index = 1;
+        const xResult = this.readNumberExpr(tokens, index);
+        index = xResult.nextIndex;
+        const yResult = this.readNumberExpr(tokens, index);
+        index = yResult.nextIndex;
+        const rResult = this.readNumberExpr(tokens, index);
+        this.uiShapes.push({
+          kind: 'circle',
+          x: xResult.value,
+          y: yResult.value,
+          r: rResult.value,
+          color: this.color,
+        });
+        break;
+      }
+      case 'uiline': {
+        let index = 1;
+        const x1 = this.readNumberExpr(tokens, index);
+        index = x1.nextIndex;
+        const y1 = this.readNumberExpr(tokens, index);
+        index = y1.nextIndex;
+        const x2 = this.readNumberExpr(tokens, index);
+        index = x2.nextIndex;
+        const y2 = this.readNumberExpr(tokens, index);
+        this.uiShapes.push({
+          kind: 'line',
+          x1: x1.value,
+          y1: y1.value,
+          x2: x2.value,
+          y2: y2.value,
+          color: this.color,
+        });
+        break;
+      }
+      case 'button': {
+        const id = tokens[1];
+        if (!id) break;
+        const x = this.getNumberValue(tokens[2]);
+        const y = this.getNumberValue(tokens[3]);
+        const w = Math.max(8, this.getNumberValue(tokens[4]));
+        const h = Math.max(8, this.getNumberValue(tokens[5]));
+        const textTokens = tokens.slice(6);
+        const existing = this.getUiButtonById(id);
+
+        if (existing) {
+          existing.x = x;
+          existing.y = y;
+          existing.w = w;
+          existing.h = h;
+          existing.textTokens = textTokens.length > 0 ? textTokens : [id];
+          existing.color = this.uiButtonColor;
+          existing.hoverColor = this.uiButtonHoverColor;
+          existing.textColor = this.uiButtonTextColor;
+          break;
+        }
+
+        this.uiButtons.push({
+          id,
+          x,
+          y,
+          w,
+          h,
+          textTokens: textTokens.length > 0 ? textTokens : [id],
+          color: this.uiButtonColor,
+          hoverColor: this.uiButtonHoverColor,
+          textColor: this.uiButtonTextColor,
+          visible: true,
+          enabled: true,
+        });
+        break;
+      }
+      case 'removeui': {
+        const id = tokens[1];
+        if (!id) break;
+        this.uiButtons = this.uiButtons.filter((button) => button.id !== id);
+        delete this.uiClickBindings[id];
+        delete this.uiHoverBindings[id];
+        if (this.hoveredUiId === id) {
+          this.hoveredUiId = null;
+          this.vars.UIHOVER = '';
+        }
+        break;
+      }
+      case 'clearui': {
+        this.clearUi();
+        break;
+      }
+      case 'uivisible': {
+        const id = tokens[1];
+        if (!id) break;
+        const button = this.getUiButtonById(id);
+        if (!button) break;
+        button.visible = this.parseBooleanToken(tokens[2], true);
+        if (!button.visible && this.hoveredUiId === id) {
+          this.hoveredUiId = null;
+          this.vars.UIHOVER = '';
+        }
+        break;
+      }
+      case 'uienable': {
+        const id = tokens[1];
+        if (!id) break;
+        const button = this.getUiButtonById(id);
+        if (!button) break;
+        button.enabled = this.parseBooleanToken(tokens[2], true);
+        if (!button.enabled && this.hoveredUiId === id) {
+          this.hoveredUiId = null;
+          this.vars.UIHOVER = '';
+        }
+        break;
+      }
       case 'rect': {
         let index = 1;
         const xResult = this.readNumberExpr(tokens, index);
@@ -1533,6 +1874,20 @@ export class WBWEngine {
         if (!key) break;
         const action = tokens.slice(2);
         this.registerBinding(this.inputReleaseBindings, key, action, lineNumber);
+        break;
+      }
+      case 'onui': {
+        const id = tokens[1];
+        if (!id) break;
+        const action = tokens.slice(2);
+        this.registerUiBinding(this.uiClickBindings, id, action, lineNumber);
+        break;
+      }
+      case 'onhoverui': {
+        const id = tokens[1];
+        if (!id) break;
+        const action = tokens.slice(2);
+        this.registerUiBinding(this.uiHoverBindings, id, action, lineNumber);
         break;
       }
       case 'move': {
@@ -1766,6 +2121,38 @@ export class WBWEngine {
         if (label) this.runLabel(label, context);
         break;
       }
+      case 'after':
+      case 'every': {
+        const timer = this.parseTimerCommand(tokens);
+        if (!timer) break;
+        const repeat = command === 'every';
+        if (!repeat && timer.seconds <= 0) {
+          this.runLabel(timer.label, context);
+          break;
+        }
+
+        const interval = Math.max(1 / 60, timer.seconds);
+        const timerId = timer.id || `${command}:${lineNumber}:${timer.label}`;
+        this.timers = this.timers.filter((item) => item.id !== timerId);
+        this.timers.push({
+          id: timerId,
+          label: timer.label,
+          remaining: interval,
+          interval,
+          repeat,
+        });
+        break;
+      }
+      case 'canceltimer': {
+        const id = tokens[1];
+        if (!id) break;
+        this.timers = this.timers.filter((timer) => timer.id !== id);
+        break;
+      }
+      case 'cleartimers': {
+        this.timers = [];
+        break;
+      }
       case 'msg': {
         let textTokens = tokens.slice(1);
         let duration = 2;
@@ -1805,7 +2192,7 @@ export class WBWEngine {
 
   private runLabel(
     label: string,
-    context?: { speed?: number; gravity?: number; delta?: number; key?: string; source?: 'init' | 'input' | 'tick' }
+    context?: WBWExecutionContext
   ) {
     if (!this.program || !this.program.labels[label]) return;
     if (this.labelStack.includes(label)) return;
@@ -1960,14 +2347,143 @@ export class WBWEngine {
     }
   }
 
+  private registerUiBinding(
+    map: Record<string, CommandLine[]>,
+    id: string,
+    action: string[],
+    lineNumber: number
+  ) {
+    if (action.length === 0) return;
+    if (!map[id]) {
+      map[id] = [];
+    }
+    const raw = action.join(' ');
+    const exists = map[id].some((cmd) => cmd.raw === raw);
+    if (!exists) {
+      map[id].push({ tokens: action, line: lineNumber, raw });
+    }
+  }
+
+  private runUiBindings(
+    map: Record<string, CommandLine[]>,
+    id: string,
+    context?: WBWExecutionContext
+  ) {
+    for (const cmd of map[id] || []) {
+      this.executeCommand(cmd.tokens, cmd.line, context);
+      if (!this.running) {
+        break;
+      }
+    }
+  }
+
+  private getUiButtonById(id: string): WBWUIButton | null {
+    const button = this.uiButtons.find((item) => item.id === id);
+    return button || null;
+  }
+
+  private clearUi() {
+    this.uiShapes = [];
+    this.uiButtons = [];
+    this.uiClickBindings = {};
+    this.uiHoverBindings = {};
+    this.hoveredUiId = null;
+    this.vars.UIHOVER = '';
+    this.vars.UICLICK = '';
+  }
+
+  private parseBooleanToken(token: string | undefined, fallback: boolean): boolean {
+    if (token === undefined) return fallback;
+    const normalized = token.toLowerCase();
+    if (normalized === '1' || normalized === 'true' || normalized === 'on' || normalized === 'yes') {
+      return true;
+    }
+    if (normalized === '0' || normalized === 'false' || normalized === 'off' || normalized === 'no') {
+      return false;
+    }
+    return fallback;
+  }
+
+  private parseTimerCommand(tokens: string[]): { id: string; label: string; seconds: number } | null {
+    if (tokens.length < 3) return null;
+
+    let index = 1;
+    let id = '';
+    const maybeId = tokens[index];
+    const maybeSecondsToken = tokens[index + 1];
+
+    if (maybeId && maybeSecondsToken && !isNumberLike(maybeId)) {
+      const resolved = this.getValue(maybeSecondsToken);
+      const maybeNumericDuration = typeof resolved === 'number' || isNumberLike(maybeSecondsToken);
+      if (maybeNumericDuration) {
+        id = maybeId;
+        index += 1;
+      }
+    }
+
+    const seconds = this.getNumberValue(tokens[index]);
+    index += 1;
+    const marker = tokens[index];
+    if (!marker) return null;
+
+    let label = '';
+    if (marker.toLowerCase() === 'goto') {
+      label = tokens[index + 1] || '';
+    } else {
+      label = marker;
+    }
+
+    if (!label) return null;
+    return { id, label, seconds };
+  }
+
+  private getButtonAt(x: number, y: number): WBWUIButton | null {
+    for (let i = this.uiButtons.length - 1; i >= 0; i -= 1) {
+      const button = this.uiButtons[i];
+      if (!button.visible || !button.enabled) continue;
+      const inside =
+        x >= button.x &&
+        x <= button.x + button.w &&
+        y >= button.y &&
+        y <= button.y + button.h;
+      if (inside) {
+        return button;
+      }
+    }
+    return null;
+  }
+
+  private getPointerFromEvent(event: MouseEvent): { x: number; y: number } | null {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const x = clamp(((event.clientX - rect.left) / rect.width) * this.width, 0, this.width);
+    const y = clamp(((event.clientY - rect.top) / rect.height) * this.height, 0, this.height);
+    return { x, y };
+  }
+
+  private updatePointer(pointer: { x: number; y: number }) {
+    this.pointerX = pointer.x;
+    this.pointerY = pointer.y;
+    this.vars.MX = Number(pointer.x.toFixed(2));
+    this.vars.MY = Number(pointer.y.toFixed(2));
+  }
+
   private attachListeners() {
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
+    window.addEventListener('mouseup', this.handlePointerUp);
+    this.canvas.addEventListener('mousemove', this.handlePointerMove);
+    this.canvas.addEventListener('mousedown', this.handlePointerDown);
+    this.canvas.addEventListener('mouseleave', this.handlePointerLeave);
   }
 
   private detachListeners() {
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+    window.removeEventListener('mouseup', this.handlePointerUp);
+    this.canvas.removeEventListener('mousemove', this.handlePointerMove);
+    this.canvas.removeEventListener('mousedown', this.handlePointerDown);
+    this.canvas.removeEventListener('mouseleave', this.handlePointerLeave);
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
@@ -1978,5 +2494,68 @@ export class WBWEngine {
   private handleKeyUp = (event: KeyboardEvent) => {
     const key = normalizeKey(event.key);
     this.keys[key] = false;
+  };
+
+  private handlePointerMove = (event: MouseEvent) => {
+    if (!this.running) return;
+    const pointer = this.getPointerFromEvent(event);
+    if (!pointer) return;
+
+    this.updatePointer(pointer);
+    const hovered = this.getButtonAt(pointer.x, pointer.y);
+    const nextHoveredId = hovered?.id || null;
+    if (nextHoveredId === this.hoveredUiId) {
+      return;
+    }
+
+    this.hoveredUiId = nextHoveredId;
+    this.vars.UIHOVER = nextHoveredId ?? '';
+    if (hovered) {
+      this.runUiBindings(this.uiHoverBindings, hovered.id, {
+        source: 'ui',
+        mouseX: pointer.x,
+        mouseY: pointer.y,
+      });
+    }
+  };
+
+  private handlePointerDown = (event: MouseEvent) => {
+    if (!this.running) return;
+    const pointer = this.getPointerFromEvent(event);
+    if (!pointer) return;
+
+    this.updatePointer(pointer);
+    this.pointerDown = true;
+    this.vars.MOUSEDOWN = 1;
+    const button = this.getButtonAt(pointer.x, pointer.y);
+    if (!button) {
+      this.vars.UICLICK = '';
+      return;
+    }
+
+    this.vars.UICLICK = button.id;
+
+    this.runUiBindings(this.uiClickBindings, button.id, {
+      source: 'ui',
+      mouseX: pointer.x,
+      mouseY: pointer.y,
+    });
+  };
+
+  private handlePointerUp = (event: MouseEvent) => {
+    if (!this.running) return;
+    const pointer = this.getPointerFromEvent(event);
+    if (pointer) {
+      this.updatePointer(pointer);
+    }
+    this.pointerDown = false;
+    this.vars.MOUSEDOWN = 0;
+  };
+
+  private handlePointerLeave = () => {
+    this.pointerDown = false;
+    this.hoveredUiId = null;
+    this.vars.MOUSEDOWN = 0;
+    this.vars.UIHOVER = '';
   };
 }

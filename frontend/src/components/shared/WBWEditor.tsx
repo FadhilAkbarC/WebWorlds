@@ -30,6 +30,15 @@ const GROUPS = {
     'text',
     'textsize',
     'hud',
+    'uirect',
+    'uicircle',
+    'uiline',
+    'button',
+    'uivisible',
+    'uienable',
+    'uicolor',
+    'removeui',
+    'clearui',
     'world',
     'cam',
     'camfollow',
@@ -42,6 +51,8 @@ const GROUPS = {
     'on',
     'onpress',
     'onrelease',
+    'onui',
+    'onhoverui',
     'move',
     'jump',
     'shoot',
@@ -66,7 +77,7 @@ const GROUPS = {
     'sizeof',
     'colorof',
   ]),
-  flow: new Set(['if', 'goto', 'loop', 'end', 'stop']),
+  flow: new Set(['if', 'goto', 'loop', 'end', 'stop', 'after', 'every', 'canceltimer', 'cleartimers']),
   math: new Set([
     'set',
     'add',
@@ -107,7 +118,21 @@ const GROUPS = {
     'gravity',
     'friction',
   ]),
-  event: new Set(['msg', 'shake', 'sound', 'checkpoint', 'respawn', 'remove', 'patrol']),
+  event: new Set([
+    'msg',
+    'shake',
+    'sound',
+    'checkpoint',
+    'respawn',
+    'remove',
+    'patrol',
+    'onui',
+    'onhoverui',
+    'after',
+    'every',
+    'canceltimer',
+    'cleartimers',
+  ]),
 };
 
 const INPUT_KEYS = new Set([
@@ -143,6 +168,11 @@ const CONSTANTS = new Set([
   'WORLDH',
   'CAMX',
   'CAMY',
+  'MX',
+  'MY',
+  'MOUSEDOWN',
+  'UIHOVER',
+  'UICLICK',
   'SPEED',
   'GRAVITY',
   'FRICTION',
@@ -272,7 +302,7 @@ export default function WBWEditor({ value, onChange, readOnly = false }: WBWEdit
         <code dangerouslySetInnerHTML={{ __html: highlighted + (value.endsWith('\n') ? '\n' : '') }} />
       </pre>
       {!readOnly && !value && (
-        <div className="wbw-editor-placeholder">// Write WBW code here...</div>
+        <div className="wbw-editor-placeholder">Write WBW code here...</div>
       )}
       <textarea
         ref={textareaRef}
