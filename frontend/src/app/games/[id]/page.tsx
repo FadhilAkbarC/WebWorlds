@@ -1,15 +1,23 @@
-﻿import GameDetailClient from '@/components/desktop/GameDetailClient';
+import GameDetailClient from '@/components/desktop/GameDetailClient';
 import { getGameById } from '@/lib/serverApi';
+import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
 
 type GameDetailPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
-  const response = await getGameById(params.id, 60);
+  const { id } = await params;
+  const gameId = id?.trim();
+
+  if (!gameId || gameId === 'undefined' || gameId === '$undefined') {
+    notFound();
+  }
+
+  const response = await getGameById(gameId, 60);
   const game = response.success ? response.data ?? null : null;
 
-  return <GameDetailClient gameId={params.id} initialGame={game} />;
+  return <GameDetailClient gameId={gameId} initialGame={game} />;
 }

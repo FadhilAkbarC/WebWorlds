@@ -1,15 +1,23 @@
-﻿import MobileGameDetailClient from '@/components/mobile/MobileGameDetailClient';
+import MobileGameDetailClient from '@/components/mobile/MobileGameDetailClient';
 import { getGameById } from '@/lib/serverApi';
+import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
 
 type MobileGameDetailPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function MobileGameDetailPage({ params }: MobileGameDetailPageProps) {
-  const response = await getGameById(params.id, 60);
+  const { id } = await params;
+  const gameId = id?.trim();
+
+  if (!gameId || gameId === 'undefined' || gameId === '$undefined') {
+    notFound();
+  }
+
+  const response = await getGameById(gameId, 60);
   const game = response.success ? response.data ?? null : null;
 
-  return <MobileGameDetailClient gameId={params.id} initialGame={game} />;
+  return <MobileGameDetailClient gameId={gameId} initialGame={game} />;
 }

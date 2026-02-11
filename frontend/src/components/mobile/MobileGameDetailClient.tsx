@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Play, Heart, Share2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
-import { useGameStore } from '@/stores/gameStore';
-import { shallow } from 'zustand/shallow';
 import type { Game } from '@/types';
 import MobileLink from '@/components/mobile/MobileLink';
 import dynamic from 'next/dynamic';
@@ -37,20 +35,30 @@ export default function MobileGameDetailClient({
 }: MobileGameDetailClientProps) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const { likeGame, unlikeGame } = useGameStore(
-    (state) => ({ likeGame: state.likeGame, unlikeGame: state.unlikeGame }),
-    shallow
-  );
+  const normalizedGameId = typeof gameId === 'string' ? gameId.trim() : '';
+  const hasValidGameId =
+    normalizedGameId.length > 0 &&
+    normalizedGameId !== 'undefined' &&
+    normalizedGameId !== '$undefined';
   const [game, setGame] = useState<Game | null>(initialGame);
   const [isLoading, setIsLoading] = useState(!initialGame);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [shouldMountComments, setShouldMountComments] = useState(false);
+  const commentsAnchorRef = useRef<HTMLDivElement | null>(null);
 
   const fetchGameDetail = useCallback(async () => {
+    if (!hasValidGameId) {
+      console.error('[MobileGameDetailClient] invalid gameId', { gameId });
+      setError('Invalid game URL');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await api.get(`/games/${gameId}`, { timeout: 5000 });
+      const response = await api.get(`/games/${normalizedGameId}`, { timeout: 5000 });
       if (response.data?.success === false) {
         throw new Error(response.data?.error || 'Game not found');
       }
@@ -62,35 +70,84 @@ export default function MobileGameDetailClient({
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load game details');
-      console.error(err);
+      console.error('[MobileGameDetailClient] failed to load game details', {
+        gameId: normalizedGameId,
+        error: err,
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [gameId]);
+  }, [gameId, hasValidGameId, normalizedGameId]);
 
   const fetchLikeStatus = useCallback(async () => {
+    if (!hasValidGameId) {
+      return;
+    }
+
     if (!user) return;
     try {
-      const likeCheckResponse = await api.get(`/games/${gameId}/like-status`, { timeout: 3000 });
+      const likeCheckResponse = await api.get(`/games/${normalizedGameId}/like-status`, { timeout: 3000 });
       setIsLiked(Boolean(likeCheckResponse.data?.data?.isLiked));
     } catch {
       setIsLiked(false);
     }
-  }, [gameId, user]);
+  }, [hasValidGameId, normalizedGameId, user]);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!hasValidGameId) {
+      console.error('[MobileGameDetailClient] invalid gameId', { gameId });
+      setError('Invalid game URL');
+      setIsLoading(false);
+      return;
+    }
+
     if (!initialGame) {
       void fetchGameDetail();
+      return;
     }
-  }, [gameId, initialGame, fetchGameDetail]);
+
+    setIsLoading(false);
+    setError(null);
+  }, [fetchGameDetail, gameId, hasValidGameId, initialGame]);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!hasValidGameId) return;
     void fetchLikeStatus();
-  }, [gameId, fetchLikeStatus]);
+  }, [fetchLikeStatus, hasValidGameId]);
+
+  useEffect(() => {
+    if (shouldMountComments) return;
+    const target = commentsAnchorRef.current;
+    if (!target) return;
+
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setShouldMountComments(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const isVisible = entries.some((entry) => entry.isIntersecting);
+        if (isVisible) {
+          setShouldMountComments(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px 0px' }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [shouldMountComments]);
 
   const handleToggleLike = async () => {
+    if (!hasValidGameId) {
+      console.error('[MobileGameDetailClient] invalid gameId on like toggle', { gameId });
+      setError('Invalid game URL');
+      setIsLoading(false);
+      return;
+    }
+
     if (!user) {
       alert('Please login to like games');
       return;
@@ -99,7 +156,7 @@ export default function MobileGameDetailClient({
     setIsLiking(true);
     try {
       if (isLiked) {
-        await unlikeGame(gameId);
+        await api.post(`/games/${normalizedGameId}/unlike`);
         setIsLiked(false);
         setGame((prev) =>
           prev
@@ -107,14 +164,18 @@ export default function MobileGameDetailClient({
             : null
         );
       } else {
-        await likeGame(gameId);
+        await api.post(`/games/${normalizedGameId}/like`);
         setIsLiked(true);
         setGame((prev) =>
           prev ? { ...prev, likes: (prev.likes ?? prev.stats?.likes ?? 0) + 1 } : null
         );
       }
+      setError(null);
     } catch (error) {
-      console.error('Failed to toggle like:', error);
+      console.error('[MobileGameDetailClient] failed to toggle like', {
+        gameId: normalizedGameId,
+        error,
+      });
     } finally {
       setIsLiking(false);
     }
@@ -193,8 +254,9 @@ export default function MobileGameDetailClient({
 
         <div className="flex gap-3">
           <button
-            onClick={() => router.push(`/m/play/${gameId}`)}
-            className="flex-1 rounded-full bg-blue-600 py-2 text-xs font-semibold"
+            onClick={() => hasValidGameId && router.push(`/m/play/${normalizedGameId}`)}
+            disabled={!hasValidGameId}
+            className="flex-1 rounded-full bg-blue-600 py-2 text-xs font-semibold disabled:opacity-50"
           >
             <span className="inline-flex items-center gap-2">
               <Play size={14} /> Play
@@ -202,7 +264,7 @@ export default function MobileGameDetailClient({
           </button>
           <button
             onClick={handleToggleLike}
-            disabled={isLiking}
+            disabled={isLiking || !hasValidGameId}
             className={`flex-1 rounded-full border py-2 text-xs font-semibold ${
               isLiked
                 ? 'border-red-500/60 text-red-300'
@@ -246,7 +308,15 @@ export default function MobileGameDetailClient({
           </button>
         </div>
 
-        <MobileCommentsSection gameId={gameId} />
+        <div ref={commentsAnchorRef}>
+          {shouldMountComments ? (
+            <MobileCommentsSection gameId={normalizedGameId} />
+          ) : (
+            <div className="rounded-2xl border border-[#232323] bg-[#181818] p-4 text-xs text-slate-400">
+              Scroll to load comments...
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
