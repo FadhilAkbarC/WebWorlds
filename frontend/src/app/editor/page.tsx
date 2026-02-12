@@ -2,16 +2,16 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/Tabs';
 import dynamic from 'next/dynamic';
-import { WBWEngine, type WBWError } from '@/engine/WBWEngine';
+import { WBWEngine, type WBWError } from '@/engine/wbw-game-engine';
 import { useEditorStore } from '@/stores/editorStore';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
-import WBWEditor from '@/components/shared/WBWEditor';
-import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
-import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import WBWEditor from '@/components/shared/wbw-code-editor';
+import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
+import { lazyWithRetry } from '@/lib/lazy-with-retry';
 
-const ManageGamesTab = dynamic(lazyWithRetry(() => import('./ManageGamesTab')), {
+const ManageGamesTab = dynamic(lazyWithRetry(() => import('./manage-games-tab')), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center py-12 text-slate-400">

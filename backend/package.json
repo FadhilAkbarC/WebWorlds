@@ -9,8 +9,8 @@
     "start": "node dist/server.js",
     "test": "echo \"Run tests here\"",
     "type-check": "tsc --noEmit",
-    "db:init": "ts-node src/scripts/initialize.ts",
-    "db:seed": "ts-node src/scripts/seed.ts",
+    "db:init": "ts-node src/scripts/initialize-database.ts",
+    "db:seed": "ts-node src/scripts/seed-database.ts",
     "db:reset": "npm run db:init && npm run db:seed"
   },
   "keywords": [

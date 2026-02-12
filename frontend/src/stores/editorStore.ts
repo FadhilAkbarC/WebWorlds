@@ -1,7 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { GameProject, GameAsset, GameScript } from '@/types';
-import { api } from '@/lib/api';
-import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbwTemplate';
+import { api } from '@/lib/api-client';
+import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
 import { shallow } from 'zustand/shallow';
 
 interface EditorStore {

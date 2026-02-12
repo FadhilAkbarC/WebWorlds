@@ -1,7 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 import { User, AuthState } from '@/types';
-import { api, apiClient, tokenManager } from '@/lib/api';
+import { api, apiClient, tokenManager } from '@/lib/api-client';
 import { shallow } from 'zustand/shallow';
 
 interface AuthStore extends AuthState {

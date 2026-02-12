@@ -1,6 +1,6 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { Game, GameState } from '@/types';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
 import { logger } from '@/utils/logger';
 import { shallow } from 'zustand/shallow';
 

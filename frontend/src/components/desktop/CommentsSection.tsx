@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Heart, Trash2, MessageSquare } from 'lucide-react';
 import AppLink from '@/components/shared/AppLink';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { Comment } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 

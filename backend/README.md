@@ -314,7 +314,7 @@ In frontend API client, use this URL for all requests.
 backend/
 ├── src/
 │   ├── server.ts           # Entry point
-│   ├── app.ts              # Express setup
+│   ├── create-app.ts       # Express setup
 │   ├── config/             # Configuration
 │   │   ├── database.ts
 │   │   ├── socket.ts
@@ -326,14 +326,14 @@ backend/
 │   │   ├── Leaderboard.ts
 │   │   └── index.ts
 │   ├── controllers/        # Business logic
-│   │   ├── authController.ts
-│   │   └── gameController.ts
+│   │   ├── auth.controller.ts
+│   │   └── game.controller.ts
 │   ├── routes/             # API routes
-│   │   ├── auth.ts
-│   │   └── games.ts
+│   │   ├── auth.routes.ts
+│   │   └── games.routes.ts
 │   ├── middleware/         # Express middleware
 │   │   ├── auth.ts
-│   │   ├── errorHandler.ts
+│   │   ├── error-handler.ts
 │   │   └── validation.ts
 │   └── utils/              # Utilities
 │

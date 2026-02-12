@@ -4,13 +4,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Play, Heart, Share2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import type { Game } from '@/types';
 import MobileLink from '@/components/mobile/MobileLink';
 import dynamic from 'next/dynamic';
-import { lazyWithRetry } from '@/lib/lazyWithRetry';
-import { shouldUseNextImage } from '@/lib/imageUtils';
+import { lazyWithRetry } from '@/lib/lazy-with-retry';
+import { shouldUseNextImage } from '@/lib/image-utils';
 
 const MobileCommentsSection = dynamic(
   lazyWithRetry(() => import('@/components/mobile/MobileCommentsSection')),
@@ -254,7 +254,7 @@ export default function MobileGameDetailClient({
 
         <div className="flex gap-3">
           <button
-            onClick={() => hasValidGameId && router.push(`/m/play/${normalizedGameId}`)}
+            onClick={() => hasValidGameId && router.push(`/mobile/play/${normalizedGameId}`)}
             disabled={!hasValidGameId}
             className="flex-1 rounded-full bg-blue-600 py-2 text-xs font-semibold disabled:opacity-50"
           >

@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== 'production') {
     dotenv_1.default.config();
 }
 const http_1 = __importDefault(require("http"));
-const app_1 = require("./app");
+const create_app_1 = require("./create-app");
 const database_1 = require("./config/database");
 const socket_1 = require("./config/socket");
 const env_1 = require("./config/env");
@@ -21,7 +21,7 @@ async function main() {
         (0, env_1.validateConfig)();
         logger_1.logger.info('Connecting to MongoDB...');
         await (0, database_1.connectDatabase)();
-        const app = (0, app_1.createApp)();
+        const app = (0, create_app_1.createApp)();
         httpServer = http_1.default.createServer(app);
         logger_1.logger.info('Setting up Socket.io...');
         const io = (0, socket_1.setupSocket)(httpServer);

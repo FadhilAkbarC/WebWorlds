@@ -6,7 +6,7 @@ import { GameCard } from '@/components/desktop/GameCard';
 import { GameFilter } from '@/components/desktop/GameFilter';
 import { useGameStore } from '@/stores/gameStore';
 import { Users, Search, UsersRound } from 'lucide-react';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import type { Group, UserSearch } from '@/types';
 

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Heart, Trash2, MessageSquare } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { Comment } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import MobileLink from '@/components/mobile/MobileLink';

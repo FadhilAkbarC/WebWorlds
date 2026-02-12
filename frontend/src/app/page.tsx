@@ -5,8 +5,8 @@ import HomeFollowersCount from '@/components/desktop/HomeFollowersCount';
 import Image from 'next/image';
 import { UserPlus, Heart, Play } from 'lucide-react';
 import type { Game } from '@/types';
-import { getGamesList } from '@/lib/serverApi';
-import { shouldUseNextImage } from '@/lib/imageUtils';
+import { getGamesList } from '@/lib/server-api-client';
+import { shouldUseNextImage } from '@/lib/image-utils';
 
 const FRIEND_SLOTS = 12;
 const RECENT_LIMIT = 10;

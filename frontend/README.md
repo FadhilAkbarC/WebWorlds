@@ -57,9 +57,9 @@ src/
 │   └── ui/
 │       └── Tabs.tsx
 ├── engine/
-│   └── WBWEngine.ts (WBW runtime engine)
+│   └── wbw-game-engine.ts (WBW runtime engine)
 ├── lib/
-│   └── api.ts (axios config & helpers)
+│   └── api-client.ts (axios config & helpers)
 ├── stores/
 │   ├── authStore.ts (Zustand auth store)
 │   ├── gameStore.ts (Zustand game store)
@@ -90,7 +90,7 @@ src/
 
 ## API Integration
 
-The frontend is pre-configured to communicate with the Railway backend. See `src/lib/api.ts` for all available API methods.
+The frontend is pre-configured to communicate with the Railway backend. See `src/lib/api-client.ts` for all available API methods.
 
 ## Deployment
 

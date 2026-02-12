@@ -12,7 +12,7 @@ This document is the single source of truth for AI-driven development on WebWorl
 ## 2. Architecture Overview
 - Frontend: Next.js App Router (React 18), output `standalone`.
 - Backend: Express + MongoDB (Mongoose).
-- Device routing: server-side proxy + `/m` mobile routes.
+- Device routing: server-side proxy + `/mobile` mobile routes (legacy `/m` redirects retained).
 - Caching layers:
   - Browser + CDN caching for static assets.
   - Next.js fetch caching + ISR for server-rendered pages.
@@ -28,21 +28,21 @@ This document is the single source of truth for AI-driven development on WebWorl
   - `src/stores/`: Zustand stores
   - `src/proxy.ts`: Device-aware route rewrite (mobile/desktop)
 - `backend/`
-  - `src/app.ts`: Express app
+  - `src/create-app.ts`: Express app
   - `src/routes/`: API routes
   - `src/controllers/`: Route handlers
   - `src/services/database.service.ts`: cached DB access
-  - `src/middleware/responseCache.ts`: response-level cache + cache headers
+  - `src/middleware/response-cache.ts`: response-level cache + cache headers
 
 ## 4. Mobile/Desktop Separation (Hard Rule)
-- Mobile routes live under `/m/*`.
+- Mobile routes live under `/mobile/*` (legacy `/m/*` auto-redirects).
 - Desktop routes live under `/`.
-- `frontend/src/proxy.ts` rewrites device traffic to `/m` (server-side only).
-- Client-side navigation MUST stay in `/m` using `MobileLink`.
+- `frontend/src/proxy.ts` rewrites device traffic to `/mobile` (server-side only), and redirects legacy `/m`.
+- Client-side navigation MUST stay in `/mobile` using `MobileLink`.
 
 ## 5. Data Fetching Strategy
 ### Server-side (preferred)
-- Use `frontend/src/lib/serverApi.ts` for server fetch.
+- Use `frontend/src/lib/server-api-client.ts` for server fetch.
 - Fetch uses `next: { revalidate }` for ISR and caching.
 - Pages like home, games list, and trending are server-rendered first.
 
@@ -79,10 +79,10 @@ Reference the metrics below for any optimization work:
 
 ## 8. Key Files You Must Know
 - `frontend/src/proxy.ts`: device routing
-- `frontend/src/lib/serverApi.ts`: server-side fetch
+- `frontend/src/lib/server-api-client.ts`: server-side fetch
 - `frontend/src/components/shared/ChunkRecovery.tsx`: chunk error recovery
-- `frontend/src/lib/lazyWithRetry.ts`: retry dynamic chunks
-- `backend/src/middleware/responseCache.ts`: cached GET responses
+- `frontend/src/lib/lazy-with-retry.ts`: retry dynamic chunks
+- `backend/src/middleware/response-cache.ts`: cached GET responses
 
 ## 9. Environment Variables
 ### Frontend
@@ -109,7 +109,7 @@ Reference the metrics below for any optimization work:
 ## 11. AI Development Rules
 - Prefer server components for static or list pages.
 - Hydrate client stores with server data to avoid double fetch.
-- Avoid breaking `/m` routing.
+- Avoid breaking `/mobile` routing (legacy `/m` redirects must keep working).
 - Never introduce long-polling or unnecessary background requests.
 - Any major change must preserve or improve performance and stability.
 
@@ -117,7 +117,7 @@ Reference the metrics below for any optimization work:
 - `npm run build` (frontend + backend) passes with zero warnings.
 - No `_next/static` 404s in production.
 - No `ChunkLoadError` in production.
-- Mobile stays in `/m` routes for client-side navigation.
+- Mobile stays in `/mobile` routes for client-side navigation (legacy `/m` redirects retained).
 - All caching headers verified.
 
 ## 13. Troubleshooting

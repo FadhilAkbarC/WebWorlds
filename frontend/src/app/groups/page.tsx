@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlusCircle, UsersRound, Globe, Lock } from 'lucide-react';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import type { Group } from '@/types';
 
@@ -18,7 +18,7 @@ export default function GroupsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await apiClient.getGroups({ page: 1, limit: 30 });
@@ -29,9 +29,9 @@ export default function GroupsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchMyGroups = async () => {
+  const fetchMyGroups = useCallback(async () => {
     if (!user) {
       setMyGroups([]);
       return;
@@ -42,12 +42,12 @@ export default function GroupsPage() {
     } catch {
       setMyGroups([]);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     void fetchGroups();
     void fetchMyGroups();
-  }, [user]);
+  }, [fetchGroups, fetchMyGroups]);
 
   const handleCreate = async () => {
     if (!user) {

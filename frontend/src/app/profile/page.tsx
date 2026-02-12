@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AppLink from '@/components/shared/AppLink';
 import { Award, BadgeCheck, Calendar, Gamepad2, ShieldCheck, Star, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { Game } from '@/types';
 
 interface Badge {

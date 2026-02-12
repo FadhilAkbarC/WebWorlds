@@ -1,5 +1,5 @@
-﻿import GamesClient from '@/components/desktop/GamesClient';
-import { getGamesList } from '@/lib/serverApi';
+import GamesClient from '@/components/desktop/GamesClient';
+import { getGamesList } from '@/lib/server-api-client';
 
 export const revalidate = 30;
 

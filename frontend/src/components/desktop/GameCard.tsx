@@ -8,7 +8,7 @@ import { Heart, Play, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import { shallow } from 'zustand/shallow';
-import { shouldUseNextImage } from '@/lib/imageUtils';
+import { shouldUseNextImage } from '@/lib/image-utils';
 
 interface GameCardProps {
   game: Game;

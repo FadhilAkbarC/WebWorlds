@@ -4,13 +4,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLink from '@/components/shared/AppLink';
 import dynamic from 'next/dynamic';
-import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import { lazyWithRetry } from '@/lib/lazy-with-retry';
 import Image from 'next/image';
 import { Play, Heart, Share2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import type { Game } from '@/types';
-import { shouldUseNextImage } from '@/lib/imageUtils';
+import { shouldUseNextImage } from '@/lib/image-utils';
 
 const CommentsSection = dynamic(
   lazyWithRetry(() =>

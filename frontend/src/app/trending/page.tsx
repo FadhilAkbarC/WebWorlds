@@ -1,5 +1,5 @@
-﻿import { GameCard } from '@/components/desktop/GameCard';
-import { getTrendingGames } from '@/lib/serverApi';
+import { GameCard } from '@/components/desktop/GameCard';
+import { getTrendingGames } from '@/lib/server-api-client';
 
 export const revalidate = 45;
 

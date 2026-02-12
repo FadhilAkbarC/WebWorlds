@@ -4,7 +4,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import http from 'http';
-import { createApp } from './app';
+import { createApp } from './create-app';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { setupSocket } from './config/socket';
 import { config, validateConfig } from './config/env';

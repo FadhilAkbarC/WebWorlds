@@ -1,5 +1,5 @@
 import GameDetailClient from '@/components/desktop/GameDetailClient';
-import { getGameById } from '@/lib/serverApi';
+import { getGameById } from '@/lib/server-api-client';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 60;

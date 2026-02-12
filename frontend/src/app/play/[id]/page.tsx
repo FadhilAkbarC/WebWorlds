@@ -3,9 +3,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { X, Volume2, VolumeX } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import { Game } from '@/types';
-import { WBWEngine, type WBWError } from '@/engine/WBWEngine';
+import { WBWEngine, type WBWError } from '@/engine/wbw-game-engine';
 
 export default function PlayGamePage() {
   const params = useParams();

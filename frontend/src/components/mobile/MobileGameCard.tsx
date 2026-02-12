@@ -8,7 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGameStore } from '@/stores/gameStore';
 import MobileLink from '@/components/mobile/MobileLink';
 import { shallow } from 'zustand/shallow';
-import { shouldUseNextImage } from '@/lib/imageUtils';
+import { shouldUseNextImage } from '@/lib/image-utils';
 
 interface MobileGameCardProps {
   game: Game;

@@ -197,8 +197,8 @@ WebWorlds/
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GameFilter.tsx
 │   │   │   └── ui/Tabs.tsx
-│   │   ├── engine/WBWEngine.ts
-│   │   ├── lib/api.ts
+│   │   ├── engine/wbw-game-engine.ts
+│   │   ├── lib/api-client.ts
 │   │   ├── stores/ (Zustand)
 │   │   │   ├── authStore.ts
 │   │   │   ├── editorStore.ts
@@ -213,7 +213,7 @@ WebWorlds/
 │
 └── backend/
     ├── src/
-    │   ├── app.ts
+    │   ├── create-app.ts
     │   ├── server.ts
     │   ├── config/
     │   ├── controllers/
