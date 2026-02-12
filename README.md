@@ -1,470 +1,272 @@
-# 🎉 WebWorlds - FULL STACK COMPLETE! 
+# WebWorlds
 
-## ✅ Project Status: FULLY FUNCTIONAL & PRODUCTION READY
+Single source of truth documentation for this repository.
+Dokumen ini adalah sumber kebenaran tunggal untuk pengembangan WebWorlds.
 
-**Date:** February 8, 2026  
-**Status:** ✅ **ALL 19 PAGES COMPLETE & TESTED**  
-**Build:** ✅ **SUCCESS (0 critical errors, optimized with Turbopack)**  
-**Version:** 1.0.0  
-**Cost:** **$0/month** 🆓
+## Project Overview / Ikhtisar Proyek
 
----
+**English**
+WebWorlds is a full-stack web gaming platform where users can create, publish, and play lightweight games in the browser. The system uses a Next.js App Router frontend and an Express + MongoDB backend, optimized for fast navigation, cache-aware data delivery, and clear mobile/desktop behavior.
 
-## 📌 What Is WebWorlds?
+**Bahasa Indonesia**
+WebWorlds adalah platform game web full-stack untuk membuat, mempublikasikan, dan memainkan game ringan langsung dari browser. Sistem menggunakan frontend Next.js App Router dan backend Express + MongoDB, dengan fokus pada performa navigasi cepat, caching yang aman, dan perilaku mobile/desktop yang jelas.
 
-WebWorlds is a complete, production-ready gaming platform with:
-- **19 fully functional pages** for users to create, play, and share games
-- **User authentication system** with secure login/signup/password reset
-- **Game editor** with code editor and live preview
-- **Game library** with search, filtering, and trending
-- **User profiles** (personal & public)
-- **Settings & preferences** dashboard
-- **Help system** with FAQs
-- **Responsive design** that works on mobile, tablet, and desktop
+## Current System State / Kondisi Sistem Saat Ini
 
----
+- Frontend framework: `Next.js 16.1.6` (`frontend/package.json`)
+- Frontend output mode: `standalone` (`frontend/next.config.ts`)
+- Mobile route namespace: `/mobile/*`
+- Legacy mobile compatibility: `/m/*` is redirected (HTTP 308) to `/mobile/*` (`frontend/src/proxy.ts`)
+- Backend entrypoint: `backend/src/server.ts`
+- Backend app factory: `backend/src/create-app.ts`
+- Backend runtime build target: `backend/dist/server.js`
+- API base behavior:
+  - Client-side calls use `frontend/src/lib/api-client.ts`
+  - Server-side calls use `frontend/src/lib/server-api-client.ts`
+  - Frontend rewrite proxies `/api/:path*` to backend target from `NEXT_PUBLIC_API_URL` or `API_URL` (`frontend/next.config.ts`)
 
-## 🚀 Live Links
+## Architecture and Repo Paths / Arsitektur dan Path Repo
 
-| Component | Status | URL |
-|-----------|--------|-----|
-| **Frontend** | ✅ Live | https://webworlds.vercel.app |
-| **Repository** | ✅ Git | https://github.com/FadhilAkbarC/WebWorlds |
-| **Backend** | ✅ Deployed | Railway Container |
-| **Database** | ✅ Connected | MongoDB |
+### Root Layout
 
----
-
-## ✨ All 19 Pages Included
-
-### Authentication (4 pages)
-- ✅ `/login` - User login
-- ✅ `/signup` - User registration with validation
-- ✅ `/forgot-password` - Password recovery
-- ✅ `/change-password` - Change existing password
-
-### User Management (4 pages)
-- ✅ `/profile` - Personal profile dashboard with stats
-- ✅ `/profile/edit` - Edit personal information
-- ✅ `/profile/[id]` - View public user profiles
-- ✅ `/settings` - Account settings (notifications, security, danger zone)
-
-### Gaming (4 pages)
-- ✅ `/` - Homepage with hero section
-- ✅ `/games` - Browse all games with filters
-- ✅ `/games/[id]` - Individual game detail page
-- ✅ `/editor` - Game editor with code & preview
-
-### Information (7 pages)
-- ✅ `/trending` - Trending games list
-- ✅ `/help` - Help center with 8 FAQs
-- ✅ `/about` - About WebWorlds
-- ✅ `/docs` - Documentation portal
-- ✅ `/privacy` - Privacy policy
-- ✅ `/terms` - Terms of service
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Next.js 16** with Turbopack (default build engine)
-- **React 18** for UI
-- **TypeScript** for type safety
-- **TailwindCSS** for styling
-- **Zustand** for state management
-- **Axios** for API calls
-- **Lucide React** for icons
-
-### Backend
-- **Express.js** for API server
-- **MongoDB** for database
-- **JWT** for authentication
-- **Socket.io** for real-time features
-- **Bcrypt** for password hashing
-
-### Deployment
-- **Vercel** for frontend (auto-deploy from GitHub)
-- **Railway** for backend (Docker container)
-- **GitHub** for version control
-
----
-
-## 📊 Build Metrics
-
-```
-✅ Total Pages:              19
-✅ Prerendered Routes:       18 static
-✅ Dynamic Routes:           2 (games/[id], profile/[id])
-✅ Build Time:               ~27 seconds
-✅ Bundle Size:              ~450KB (uncompressed)
-✅ Gzip Compressed:          ~120KB
-✅ TypeScript Errors:        0
-✅ Critical Warnings:        0
-✅ CSS Chunks:               Optimized per route
-```
-
----
-
-## 🎯 Core Features
-
-### Authentication ✅
-- Email/password registration
-- Strong password validation (8+ chars, uppercase, lowercase, number)
-- Secure JWT token management
-- Password reset via email
-- Session persistence
-- Logout functionality
-
-### User Profiles ✅
-- Personal profile dashboard with stats
-- Edit profile information
-- View public user profiles
-- User statistics display
-- Follow/unfollow users
-- Profile avatar support
-
-### Game System ✅
-- Browse game library
-- Search and filter games
-- View game details
-- Like/unlike games
-- Play count tracking
-- Trending games list
-
-### Game Editor ✅
-- Code editor with syntax highlighting
-- Live preview window
-- Script management
-- Save functionality
-- Publish to library with modal form
-- Genre and tag input
-
-### Settings & Preferences ✅
-- Notification settings
-- Email preferences
-- Security settings
-- Account deletion option
-- Password change
-- Logout from device
-
-### Help System ✅
-- Searchable FAQs
-- Common issues section
-- Support contact info
-- Discord community link
-- Documentation links
-
----
-
-## 📁 Complete Project Structure
-
-```
+```text
 WebWorlds/
-├── 📄 README.md (This file)
-├── 📄 CSS_PRELOAD_ANALYSIS.md (Optimization analysis)
-├── 📄 package.json
-├── 📄 Procfile
-│
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx (Homepage)
-│   │   │   ├── layout.tsx (Root layout)
-│   │   │   ├── globals.css
-│   │   │   ├── login/
-│   │   │   ├── signup/
-│   │   │   ├── forgot-password/
-│   │   │   ├── change-password/
-│   │   │   ├── profile/
-│   │   │   │   ├── page.tsx (Personal dashboard)
-│   │   │   │   ├── edit/page.tsx (Edit profile)
-│   │   │   │   └── [id]/page.tsx (Public profiles)
-│   │   │   ├── games/
-│   │   │   │   ├── page.tsx (Browse games)
-│   │   │   │   └── [id]/page.tsx (Game details)
-│   │   │   ├── editor/page.tsx (Game editor)
-│   │   │   ├── trending/page.tsx
-│   │   │   ├── settings/page.tsx
-│   │   │   ├── help/page.tsx
-│   │   │   ├── about/page.tsx
-│   │   │   ├── docs/page.tsx
-│   │   │   ├── privacy/page.tsx
-│   │   │   └── terms/page.tsx
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx (Navigation)
-│   │   │   ├── Footer.tsx (Footer with links)
-│   │   │   ├── GameCard.tsx
-│   │   │   ├── GameFilter.tsx
-│   │   │   └── ui/Tabs.tsx
-│   │   ├── engine/wbw-game-engine.ts
-│   │   ├── lib/api-client.ts
-│   │   ├── stores/ (Zustand)
-│   │   │   ├── authStore.ts
-│   │   │   ├── editorStore.ts
-│   │   │   └── gameStore.ts
-│   │   └── types/index.ts
-│   ├── package.json
-│   ├── package-lock.json ✅ Committed
-│   ├── next.config.ts ✅ Turbopack configured
-│   ├── tailwind.config.ts
-│   ├── tsconfig.json
-│   └── README.md
-│
-└── backend/
-    ├── src/
-    │   ├── create-app.ts
-    │   ├── server.ts
-    │   ├── config/
-    │   ├── controllers/
-    │   ├── middleware/
-    │   ├── models/
-    │   ├── routes/
-    │   └── utils/
-    ├── package.json
-    ├── package-lock.json ✅ Committed
-    ├── tsconfig.json
-    ├── Procfile ✅ Railway deployment
-    └── docker-compose.yml
+  backend/     # Express + MongoDB API
+  frontend/    # Next.js App Router UI
+  shared/      # Shared area (currently minimal)
+  README.md    # This document (single doc policy)
 ```
 
----
+### Frontend Key Paths
 
-## 🚀 How to Use
+- `frontend/src/app/`: App Router routes (desktop + mobile)
+- `frontend/src/app/mobile/`: Mobile-specific route tree
+- `frontend/src/proxy.ts`: Device-aware routing, `/mobile` rewrite, legacy `/m` redirect
+- `frontend/src/lib/api-client.ts`: Browser/API client helpers
+- `frontend/src/lib/server-api-client.ts`: Server-side fetch helpers
+- `frontend/src/lib/lazy-with-retry.ts`: Dynamic import retry strategy
+- `frontend/src/components/shared/ChunkRecovery.tsx`: Chunk load recovery UI
 
-### Run Locally
+### Backend Key Paths
+
+- `backend/src/create-app.ts`: Express app composition (middleware, routes, docs endpoint)
+- `backend/src/server.ts`: Server startup, DB init, graceful shutdown
+- `backend/src/routes/*.routes.ts`: Route definitions
+- `backend/src/controllers/*.controller.ts`: Request handlers
+- `backend/src/middleware/response-cache.ts`: Cache headers + in-memory response cache logic
+- `backend/src/middleware/error-handler.ts`: AppError and global error handling
+- `backend/src/services/database.service.ts`: Data access helpers
+
+## How the System Works / Cara Kerja Sistem
+
+### Request and Routing Flow / Alur Request dan Routing
+
+1. User opens frontend route (`/` desktop or `/mobile/*` mobile).
+2. `frontend/src/proxy.ts` decides desktop/mobile behavior:
+   - Forces legacy `/m/*` to `/mobile/*` using redirect.
+   - Uses cookie/user-agent for mobile rewrite when needed.
+3. Frontend data fetching:
+   - Server components call `server-api-client.ts`.
+   - Client components/stores call `api-client.ts`.
+4. `/api/:path*` can be rewritten to backend target via `frontend/next.config.ts`.
+5. Backend (`create-app.ts`) validates security/cors/rate limit, then dispatches routes.
+
+### Caching and Performance Behavior / Perilaku Caching dan Performa
+
+- Frontend static chunks: immutable long cache
+- Next image endpoint: short TTL + stale-while-revalidate
+- Public backend GET endpoints use response cache middleware with route-specific TTL values
+- Compression enabled on backend (`compression`)
+- CSS preload warnings are treated as non-critical optimization hints (not runtime failures)
+
+## Setup and Run Local / Setup dan Menjalankan Lokal
+
+### Prerequisites
+
+- Node.js `>=18`
+- npm `>=9`
+- MongoDB (local or cloud)
+
+### 1) Frontend Setup
+
 ```bash
-# Frontend
 cd frontend
-npm install --legacy-peer-deps
+npm install
+cp .env.local.example .env.local
+# or use .env.example as baseline
 npm run dev
-# Visit http://localhost:3000
+```
 
-# Backend
+Frontend default local URL: `http://localhost:3000`
+
+### 2) Backend Setup
+
+```bash
 cd backend
 npm install
+# copy env template manually if needed
 npm run dev
-# Runs on http://localhost:5000
 ```
 
-### Deploy Changes
-```bash
-# All you need to do:
-git add .
-git commit -m "Your message"
-git push origin main
+Backend default local URL: `http://localhost:5000`
+Health check: `http://localhost:5000/health`
 
-# Vercel automatically:
-# 1. Detects changes
-# 2. Builds frontend
-# 3. Runs tests
-# 4. Deploys to webworlds.vercel.app
-# Takes ~2-3 minutes
-```
+### Environment Files Used / File Env yang Digunakan
 
-### Build for Production
+- `frontend/.env.local.example`
+- `frontend/.env.example`
+- `backend/.env.example`
+
+### Main Environment Variables / Variabel Environment Utama
+
+**Frontend**
+- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_SOCKET_URL`
+- `API_URL` (optional, server-side fallback)
+
+**Backend**
+- `NODE_ENV`
+- `PORT`
+- `HOST`
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `JWT_EXPIRY`
+- `CORS_ORIGIN`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX_REQUESTS`
+- `LOG_LEVEL`
+
+## Build, Check, and Deploy / Build, Check, dan Deploy
+
+### Frontend Commands
+
 ```bash
 cd frontend
+npm run dev
+npm run lint
 npm run build
-npm start
+npm run start
+npm run analyze
 ```
 
----
+### Backend Commands
 
-## ✅ Quality Assurance
-
-### Type Safety
-- ✅ Full TypeScript coverage
-- ✅ Strict mode enabled
-- ✅ All types defined
-- ✅ Zero `any` types
-
-### Testing
-- ✅ All 19 pages build successfully
-- ✅ All routes accessible
-- ✅ Forms validate correctly
-- ✅ API integration working
-- ✅ State management functional
-
-### Performance
-- ✅ Code splitting per route
-- ✅ CSS optimized with Turbopack
-- ✅ Image optimization
-- ✅ Gzip compression enabled
-- ✅ Browser caching configured
-
-### Responsive Design
-- ✅ Mobile (320px)
-- ✅ Tablet (768px)
-- ✅ Desktop (1024px+)
-- ✅ All breakpoints tested
-
----
-
-## 🐛 Known Issues & Resolutions
-
-### ✅ Resolved
-1. **404 errors on missing pages** → Created all 19 pages
-2. **Package-lock.json not committed** → Now committed for Docker
-3. **Password validation mismatch** → Unified frontend/backend
-4. **Profile page crashes** → Fixed with optional chaining
-5. **Unused imports** → Cleaned up
-6. **CSS preload warnings** → Analyzed as Turbopack optimization
-
-### ⚠️ Non-Critical Warnings
-- CSS preload browser hints (see CSS_PRELOAD_ANALYSIS.md) - **Expected behavior**
-- Metadata viewport suggestions - **Informational only**
-
----
-
-## 📊 Feature Checklist
-
-| Feature | Status | Details |
-|---------|--------|---------|
-| Authentication | ✅ Complete | Login, signup, password reset |
-| User Profiles | ✅ Complete | Personal & public profiles |
-| Game Browse | ✅ Complete | Search, filter, trending |
-| Game Editor | ✅ Complete | Code editor, preview, publish |
-| Settings | ✅ Complete | Notifications, security, danger zone |
-| Help System | ✅ Complete | 8 FAQs + support links |
-| Info Pages | ✅ Complete | About, docs, privacy, terms |
-| Responsive | ✅ Complete | Mobile-first design |
-| Performance | ✅ Complete | Turbopack optimized |
-| Deployment | ✅ Complete | Vercel auto-deploy active |
-
----
-
-## 🔄 Deployment Status
-
-### Frontend (Vercel)
-```
-Status: ✅ LIVE
-URL: https://webworlds.vercel.app
-Build: Auto-deploys on main branch push
-Time: ~2-3 minutes
-SSL: ✅ Auto-configured
-Domain: ✅ Ready for custom domain
+```bash
+cd backend
+npm run dev
+npm run type-check
+npm run build
+npm run start
+npm run db:init
+npm run db:seed
+npm run db:reset
 ```
 
-### Backend (Railway)
-```
-Status: ✅ DEPLOYED
-Database: ✅ Connected
-Variables: ✅ Configured
-Scaling: ✅ Available
-Monitoring: ✅ Enabled
-```
+### Deployment Notes / Catatan Deploy
 
----
+- Root `Procfile` starts backend from monorepo root context:
+  - `web: cd backend && npm install --omit=dev && npm run build && npm start`
+- `backend/Procfile` supports backend-only runtime context.
+- `railway.json` deploy start command:
+  - `cd backend && npm ci --omit=dev && npm run build && npm start`
+- Frontend is configured for standalone output and can be deployed independently.
 
-## 💾 Recent Changes
+## API Surface Summary (Current) / Ringkasan API Aktif
 
-### Latest Commit
-- **Message:** Add Turbopack configuration and CSS preload analysis documentation
-- **Files:** next.config.ts, CSS_PRELOAD_ANALYSIS.md
-- **Impact:** Optimized builds, comprehensive documentation
-- **Status:** ✅ Deployed
+Base URL: `/api`
 
-### What's Been Fixed
-1. ✅ Created /change-password page
-2. ✅ Created /settings page with 3 sections
-3. ✅ Created /help page with 8 FAQs
-4. ✅ Removed unused imports
-5. ✅ Added Turbopack configuration
-6. ✅ Documented CSS preload optimization
+### Auth
 
----
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` (auth required)
+- `GET /api/auth/profile/:id`
 
-## 📖 Documentation
+### Games
 
-| Document | Purpose | Status |
-|----------|---------|--------|
-| README.md | Project overview | ✅ This file |
-| CSS_PRELOAD_ANALYSIS.md | Build optimization | ✅ Complete |
-| frontend/README.md | Frontend details | ✅ Available |
-| backend/README.md | Backend details | ✅ Available |
-| plan.md | Architecture | ✅ Available |
+- `GET /api/games`
+- `GET /api/games/:id`
+- `GET /api/games/:id/like-status`
+- `GET /api/games/creator/:creatorId`
+- `POST /api/games` (auth required)
+- `PUT /api/games/:id` (auth required)
+- `DELETE /api/games/:id` (auth required)
+- `POST /api/games/:id/publish` (auth required)
+- `POST /api/games/:id/like` (auth required)
+- `POST /api/games/:id/unlike` (auth required)
 
----
+### Groups
 
-## 🎯 Next Steps
+- `GET /api/groups`
+- `GET /api/groups/mine` (auth required)
+- `GET /api/groups/:id`
+- `POST /api/groups` (auth required)
+- `POST /api/groups/:id/join` (auth required)
+- `POST /api/groups/:id/leave` (auth required)
 
-### Immediate
-- [ ] Monitor Vercel deployment (should be live)
-- [ ] Test all 19 pages at https://webworlds.vercel.app
-- [ ] Verify JWT authentication working
-- [ ] Check database connections
+### Users
 
-### This Week
-- [ ] Set up custom domain
-- [ ] Configure email service for password reset
-- [ ] Add analytics (Google Analytics)
-- [ ] Create demo games
+- `GET /api/users`
 
-### This Month
-- [ ] Implement multiplayer features
-- [ ] Add game ratings and reviews
-- [ ] Create leaderboards
-- [ ] Add social features (follow, messaging)
+### Comments and Activities
 
-### future Features
-- [ ] File uploads (Cloudinary integration)
-- [ ] Email notifications
-- [ ] Payment processing (Stripe)
-- [ ] Mobile app (React Native)
+- `GET /api/games/:gameId/comments`
+- `POST /api/games/:gameId/comments` (auth required)
+- `DELETE /api/comments/:commentId` (auth required)
+- `POST /api/comments/:commentId/like` (auth required)
+- `POST /api/comments/:commentId/unlike` (auth required)
+- `GET /api/users/:userId/activities`
 
----
+## Performance and Caching Notes / Catatan Performa dan Caching
 
-## 📞 Support
+**English**
+- CSS preload warnings can appear due to route-level chunk preloading and are informational in this architecture.
+- Keep preload strategy enabled; removing it can hurt navigation performance.
+- Static chunk caching and image cache headers are explicitly configured in `frontend/next.config.ts`.
+- Backend response cache middleware is applied to selected public GET routes for speed and lower DB load.
 
-### Quick Links
-- **Live Site:** https://webworlds.vercel.app
-- **GitHub:** https://github.com/FadhilAkbarC/WebWorlds
-- **Help Page:** /help
-- **Email:** support@webworlds.dev
+**Bahasa Indonesia**
+- Warning preload CSS bisa muncul karena preloading chunk per route dan sifatnya informatif, bukan error fungsional.
+- Strategi preload tetap dipertahankan karena membantu kecepatan navigasi.
+- Cache untuk static chunk dan image sudah dikonfigurasi eksplisit di `frontend/next.config.ts`.
+- Middleware cache respons backend dipasang pada endpoint GET publik tertentu untuk menurunkan beban database.
 
-### Documentation
-- Check `/help` page for FAQs
-- Read CSS_PRELOAD_ANALYSIS.md for optimization details
-- See backend/README.md for API details
+## Troubleshooting / Panduan Troubleshooting
 
----
+### CORS blocked
 
-## ✨ Key Achievements
+- Ensure `CORS_ORIGIN` includes the exact frontend origin.
+- In production, use full domain (including protocol), can be comma-separated in backend config.
 
-✅ **19 Pages Complete** - Every route functional  
-✅ **Zero Build Errors** - Clean TypeScript  
-✅ **Responsive Design** - Mobile to desktop  
-✅ **Type Safe** - 100% TypeScript  
-✅ **Optimized** - Turbopack configured  
-✅ **Deployed** - Vercel auto-deploy  
-✅ **Documented** - Complete guides  
-✅ **Zero Cost** - Free hosting tier  
+### API not reachable from frontend
 
----
+- Verify `NEXT_PUBLIC_API_URL` and optional `API_URL`.
+- Confirm rewrite logic in `frontend/next.config.ts` resolves to backend `/api` path.
 
-## 🎊 Summary
+### Auth errors (401/403)
 
-**WebWorlds is COMPLETE and LIVE!**
+- Check token issuance (`/api/auth/login`) and Authorization header formatting.
+- Confirm backend `JWT_SECRET` is set and stable.
 
-All 19 pages are:
-- ✅ Built
-- ✅ Tested
-- ✅ Deployed
-- ✅ Optimized
-- ✅ Documented
+### Build mismatch or path errors after refactor
 
-**You can start using it right now at https://webworlds.vercel.app**
+- Re-check canonical paths in this README.
+- Ensure imports use current filenames (`*.controller.ts`, `*.routes.ts`, `create-app.ts`, `/mobile` routes).
 
----
+### Legacy mobile links still in use
 
-## 📝 License
+- `/m/*` should auto-redirect to `/mobile/*`.
+- If behavior differs, inspect `frontend/src/proxy.ts` deployment output.
 
-MIT - Use freely for any project
+## Contribution and Maintenance Rules / Aturan Kontribusi dan Pemeliharaan
 
----
+1. **One-Readme Policy (mandatory):**
+   - Only root `README.md` is allowed for project markdown documentation.
+2. Do not add new project-level `.md` files unless policy is intentionally changed.
+3. Keep this README aligned with real code/config state.
+4. If architecture, routes, env, scripts, or deployment flow changes, update this README in the same PR/commit.
+5. Prefer concise, operational, and verifiable documentation over historical narrative.
 
-**Status: ✅ 100% COMPLETE & PRODUCTION READY**
+## License
 
-Last Updated: February 8, 2026  
-Next Major Release: Multiplayer Features
+MIT
