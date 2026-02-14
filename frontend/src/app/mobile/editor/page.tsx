@@ -266,130 +266,132 @@ export default function MobileEditorPage() {
           <TabsTrigger value="manage">Manage</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="editor" className="mt-4 space-y-4">
-          <details className="rounded-2xl border border-[#232323] bg-[#141414] p-3" open>
-            <summary className="cursor-pointer text-xs font-semibold uppercase text-slate-300">Code Explorer</summary>
-            <div className="mt-3 flex items-center gap-2 overflow-x-auto">
-              {project.scripts.map((script) => (
+        <TabsContent value="editor" className="mt-4">
+          <div className="flex gap-3 overflow-x-auto">
+            <aside className="w-44 shrink-0 rounded-2xl border border-[#232323] bg-[#141414] p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase text-slate-300">Explorer</p>
+              <div className="max-h-[62vh] space-y-2 overflow-y-auto pr-1">
+                {project.scripts.map((script) => (
+                  <button
+                    key={script.id}
+                    onClick={() => setActiveTab(script.id)}
+                    className={`w-full rounded border px-2 py-1 text-left text-[11px] ${
+                      activeTabId === script.id
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-200'
+                        : 'border-[#2b2b2b] text-slate-400'
+                    }`}
+                  >
+                    {script.name}
+                  </button>
+                ))}
                 <button
-                  key={script.id}
-                  onClick={() => setActiveTab(script.id)}
-                  className={`rounded-full border px-3 py-1 text-xs ${
-                    activeTabId === script.id
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                      : 'border-[#2b2b2b] text-slate-400'
-                  }`}
+                  onClick={() => setShowNewScriptDialog(true)}
+                  className="w-full rounded border border-[#2b2b2b] px-2 py-1 text-[11px] text-slate-300"
                 >
-                  {script.name}
+                  <Plus size={11} className="mr-1 inline" /> New
                 </button>
-              ))}
-              <button
-                onClick={() => setShowNewScriptDialog(true)}
-                className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
-              >
-                <Plus size={12} className="inline mr-1" /> New
-              </button>
-              <button
-                onClick={() => setShowTemplateStore(true)}
-                className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
-              >
-                <Store size={12} className="inline mr-1" /> Store
-              </button>
-            </div>
-          </details>
-
-          <details className="rounded-2xl border border-[#232323] bg-[#141414] p-3" open>
-            <summary className="cursor-pointer text-xs font-semibold uppercase text-slate-400">Creator Store Template List</summary>
-            <div className="mt-3 space-y-2">
-              {WBW_BUILTIN_TEMPLATES.map((template) => (
-                <div key={template.id} className="rounded border border-[#2b2b2b] bg-black/30 p-2">
-                  <p className="text-xs font-semibold text-white">{template.title}</p>
-                  <p className="text-[10px] text-slate-400">{template.category} • {template.difficulty}</p>
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      onClick={() => applyTemplate(template)}
-                      className="flex-1 rounded bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white"
-                    >
-                      Use
-                    </button>
-                    <button
-                      onClick={() => createScriptFromTemplate(template)}
-                      className="flex-1 rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </details>
-
-          <div className="rounded-2xl border border-[#232323] bg-[#141414] overflow-hidden">
-            {currentScript ? (
-              <>
-                <div className="flex items-center justify-between border-b border-[#2b2b2b] px-3 py-2">
-                  <p className="text-xs text-slate-400">{currentScript.name}</p>
-                  <div className="flex gap-2 text-[11px]">
-                    <button
-                      onClick={() => setEditorMode('visual')}
-                      className={`rounded px-2 py-1 ${editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
-                    >
-                      Visual
-                    </button>
-                    <button
-                      onClick={() => setEditorMode('code')}
-                      className={`rounded px-2 py-1 ${editorMode === 'code' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
-                    >
-                      Code
-                    </button>
-                  </div>
-                </div>
-                {editorMode === 'visual' ? (
-                  <WBWVisualEditor
-                    value={currentScript.code}
-                    onChange={(val: string) => updateScript(currentScript.id, val)}
-                    readOnly={false}
-                  />
-                ) : (
-                  <WBWEditor
-                    value={currentScript.code}
-                    onChange={(val: string) => updateScript(currentScript.id, val)}
-                    readOnly={false}
-                  />
-                )}
-              </>
-            ) : (
-              <div className="p-6 text-slate-400">Select a script to edit</div>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-[#232323] bg-[#141414] p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-300 uppercase">Preview</p>
-              <button
-                onClick={() => setShowPublishDialog(true)}
-                className="rounded-full bg-purple-600 px-3 py-1 text-xs font-semibold text-white"
-              >
-                <Upload size={12} className="inline mr-1" /> Publish
-              </button>
-            </div>
-            <div className="rounded-xl border border-[#2b2b2b] bg-black/40 min-h-[200px] flex items-center justify-center">
-              {isPreviewActive ? (
-                wbwErrors.length > 0 ? (
-                  <div className="text-left text-xs text-red-300 p-4 space-y-2">
-                    <p className="font-semibold">WBW Syntax Errors</p>
-                    {wbwErrors.slice(0, 4).map((err) => (
-                      <p key={`${err.line}-${err.message}`}>
-                        Line {err.line}: {err.message}
-                      </p>
+                <button
+                  onClick={() => setShowTemplateStore(true)}
+                  className="w-full rounded border border-[#2b2b2b] px-2 py-1 text-[11px] text-slate-300"
+                >
+                  <Store size={11} className="mr-1 inline" /> Store
+                </button>
+                <details className="rounded border border-[#2b2b2b] bg-black/30 p-2" open>
+                  <summary className="cursor-pointer text-[10px] font-semibold uppercase text-slate-400">Templates</summary>
+                  <div className="mt-2 space-y-2">
+                    {WBW_BUILTIN_TEMPLATES.map((template) => (
+                      <div key={template.id} className="rounded border border-[#2b2b2b] bg-black/30 p-1.5">
+                        <p className="text-[10px] font-semibold text-white">{template.title}</p>
+                        <div className="mt-1 flex gap-1">
+                          <button
+                            onClick={() => applyTemplate(template)}
+                            className="flex-1 rounded bg-blue-600 px-1 py-1 text-[10px] font-semibold text-white"
+                          >
+                            Use
+                          </button>
+                          <button
+                            onClick={() => createScriptFromTemplate(template)}
+                            className="flex-1 rounded bg-emerald-600 px-1 py-1 text-[10px] font-semibold text-white"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
+                </details>
+              </div>
+            </aside>
+
+            <div className="min-w-[340px] flex-1 space-y-3">
+              <div className="rounded-2xl border border-[#232323] bg-[#141414] overflow-hidden">
+                {currentScript ? (
+                  <>
+                    <div className="flex items-center justify-between border-b border-[#2b2b2b] px-3 py-2">
+                      <p className="text-xs text-slate-400">{currentScript.name}</p>
+                      <div className="flex gap-2 text-[11px]">
+                        <button
+                          onClick={() => setEditorMode('visual')}
+                          className={`rounded px-2 py-1 ${editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
+                        >
+                          Visual
+                        </button>
+                        <button
+                          onClick={() => setEditorMode('code')}
+                          className={`rounded px-2 py-1 ${editorMode === 'code' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
+                        >
+                          Code
+                        </button>
+                      </div>
+                    </div>
+                    {editorMode === 'visual' ? (
+                      <WBWVisualEditor
+                        value={currentScript.code}
+                        onChange={(val: string) => updateScript(currentScript.id, val)}
+                        readOnly={false}
+                      />
+                    ) : (
+                      <WBWEditor
+                        value={currentScript.code}
+                        onChange={(val: string) => updateScript(currentScript.id, val)}
+                        readOnly={false}
+                      />
+                    )}
+                  </>
                 ) : (
-                  <canvas ref={canvasRef} className="max-w-full max-h-full bg-black" />
-                )
-              ) : (
-                <p className="text-xs text-slate-400">Tap Preview to test your game</p>
-              )}
+                  <div className="p-6 text-slate-400">Select a script to edit</div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-[#232323] bg-[#141414] p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-slate-300 uppercase">Preview</p>
+                  <button
+                    onClick={() => setShowPublishDialog(true)}
+                    className="rounded-full bg-purple-600 px-3 py-1 text-xs font-semibold text-white"
+                  >
+                    <Upload size={12} className="inline mr-1" /> Publish
+                  </button>
+                </div>
+                <div className="rounded-xl border border-[#2b2b2b] bg-black/40 min-h-[200px] flex items-center justify-center">
+                  {isPreviewActive ? (
+                    wbwErrors.length > 0 ? (
+                      <div className="text-left text-xs text-red-300 p-4 space-y-2">
+                        <p className="font-semibold">WBW Syntax Errors</p>
+                        {wbwErrors.slice(0, 4).map((err) => (
+                          <p key={`${err.line}-${err.message}`}>
+                            Line {err.line}: {err.message}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <canvas ref={canvasRef} className="max-w-full max-h-full bg-black" />
+                    )
+                  ) : (
+                    <p className="text-xs text-slate-400">Tap Preview to test your game</p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
