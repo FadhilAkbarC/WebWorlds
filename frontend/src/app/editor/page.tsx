@@ -10,7 +10,11 @@ import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
 import WBWEditor from '@/components/shared/wbw-code-editor';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
 import { lazyWithRetry } from '@/lib/lazy-with-retry';
-import { type WBWTemplateDefinition } from '@/lib/wbw-template-store';
+import {
+  applyTemplateToProject,
+  createTemplateScript,
+  type WBWTemplateDefinition,
+} from '@/lib/wbw-template-store';
 import WBWTemplateStoreModal from '@/components/shared/wbw-template-store-modal';
 
 const ManageGamesTab = dynamic(lazyWithRetry(() => import('./manage-games-tab')), {
@@ -60,29 +64,25 @@ export default function EditorPage() {
 
   // --- Effects ---
   useEffect(() => {
-    // On first load, replace scripts with single WBW template from public folder
-    const initializeTemplate = () => {
-      const baseProject = useEditorStore.getState().project;
-      const projectData = {
-        ...baseProject,
-        title: 'WBW Template',
-        description: 'Start with the official WBW template',
-        assets: [],
-        scripts: [
-          {
-            id: 'main',
-            name: 'main.wbw',
-            code: DEFAULT_WBW_TEMPLATE,
-            language: 'wbw' as const,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      };
-      loadProject(projectData as any);
-      setActiveTab('main');
-    };
+    const current = useEditorStore.getState().project;
+    if (current.scripts && current.scripts.length > 0) return;
 
-    initializeTemplate();
+    loadProject({
+      ...current,
+      title: 'WBW Template',
+      description: 'Start with the official WBW template',
+      assets: [],
+      scripts: [
+        {
+          id: 'main',
+          name: 'main.wbw',
+          code: DEFAULT_WBW_TEMPLATE,
+          language: 'wbw',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+    setActiveTab('main');
   }, [loadProject, setActiveTab]);
 
   useEffect(() => {
@@ -138,31 +138,16 @@ export default function EditorPage() {
 
   const applyTemplate = (template: WBWTemplateDefinition) => {
     const baseProject = useEditorStore.getState().project;
-    loadProject({
-      ...baseProject,
-      title: template.title,
-      description: template.description,
-      scripts: [
-        {
-          id: 'main',
-          name: 'main.wbw',
-          code: template.code,
-          language: 'wbw' as const,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    } as any);
+    loadProject(applyTemplateToProject(baseProject, template));
     setActiveTab('main');
     setShowTemplateStore(false);
   };
 
   const createScriptFromTemplate = (template: WBWTemplateDefinition) => {
     addScript({
+      ...createTemplateScript(template),
       id: `template_${template.id}_${Date.now()}`,
       name: `${template.id}.wbw`,
-      code: template.code,
-      language: 'wbw',
-      createdAt: new Date().toISOString(),
     });
     setShowTemplateStore(false);
   };

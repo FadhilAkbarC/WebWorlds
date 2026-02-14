@@ -1,3 +1,5 @@
+import type { GameProject, GameScript } from '@/types';
+
 export type WBWTemplateCategory =
   | 'platformer'
   | 'rpg'
@@ -22,6 +24,28 @@ export interface WBWTemplateDefinition {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   description: string;
   code: string;
+}
+
+export function createTemplateScript(template: WBWTemplateDefinition): GameScript {
+  return {
+    id: 'main',
+    name: 'main.wbw',
+    code: template.code,
+    language: 'wbw',
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function applyTemplateToProject(
+  baseProject: GameProject,
+  template: WBWTemplateDefinition
+): GameProject {
+  return {
+    ...baseProject,
+    title: template.title,
+    description: template.description,
+    scripts: [createTemplateScript(template)],
+  };
 }
 
 export const WBW_BUILTIN_TEMPLATES: WBWTemplateDefinition[] = [
