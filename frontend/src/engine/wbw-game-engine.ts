@@ -517,6 +517,8 @@ function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
       }
       if (!labels[labelName]) {
         labels[labelName] = [];
+      } else {
+        errors.push({ line: lineNumber, message: `Duplicate label: ${labelName}` });
       }
       currentLabel = labelName;
       return;
@@ -538,10 +540,60 @@ function validateParsedProgram(program: WBWProgram): WBWError[] {
   const validationErrors: WBWError[] = [];
   const allLines = [...program.init, ...Object.values(program.labels).flat()];
 
+  const hasLabel = (label?: string) => Boolean(label && program.labels[label]);
+
   allLines.forEach((line) => {
     const command = normalizeCommand(line.tokens[0]);
+    const tokens = line.tokens;
+
     if (!KNOWN_COMMANDS.has(command)) {
       validationErrors.push({ line: line.line, message: `Unknown command: ${line.tokens[0]}` });
+      return;
+    }
+
+    if (command === 'goto') {
+      const label = tokens[1];
+      if (!label) {
+        validationErrors.push({ line: line.line, message: 'goto requires a label target' });
+      } else if (!hasLabel(label)) {
+        validationErrors.push({ line: line.line, message: `goto label not found: ${label}` });
+      }
+    }
+
+    if (command === 'if' || command === 'ifnot') {
+      const gotoIndex = tokens.indexOf('goto');
+      if (gotoIndex === -1 || !tokens[gotoIndex + 1]) {
+        validationErrors.push({ line: line.line, message: `${command} requires "goto <label>"` });
+      } else {
+        const label = tokens[gotoIndex + 1];
+        if (!hasLabel(label)) {
+          validationErrors.push({ line: line.line, message: `${command} label not found: ${label}` });
+        }
+      }
+    }
+
+    if ((command === 'on' || command === 'onpress' || command === 'onrelease') && tokens.length < 3) {
+      validationErrors.push({ line: line.line, message: `${command} requires key and action` });
+    }
+
+    if ((command === 'after' || command === 'every') && tokens.length < 4) {
+      validationErrors.push({ line: line.line, message: `${command} requires duration and action` });
+    }
+
+    if (['set', 'add', 'sub', 'mul', 'div', 'mod'].includes(command) && tokens.length < 3) {
+      validationErrors.push({ line: line.line, message: `${command} requires variable and value` });
+    }
+
+    if ((command === 'inc' || command === 'dec') && tokens.length < 2) {
+      validationErrors.push({ line: line.line, message: `${command} requires variable name` });
+    }
+
+    if (command === 'jump' && tokens.length < 2) {
+      validationErrors.push({ line: line.line, message: 'jump requires force value' });
+    }
+
+    if (command === 'touch' && tokens[1] && !['on', 'off', 'auto'].includes(tokens[1].toLowerCase())) {
+      validationErrors.push({ line: line.line, message: 'touch mode must be on|off|auto' });
     }
   });
 
