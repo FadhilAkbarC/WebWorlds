@@ -132,6 +132,8 @@ interface WBWTimer {
 
 type WBWCommandSource = 'init' | 'input' | 'tick' | 'ui';
 
+type WBWTouchMode = 'auto' | 'on' | 'off';
+
 type WBWExecutionContext = {
   speed?: number;
   gravity?: number;
@@ -246,6 +248,7 @@ const COMMAND_ALIASES: Record<string, string> = {
   var: 'set',
   const: 'set',
   when: 'if',
+  unless: 'ifnot',
   then: 'goto',
   fn: 'goto',
   camfollow: 'camfollow',
@@ -305,6 +308,7 @@ const KNOWN_COMMANDS = new Set<string>([
   'jump',
   'shoot',
   'if',
+  'ifnot',
   'goto',
   'loop',
   'end',
@@ -389,6 +393,10 @@ const KNOWN_COMMANDS = new Set<string>([
   'toggle',
   'randint',
   'randfloat',
+  'touch',
+  'and',
+  'or',
+  'not',
 ]);
 
 function normalizeKey(key: string): string {
@@ -615,6 +623,9 @@ export class WBWEngine {
   private pointerY = 0;
   private pointerDown = false;
   private timers: WBWTimer[] = [];
+  private touchMode: WBWTouchMode = 'auto';
+  private isTouchActive = false;
+  private touchKeys = new Set<string>();
 
   private inputBindings: Record<string, CommandLine[]> = {};
   private inputPressBindings: Record<string, CommandLine[]> = {};
@@ -795,6 +806,7 @@ export class WBWEngine {
     this.vars.MX = Number(this.pointerX.toFixed(2));
     this.vars.MY = Number(this.pointerY.toFixed(2));
     this.vars.MOUSEDOWN = this.pointerDown ? 1 : 0;
+    this.vars.TOUCH = this.isTouchActive ? 1 : 0;
     this.vars.UIHOVER = this.hoveredUiId ?? '';
 
     const keySet = new Set([
@@ -2155,6 +2167,69 @@ export class WBWEngine {
         }
         break;
       }
+      case 'ifnot': {
+        const gotoIndex = tokens.indexOf('goto');
+        if (gotoIndex === -1) break;
+        const label = tokens[gotoIndex + 1];
+        if (!label) break;
+
+        if (gotoIndex === 2) {
+          const condition = this.getValue(tokens[1]);
+          if (!Boolean(condition)) {
+            this.runLabel(label, context);
+          }
+          break;
+        }
+
+        let op = '==';
+        let leftToken = tokens[1];
+        let rightToken = tokens[2];
+        if (gotoIndex >= 4) {
+          op = tokens[2];
+          rightToken = tokens[3];
+        }
+
+        const leftVal = this.getValue(leftToken);
+        const rightVal = this.getValue(rightToken);
+        const result = this.compareValues(leftVal, rightVal, op);
+        if (!result) {
+          this.runLabel(label, context);
+        }
+        break;
+      }
+      case 'touch': {
+        const raw = (tokens[1] || 'auto').toLowerCase();
+        if (raw === 'on' || raw === 'off' || raw === 'auto') {
+          this.touchMode = raw;
+          if (raw === 'off') {
+            this.releaseTouchKeys();
+          }
+        }
+        break;
+      }
+      case 'and': {
+        const name = tokens[1];
+        if (!name) break;
+        const a = this.getNumberValue(tokens[2]);
+        const b = this.getNumberValue(tokens[3]);
+        this.vars[name] = a !== 0 && b !== 0 ? 1 : 0;
+        break;
+      }
+      case 'or': {
+        const name = tokens[1];
+        if (!name) break;
+        const a = this.getNumberValue(tokens[2]);
+        const b = this.getNumberValue(tokens[3]);
+        this.vars[name] = a !== 0 || b !== 0 ? 1 : 0;
+        break;
+      }
+      case 'not': {
+        const name = tokens[1];
+        if (!name) break;
+        const source = tokens[2] ? this.getNumberValue(tokens[2]) : this.getNumberVar(name, 0);
+        this.vars[name] = source !== 0 ? 0 : 1;
+        break;
+      }
       case 'goto': {
         const label = tokens[1];
         if (label) this.runLabel(label, context);
@@ -2534,6 +2609,10 @@ export class WBWEngine {
     this.canvas.addEventListener('mousemove', this.handlePointerMove);
     this.canvas.addEventListener('mousedown', this.handlePointerDown);
     this.canvas.addEventListener('mouseleave', this.handlePointerLeave);
+    this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+    this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    this.canvas.addEventListener('touchend', this.handleTouchEnd);
+    this.canvas.addEventListener('touchcancel', this.handleTouchEnd);
   }
 
   private detachListeners() {
@@ -2543,6 +2622,10 @@ export class WBWEngine {
     this.canvas.removeEventListener('mousemove', this.handlePointerMove);
     this.canvas.removeEventListener('mousedown', this.handlePointerDown);
     this.canvas.removeEventListener('mouseleave', this.handlePointerLeave);
+    this.canvas.removeEventListener('touchstart', this.handleTouchStart);
+    this.canvas.removeEventListener('touchmove', this.handleTouchMove);
+    this.canvas.removeEventListener('touchend', this.handleTouchEnd);
+    this.canvas.removeEventListener('touchcancel', this.handleTouchEnd);
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
@@ -2616,5 +2699,91 @@ export class WBWEngine {
     this.hoveredUiId = null;
     this.vars.MOUSEDOWN = 0;
     this.vars.UIHOVER = '';
+  };
+
+  private getPointerFromTouch(touch: Touch): { x: number; y: number } | null {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const x = clamp(((touch.clientX - rect.left) / rect.width) * this.width, 0, this.width);
+    const y = clamp(((touch.clientY - rect.top) / rect.height) * this.height, 0, this.height);
+    return { x, y };
+  }
+
+  private releaseTouchKeys() {
+    this.touchKeys.forEach((key) => {
+      this.keys[key] = false;
+    });
+    this.touchKeys.clear();
+    this.isTouchActive = false;
+    this.vars.TOUCH = 0;
+  }
+
+  private applyTouchControls(event: TouchEvent) {
+    if (this.touchMode === 'off') return;
+    if (this.touchMode === 'auto' && event.touches.length === 0) {
+      this.releaseTouchKeys();
+      return;
+    }
+
+    const next = new Set<string>();
+    let pointer: { x: number; y: number } | null = null;
+
+    for (let i = 0; i < event.touches.length; i += 1) {
+      const touch = event.touches.item(i);
+      if (!touch) continue;
+      const pos = this.getPointerFromTouch(touch);
+      if (!pos) continue;
+      pointer = pos;
+
+      const leftZone = pos.x <= this.width * 0.45;
+      const rightZone = pos.x >= this.width * 0.55;
+      const upperZone = pos.y <= this.height * 0.45;
+      const actionZone = pos.x >= this.width * 0.72 && pos.y >= this.height * 0.55;
+
+      if (leftZone && pos.x < this.width * 0.28) next.add('arrowleft');
+      if (leftZone && pos.x >= this.width * 0.28 && pos.x <= this.width * 0.45) next.add('arrowright');
+      if (leftZone && upperZone) next.add('arrowup');
+      if (rightZone && actionZone) next.add('space');
+    }
+
+    const allKeys = new Set([...this.touchKeys, ...next]);
+    allKeys.forEach((key) => {
+      const pressed = next.has(key);
+      this.keys[key] = pressed;
+    });
+    this.touchKeys = next;
+    this.isTouchActive = event.touches.length > 0;
+    this.vars.TOUCH = this.isTouchActive ? 1 : 0;
+
+    if (pointer) {
+      this.updatePointer(pointer);
+      this.pointerDown = true;
+      this.vars.MOUSEDOWN = 1;
+    } else {
+      this.pointerDown = false;
+      this.vars.MOUSEDOWN = 0;
+    }
+  }
+
+  private handleTouchStart = (event: TouchEvent) => {
+    if (!this.running) return;
+    event.preventDefault();
+    this.applyTouchControls(event);
+  };
+
+  private handleTouchMove = (event: TouchEvent) => {
+    if (!this.running) return;
+    event.preventDefault();
+    this.applyTouchControls(event);
+  };
+
+  private handleTouchEnd = (event: TouchEvent) => {
+    if (!this.running) return;
+    this.applyTouchControls(event);
+    if (event.touches.length === 0) {
+      this.pointerDown = false;
+      this.vars.MOUSEDOWN = 0;
+      this.vars.UICLICK = '';
+    }
   };
 }

@@ -65,8 +65,12 @@ WebWorlds/
 
 - Assignment shorthand is supported by engine parser normalization:
   - `VAR = 10`
+  - `VAR := 10`
   - `VAR += 2`, `VAR -= 1`, `VAR *= 3`, `VAR /= 2`, `VAR %= 5`
+  - `VAR++`, `VAR--`
 - `let`, `var`, and `const` aliases map to `set` command.
+- Flow aliases: `when` -> `if`, `then`/`fn` -> `goto`, plus negative condition `ifnot`/`unless`.
+- Mobile movement helper: `touch on|off|auto` to enable touch-based movement/interaction on devices without keyboard.
 - Namespaced variable reads (example `Game.Rock`) can fall back to short variable name (`Rock`) if needed.
 
 ### Backend Key Paths

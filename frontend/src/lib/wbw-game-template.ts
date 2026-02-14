@@ -4,9 +4,11 @@ export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v4 - Mega Platformer S
 // Camera: world/cam/camfollow/camlerp/camoffset/camclamp/camreset
 // Control: on/onpress/onrelease + move/jump/shoot/vel/push + setx/sety/addx/addy/velx/vely/pushx/pushy
 // UI: uirect/uicircle/uiline/button/onui/onhoverui/uivisible/uienable/uicolor/removeui/clearui
-// Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp (+ shorthand VAR=10, VAR+=2)
+// Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp (+ shorthand VAR=10, VAR:=10, VAR+=2, VAR++, VAR--)
 // Timer: after/every/canceltimer/cleartimers
 // Math: pow/sqrt/log/exp/sin/cos/tan/asin/acos/atan/lerp/mix/swap/copy/toggle
+// Flow: if/ifnot/unless + when/then/fn
+// Mobile: touch on/off/auto (no-keyboard control)
 // Events: msg/shake/stop + checkpoint/respawn/patrol + colorof/sizeof/remove
 // Built-in vars: PX PY VX VY TIME FRAME DT GROUND WORLDW WORLDH CAMX CAMY MX MY MOUSEDOWN UIHOVER UICLICK
 // Namespace vars: set Rock 3 -> can be reused as Rock or Game.Rock
@@ -96,6 +98,7 @@ onpress q velx player 4
 onpress e vely player -6
 onpress c teleport player 140 1040
 onpress v camreset
+touch auto
 onrelease left stopx
 onrelease right stopx
 onrelease up stopy
