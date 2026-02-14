@@ -534,8 +534,7 @@ function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
 }
 
 
-export function analyzeWBWCode(code: string): WBWError[] {
-  const { program, errors } = parseWBW(code);
+function validateParsedProgram(program: WBWProgram): WBWError[] {
   const validationErrors: WBWError[] = [];
   const allLines = [...program.init, ...Object.values(program.labels).flat()];
 
@@ -546,7 +545,12 @@ export function analyzeWBWCode(code: string): WBWError[] {
     }
   });
 
-  return [...errors, ...validationErrors];
+  return validationErrors;
+}
+
+export function analyzeWBWCode(code: string): WBWError[] {
+  const { program, errors } = parseWBW(code);
+  return [...errors, ...validateParsedProgram(program)];
 }
 function isNumber(value: string): boolean {
   return /^-?\d+(\.\d+)?$/.test(value);
@@ -673,9 +677,9 @@ export class WBWEngine {
   }
 
   load(code: string): { errors: WBWError[] } {
-    const { program } = parseWBW(code);
+    const { program, errors } = parseWBW(code);
     this.program = program;
-    this.parseErrors = analyzeWBWCode(code);
+    this.parseErrors = [...errors, ...validateParsedProgram(program)];
     return { errors: this.parseErrors };
   }
 

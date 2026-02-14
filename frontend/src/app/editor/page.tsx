@@ -271,7 +271,7 @@ export default function EditorPage() {
           </TabsList>
           <TabsContent value="editor" className="flex flex-1 gap-4 overflow-hidden">
             {/* Left Panel - File Explorer */}
-            <div className="w-64 bg-slate-900 rounded-lg border border-slate-700 p-4 overflow-y-auto">
+            <div className="w-56 xl:w-60 bg-slate-900 rounded-lg border border-slate-700 p-3 overflow-y-auto">
               <details className="mb-4" open>
                 <summary className="cursor-pointer text-sm font-bold uppercase text-slate-300">Code Explorer</summary>
                 <div className="mt-3">
@@ -396,7 +396,7 @@ export default function EditorPage() {
               />
             </div>
             {/* Center Panel - Code Editor */}
-            <div className="flex-1 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden flex flex-col">
+            <div className="min-w-0 flex-1 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden flex flex-col">
               {currentScript ? (
                 <>
                   <div className="bg-slate-800 px-4 py-2 border-b border-slate-700 flex items-center justify-between">
@@ -416,7 +416,7 @@ export default function EditorPage() {
               )}
             </div>
             {/* Right Panel - Preview */}
-            <div className="w-96 bg-slate-900 rounded-lg border border-slate-700 p-4 overflow-hidden flex flex-col">
+            <div className="w-[30rem] xl:w-[36rem] bg-slate-900 rounded-lg border border-slate-700 p-4 overflow-hidden flex flex-col">
               <h3 className="text-sm font-bold text-slate-300 uppercase mb-2">Preview</h3>
               <div className="flex-1 bg-slate-800 rounded border border-slate-700 overflow-auto flex items-center justify-center">
                 {isPreviewActive ? (
@@ -435,7 +435,7 @@ export default function EditorPage() {
                   ) : (
                     <canvas
                       ref={canvasRef}
-                      className="max-w-full max-h-full bg-slate-950"
+                      className="h-full w-full bg-slate-950 object-contain"
                     />
                   )
                 ) : (

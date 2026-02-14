@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeWBWCode } from '@/engine/wbw-game-engine';
 
 type WBWEditorProps = {
@@ -185,9 +185,10 @@ export default function WBWEditor({ value, onChange, readOnly = false }: WBWEdit
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const holdTimerRef = useRef<number | null>(null);
 
-  const diagnostics = useMemo(() => buildDiagnostics(value), [value]);
+  const analysisValue = useDeferredValue(value);
+  const diagnostics = useMemo(() => buildDiagnostics(analysisValue), [analysisValue]);
   const diagnosticsByLine = useMemo(() => new Map(diagnostics.map((d) => [d.line, d])), [diagnostics]);
-  const highlighted = useMemo(() => highlightWBW(value, diagnosticsByLine), [value, diagnosticsByLine]);
+  const highlighted = useMemo(() => highlightWBW(analysisValue, diagnosticsByLine), [analysisValue, diagnosticsByLine]);
 
   const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, message: '', top: 0, left: 0 });
 
@@ -216,7 +217,7 @@ export default function WBWEditor({ value, onChange, readOnly = false }: WBWEdit
     }
 
     if (issue.token) {
-      const lineText = value.split(/\r?\n/)[line - 1] ?? '';
+      const lineText = analysisValue.split(/\r?\n/)[line - 1] ?? '';
       const tokenStart = lineText.indexOf(issue.token);
       if (tokenStart >= 0) {
         const tokenEnd = tokenStart + issue.token.length;

@@ -266,7 +266,7 @@ export default function MobileEditorPage() {
 
         <TabsContent value="editor" className="mt-4">
           <div className="flex gap-3 overflow-x-auto">
-            <aside className="w-44 shrink-0 rounded-2xl border border-[#232323] bg-[#141414] p-3">
+            <aside className="w-36 shrink-0 rounded-2xl border border-[#232323] bg-[#141414] p-2.5">
               <p className="mb-2 text-[11px] font-semibold uppercase text-slate-300">Explorer</p>
               <div className="max-h-[62vh] space-y-2 overflow-y-auto pr-1">
                 {project.scripts.map((script) => (
@@ -321,7 +321,7 @@ export default function MobileEditorPage() {
               </div>
             </aside>
 
-            <div className="min-w-[340px] flex-1 space-y-3">
+            <div className="min-w-[420px] flex-1 space-y-3">
               <div className="rounded-2xl border border-[#232323] bg-[#141414] overflow-hidden">
                 {currentScript ? (
                   <>
@@ -350,7 +350,7 @@ export default function MobileEditorPage() {
                     <Upload size={12} className="inline mr-1" /> Publish
                   </button>
                 </div>
-                <div className="rounded-xl border border-[#2b2b2b] bg-black/40 min-h-[200px] flex items-center justify-center">
+                <div className="rounded-xl border border-[#2b2b2b] bg-black/40 min-h-[300px] flex items-center justify-center">
                   {isPreviewActive ? (
                     wbwErrors.length > 0 ? (
                       <div className="text-left text-xs text-red-300 p-4 space-y-2">
@@ -362,7 +362,7 @@ export default function MobileEditorPage() {
                         ))}
                       </div>
                     ) : (
-                      <canvas ref={canvasRef} className="max-w-full max-h-full bg-black" />
+                      <canvas ref={canvasRef} className="h-full w-full bg-black object-contain" />
                     )
                   ) : (
                     <p className="text-xs text-slate-400">Tap Preview to test your game</p>
