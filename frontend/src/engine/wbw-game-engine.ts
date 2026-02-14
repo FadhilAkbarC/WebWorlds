@@ -83,6 +83,14 @@ interface WBWPatrol {
   speed: number;
 }
 
+interface WBWConveyor {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  speed: number;
+}
+
 type WBWUIShape =
   | {
       kind: 'rect';
@@ -266,6 +274,11 @@ const COMMAND_ALIASES: Record<string, string> = {
   onhover: 'onhoverui',
   uihover: 'onhoverui',
   onhoverui: 'onhoverui',
+  conveyor: 'conveyor',
+  conv: 'conveyor',
+  belt: 'conveyor',
+  part: 'part',
+  parts: 'part',
   removeui: 'removeui',
   uirm: 'removeui',
   clearui: 'clearui',
@@ -341,6 +354,8 @@ const KNOWN_COMMANDS = new Set<string>([
   'button',
   'onui',
   'onhoverui',
+  'conveyor',
+  'part',
   'uivisible',
   'uienable',
   'uicolor',
@@ -617,6 +632,14 @@ function validateParsedProgram(program: WBWProgram): WBWError[] {
       validationErrors.push({ line: line.line, message: `${command} requires destination variable and numeric values` });
     }
 
+    if (command === 'conveyor' && tokens.length < 6) {
+      validationErrors.push({ line: line.line, message: 'conveyor requires x y w h speed' });
+    }
+
+    if (command === 'part' && tokens.length < 4) {
+      validationErrors.push({ line: line.line, message: 'part requires id x y [w h]' });
+    }
+
     if (command === 'touch' && tokens[1] && !['on', 'off', 'auto'].includes(tokens[1].toLowerCase())) {
       validationErrors.push({ line: line.line, message: 'touch mode must be on|off|auto' });
     }
@@ -702,6 +725,7 @@ export class WBWEngine {
   private frame = 0;
   private playerGrounded = false;
   private patrols: WBWPatrol[] = [];
+  private conveyors: WBWConveyor[] = [];
   private worldWidth = 0;
   private worldHeight = 0;
   private cameraX = 0;
@@ -829,6 +853,7 @@ export class WBWEngine {
     this.frame = 0;
     this.playerGrounded = false;
     this.patrols = [];
+    this.conveyors = [];
     this.worldWidth = this.width;
     this.worldHeight = this.height;
     this.cameraX = 0;
@@ -951,6 +976,11 @@ export class WBWEngine {
       this.playerGrounded = false;
       this.resolveVerticalCollisions(player);
 
+      const playerConveyorSpeed = this.getConveyorSpeed(player);
+      if (this.playerGrounded && playerConveyorSpeed !== 0) {
+        player.x += playerConveyorSpeed * scale;
+      }
+
       if (player.x < 0) {
         player.x = 0;
         player.vx = 0;
@@ -977,11 +1007,39 @@ export class WBWEngine {
     }
 
     this.entities = this.entities.filter((entity) => {
-      entity.x += entity.vx * scale;
-      entity.y += entity.vy * scale;
       if (entity.type === 'bullet') {
+        entity.x += entity.vx * scale;
+        entity.y += entity.vy * scale;
         return entity.x >= -40 && entity.x <= this.worldWidth + 40;
       }
+
+      entity.vy += gravity * scale;
+      entity.x += entity.vx * scale;
+      this.resolveHorizontalCollisionForEntity(entity);
+      entity.y += entity.vy * scale;
+      const grounded = this.resolveVerticalCollisionForEntity(entity);
+
+      if (grounded) {
+        const beltSpeed = this.getConveyorSpeed(entity);
+        if (beltSpeed !== 0) {
+          entity.x += beltSpeed * scale;
+          entity.vx = beltSpeed;
+        }
+      }
+
+      if (entity.x < 0) {
+        entity.x = 0;
+        entity.vx = 0;
+      }
+      if (entity.x + entity.w > this.worldWidth) {
+        entity.x = this.worldWidth - entity.w;
+        entity.vx = 0;
+      }
+      if (entity.y + entity.h > this.worldHeight) {
+        entity.y = this.worldHeight - entity.h;
+        entity.vy = 0;
+      }
+
       return true;
     });
 
@@ -1203,10 +1261,70 @@ export class WBWEngine {
     ctx.restore();
   }
 
-  private resolveHorizontalCollisions(player: WBWEntity) {
-    const solids = this.shapes.filter((shape) => shape.kind === 'rect' && shape.solid) as Array<
+  private getSolidRects() {
+    return this.shapes.filter((shape) => shape.kind === 'rect' && shape.solid) as Array<
       Extract<WBWShape, { kind: 'rect' }>
     >;
+  }
+
+  private getConveyorSpeed(entity: WBWEntity): number {
+    const feetY = entity.y + entity.h;
+    const tolerance = 2;
+    for (const conveyor of this.conveyors) {
+      const overlapX = entity.x < conveyor.x + conveyor.w && entity.x + entity.w > conveyor.x;
+      const onTop = feetY >= conveyor.y - tolerance && feetY <= conveyor.y + tolerance;
+      if (overlapX && onTop) {
+        return conveyor.speed;
+      }
+    }
+    return 0;
+  }
+
+  private resolveHorizontalCollisionForEntity(entity: WBWEntity) {
+    const solids = this.getSolidRects();
+    for (const shape of solids) {
+      const rect = { x: shape.x, y: shape.y, w: shape.w, h: shape.h };
+      if (
+        entity.x < rect.x + rect.w &&
+        entity.x + entity.w > rect.x &&
+        entity.y < rect.y + rect.h &&
+        entity.y + entity.h > rect.y
+      ) {
+        if (entity.vx > 0) {
+          entity.x = rect.x - entity.w;
+        } else if (entity.vx < 0) {
+          entity.x = rect.x + rect.w;
+        }
+        entity.vx = 0;
+      }
+    }
+  }
+
+  private resolveVerticalCollisionForEntity(entity: WBWEntity): boolean {
+    let grounded = false;
+    const solids = this.getSolidRects();
+    for (const shape of solids) {
+      const rect = { x: shape.x, y: shape.y, w: shape.w, h: shape.h };
+      if (
+        entity.x < rect.x + rect.w &&
+        entity.x + entity.w > rect.x &&
+        entity.y < rect.y + rect.h &&
+        entity.y + entity.h > rect.y
+      ) {
+        if (entity.vy > 0) {
+          entity.y = rect.y - entity.h;
+          grounded = true;
+        } else if (entity.vy < 0) {
+          entity.y = rect.y + rect.h;
+        }
+        entity.vy = 0;
+      }
+    }
+    return grounded;
+  }
+
+  private resolveHorizontalCollisions(player: WBWEntity) {
+    const solids = this.getSolidRects();
     for (const shape of solids) {
       const rect = { x: shape.x, y: shape.y, w: shape.w, h: shape.h };
       if (
@@ -1226,9 +1344,7 @@ export class WBWEngine {
   }
 
   private resolveVerticalCollisions(player: WBWEntity) {
-    const solids = this.shapes.filter((shape) => shape.kind === 'rect' && shape.solid) as Array<
-      Extract<WBWShape, { kind: 'rect' }>
-    >;
+    const solids = this.getSolidRects();
     for (const shape of solids) {
       const rect = { x: shape.x, y: shape.y, w: shape.w, h: shape.h };
       if (
@@ -1388,6 +1504,10 @@ export class WBWEngine {
         break;
       }
       case 'npc': {
+        this.spawnEntity('custom', tokens, 1);
+        break;
+      }
+      case 'part': {
         this.spawnEntity('custom', tokens, 1);
         break;
       }
@@ -1897,6 +2017,36 @@ export class WBWEngine {
           h: hResult.value,
           color: this.color,
           solid: true,
+        });
+        break;
+      }
+      case 'conveyor': {
+        let index = 1;
+        const xResult = this.readNumberExpr(tokens, index);
+        index = xResult.nextIndex;
+        const yResult = this.readNumberExpr(tokens, index);
+        index = yResult.nextIndex;
+        const wResult = this.readNumberExpr(tokens, index);
+        index = wResult.nextIndex;
+        const hResult = this.readNumberExpr(tokens, index);
+        index = hResult.nextIndex;
+        const speedResult = this.readNumberExpr(tokens, index);
+        const speed = speedResult.value || 1;
+        this.shapes.push({
+          kind: 'rect',
+          x: xResult.value,
+          y: yResult.value,
+          w: wResult.value,
+          h: hResult.value,
+          color: this.color,
+          solid: true,
+        });
+        this.conveyors.push({
+          x: xResult.value,
+          y: yResult.value,
+          w: wResult.value,
+          h: hResult.value,
+          speed,
         });
         break;
       }

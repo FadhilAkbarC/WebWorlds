@@ -587,66 +587,118 @@ end`,
   },
   {
     id: 'tycoon-factory',
-    title: 'HyperGrid Tycoon Empire',
+    title: 'HyperGrid Conveyor Tycoon',
     category: 'tycoon',
-    difficulty: 'intermediate',
+    difficulty: 'advanced',
     description:
-      'Mega tycoon siap jadi: 4 lini produksi, saham, event krisis, automation tier, prestige, dan target empire endgame.',
+      'Mega tycoon pabrik fisika: conveyor bergerak, part 2D jatuh-terseret belt, line balancing, QA station, logistics, dan prestige endgame.',
     code: `bg #0b1220
-world 1800 980
-gravity 0
-friction 0.2
+world 2600 1400
+gravity 0.62
+friction 0.05
 touch auto
-player 120 780 18 18
+camfollow player
+camlerp 0.12
 
-set MONEY 250
-set RATE 5
+player 120 1180 18 18
+checkpoint 120 1180
+
+set MONEY 400
+set RATE 6
 set LEVEL 1
 set STAFF 3
 set STOCK 0
 set QUALITY 1
 set MARKET 100
 set PRESTIGE 0
-set TARGET 50000
+set TARGET 90000
 set POWER 1
 set TAX 0
 set AUTO 0
+set SCRAP 0
+set PARTS 0
+set QA 0
+set CONVSPD 1.6
+set LINEHP 100
+set EV 0
+set CRATE 0
+set SHIPPING 0
 
-uirect 24 20 460 290 #1e293b
-button lineA 44 78 420 42 "Upgrade Line A"
-button lineB 44 126 420 42 "Upgrade Line B"
-button hire 44 174 420 42 "Hire Staff"
-button marketBtn 44 222 420 42 "Expand Market"
-button prestigeBtn 44 270 420 42 "Prestige"
-button autoBtn 500 78 260 42 "Automation"
-button auditBtn 500 126 260 42 "Tax Audit"
+color #1e293b
+platform 0 1320 2600 80
+platform 200 1210 760 18
+platform 1020 1130 860 18
+platform 1900 1040 520 18
+conveyor 260 1192 620 18 1.4
+conveyor 1080 1112 760 18 1.9
+conveyor 1960 1022 420 18 2.4
+
+uirect 20 20 500 390 #1e293b
+button lineA 40 78 220 42 "Upgrade Line A"
+button lineB 280 78 220 42 "Upgrade Line B"
+button hire 40 126 220 42 "Hire Staff"
+button marketBtn 280 126 220 42 "Expand Market"
+button autoBtn 40 174 220 42 "Automation Core"
+button qaBtn 280 174 220 42 "QA Protocol"
+button speedBtn 40 222 220 42 "Boost Conveyor"
+button repairBtn 280 222 220 42 "Repair Line"
+button shipBtn 40 270 220 42 "Ship Crates"
+button prestigeBtn 280 270 220 42 "Prestige"
+button auditBtn 40 318 460 42 "Tax Audit + Efficiency"
 onui lineA goto up_line_a
 onui lineB goto up_line_b
 onui hire goto hire_staff
 onui marketBtn goto up_market
-onui prestigeBtn goto do_prestige
 onui autoBtn goto buy_auto
+onui qaBtn goto qa_protocol
+onui speedBtn goto boost_conveyor
+onui repairBtn goto repair_line
+onui shipBtn goto ship_crates
+onui prestigeBtn goto do_prestige
 onui auditBtn goto tax_audit
 
+on left move -1 0
+on right move 1 0
+onpress up jump 9
+onrelease left stopx
+onrelease right stopx
+
 every income_tick 1 goto income_tick
-every stock_tick 2 goto stock_tick
-every event_tick 12 goto event_tick
-every quality_tick 8 goto quality_tick
+every stock_tick 1 goto stock_tick
+every spawn_parts 2 goto spawn_parts
+every qa_tick 3 goto qa_tick
+every event_tick 10 goto event_tick
 every tax_tick 11 goto tax_tick
+every shipping_tick 5 goto shipping_tick
+every maintenance_tick 4 goto maintenance_tick
 
 tick:
-  hud "HyperGrid Empire" 24 34
-  hud "Money" MONEY 24 58
-  hud "Rate" RATE 24 82
-  hud "Level" LEVEL 24 106
-  hud "Staff" STAFF 24 130
-  hud "Stock" STOCK 24 154
-  hud "Quality" QUALITY 24 178
-  hud "Market" MARKET 24 202
-  hud "Prestige" PRESTIGE 24 226
-  hud "Power" POWER 24 250
-  hud "Auto" AUTO 24 274
+  hud "HyperGrid Conveyor Tycoon" 24 32
+  hud "Money" MONEY 24 56
+  hud "Rate" RATE 24 80
+  hud "Stock" STOCK 24 104
+  hud "Parts" PARTS 24 128
+  hud "Scrap" SCRAP 24 152
+  hud "Quality" QUALITY 24 176
+  hud "QA" QA 24 200
+  hud "LineHP" LINEHP 24 224
+  hud "Crate" CRATE 24 248
+  hud "Shipping" SHIPPING 24 272
+  hud "Conveyor" CONVSPD 24 296
   if MONEY >= TARGET goto clear
+  if LINEHP <= 0 goto meltdown
+end
+
+spawn_parts:
+  if AUTO == 0 goto manual_spawn
+  loop 2
+    part rand 240 860 1160 10 10
+  end
+  goto spawn_done
+end
+manual_spawn:
+  part rand 240 860 1160 10 10
+spawn_done:
 end
 
 income_tick:
@@ -654,56 +706,78 @@ income_tick:
   GAIN *= STAFF
   GAIN *= QUALITY
   GAIN *= POWER
-  if AUTO == 1 goto auto_bonus
-auto_bonus:
-  add GAIN 20
+  if QA == 1 goto qa_bonus
+  goto gain_apply
+end
+qa_bonus:
+  add GAIN 18
+end
+gain_apply:
   div GAIN 2
   add MONEY GAIN
 end
 
 stock_tick:
-  PROD = LEVEL
-  PROD *= STAFF
-  add STOCK PROD
-  if STOCK < 1200 goto stock_ok
-  add MONEY MARKET
-  sub STOCK 400
+  add STOCK PARTS
+  set PARTS 0
+  if STOCK < 1400 goto stock_wait
+  PACK = STOCK
+  div PACK 6
+  add CRATE PACK
+  sub STOCK 700
 end
-stock_ok:
+stock_wait:
 end
 
-quality_tick:
-  if LEVEL < 6 goto quality_skip
-  if QUALITY > 9 goto quality_skip
-  inc QUALITY 1
-  msg "Quality increased" 0.7
+qa_tick:
+  if QA == 0 goto qa_skip
+  if SCRAP <= 0 goto qa_skip
+  dec SCRAP 1
+  add QUALITY 1
+  clamp QUALITY 1 12
+  msg "QA recovered scrap" 0.6
 end
-quality_skip:
+qa_skip:
+end
+
+shipping_tick:
+  if CRATE < 10 goto shipping_wait
+  SALE = CRATE
+  mul SALE MARKET
+  div SALE 20
+  add MONEY SALE
+  add SHIPPING 1
+  set CRATE 0
+  msg "Shipment sent" 0.7
+end
+shipping_wait:
+end
+
+maintenance_tick:
+  dec LINEHP 1
+  if LINEHP > 0 goto maintenance_ok
+  goto meltdown
+end
+maintenance_ok:
 end
 
 event_tick:
-  EVENT = rand
-  if EVENT > 70 goto event_boom
-  if EVENT < 20 goto event_crash
-  msg "Stable cycle" 0.6
+  EV = rand
+  if EV > 78 goto event_boom
+  if EV < 18 goto event_break
+  msg "Demand stable" 0.5
 end
 
 event_boom:
-  add MONEY 800
-  add MARKET 8
+  add MARKET 12
+  add MONEY 900
   msg "Market boom" 0.8
 end
 
-event_crash:
-  sub MONEY 350
-  if MONEY < 0 goto reset_money
-  msg "Supply disruption" 0.8
-end
-reset_money:
-  if MONEY > 0 goto event_done
-  set MONEY 0
-end
-event_done:
+event_break:
+  sub LINEHP 12
+  add SCRAP 8
+  msg "Machine breakdown" 0.8
 end
 
 tax_tick:
@@ -716,79 +790,146 @@ tax_skip:
 end
 
 up_line_a:
-  COST = 120
+  COST = 180
   COST *= LEVEL
   if MONEY < COST goto no_cash
   sub MONEY COST
-  add RATE 6
+  add RATE 7
   inc LEVEL 1
-  msg "Line A boosted" 0.8
+  add LINEHP 8
+  msg "Line A upgraded" 0.8
 end
 
 up_line_b:
-  COST = 90
+  COST = 140
   COST *= QUALITY
   if MONEY < COST goto no_cash
   sub MONEY COST
-  add RATE 4
+  add RATE 5
   inc QUALITY 1
-  msg "Line B boosted" 0.8
+  add LINEHP 6
+  msg "Line B upgraded" 0.8
 end
 
 hire_staff:
-  COST = 140
+  COST = 180
   COST *= STAFF
   if MONEY < COST goto no_cash
   sub MONEY COST
   inc STAFF 1
+  add RATE 3
   msg "Staff hired" 0.8
 end
 
 up_market:
-  COST = 300
+  COST = 420
   COST *= PRESTIGE
-  add COST 300
+  add COST 420
   if MONEY < COST goto no_cash
   sub MONEY COST
-  add MARKET 20
+  add MARKET 24
   msg "Market expanded" 0.8
 end
 
-do_prestige:
-  if MONEY < 9000 goto prestige_fail
-  inc PRESTIGE 1
-  set MONEY 450
-  set RATE 8
-  set LEVEL 2
-  set STAFF 4
-  set QUALITY 2
-  add TARGET 15000
-  msg "Prestige activated" 1
-end
-prestige_fail:
-  msg "Need 9000 money" 0.8
+buy_auto:
+  if MONEY < 2600 goto no_cash
+  sub MONEY 2600
+  set AUTO 1
+  msg "Automation enabled" 0.8
 end
 
-buy_auto:
-  if MONEY < 2200 goto no_cash
-  sub MONEY 2200
-  set AUTO 1
-  msg "Automation online" 0.8
+qa_protocol:
+  if MONEY < 1600 goto no_cash
+  sub MONEY 1600
+  set QA 1
+  msg "QA protocol online" 0.8
+end
+
+boost_conveyor:
+  if MONEY < 1200 goto no_cash
+  sub MONEY 1200
+  add CONVSPD 0.4
+  add RATE 4
+  msg "Conveyor boosted" 0.8
+end
+
+repair_line:
+  if MONEY < 700 goto no_cash
+  sub MONEY 700
+  add LINEHP 25
+  clamp LINEHP 0 100
+  msg "Line repaired" 0.8
+end
+
+ship_crates:
+  if CRATE < 4 goto no_crate
+  SALE = CRATE
+  mul SALE MARKET
+  div SALE 16
+  add MONEY SALE
+  set CRATE 0
+  add SHIPPING 1
+  msg "Manual shipment" 0.8
+end
+no_crate:
+  msg "Not enough crates" 0.7
 end
 
 tax_audit:
-  if MONEY < 500 goto no_cash
-  sub MONEY 500
+  if MONEY < 600 goto no_cash
+  sub MONEY 600
   inc POWER 1
-  msg "Efficiency boosted" 0.8
+  add LINEHP 5
+  msg "Audit optimized plant" 0.8
+end
+
+item_pick:
+  add PARTS 1
+  add MONEY 3
+  if PX > 1880 goto packed_by_conveyor
+  msg "Part collected" 0.5
+end
+
+packed_by_conveyor:
+  add PARTS 2
+  add CRATE 1
+  msg "Conveyor packed part" 0.6
+end
+
+enemy_hit:
+  sub LINEHP 6
+  add SCRAP 3
+  msg "Hazard damaged line" 0.6
+end
+
+do_prestige:
+  if MONEY < 14000 goto prestige_fail
+  inc PRESTIGE 1
+  set MONEY 650
+  set RATE 10
+  set LEVEL 2
+  set STAFF 4
+  set QUALITY 2
+  set LINEHP 100
+  add TARGET 22000
+  add MARKET 30
+  msg "Prestige activated" 1
+end
+prestige_fail:
+  msg "Need 14000 money" 0.8
 end
 
 no_cash:
   msg "Insufficient money" 0.8
 end
 
+meltdown:
+  msg "Factory meltdown" 2
+  stop
+end
+
 clear:
-  msg "Tycoon empire complete" 2
+  msg "Conveyor empire complete" 2
   stop
 end`,
   },
