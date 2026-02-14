@@ -51,366 +51,1105 @@ export function applyTemplateToProject(
 export const WBW_BUILTIN_TEMPLATES: WBWTemplateDefinition[] = [
   {
     id: 'platformer-quest',
-    title: 'Skyline Platformer',
+    title: 'Titan Trials Platformer',
     category: 'platformer',
     difficulty: 'beginner',
-    description: 'Platformer siap main: checkpoint, coin objective, musuh patrol, dan finish gate.',
-    code: `bg #0b1120
-world 2400 1200
+    description:
+      'Mega platformer siap publish: 3 zona, objective multi-fase, enemy wave, checkpoint chain, boss gate, dan ending menang/kalah.',
+    code: `bg #0a1022
+world 3600 1400
 camfollow player
-camlerp 0.14
-speed 2.8
-gravity 0.75
-friction 0.08
+camlerp 0.12
+camoffset 0 -70
+speed 3
+gravity 0.78
+friction 0.07
 size 18 24
-player 120 1030
-platform 0 1120 2400 80
-platform 260 980 170 18
-platform 590 870 170 18
-platform 930 760 170 18
-platform 1280 690 200 18
-platform 1680 620 210 18
-platform 2040 560 190 18
-enemy bat1 760 1090 18 18
-patrol bat1 650 920 1.2
-enemy bat2 1580 600 18 18
-patrol bat2 1510 1860 1.4
-coin c1 300 950 10 10
-coin c2 650 840 10 10
-coin c3 1000 730 10 10
-coin c4 1710 590 10 10
-npc finishGate 2260 1030 26 70
+touch auto
+
+set HP 6
 set SCORE 0
-set HP 3
-set GOAL 4
-checkpoint 120 1030
+set STAGE 1
+set COIN 0
+set KEY 0
+set SHARD 0
+set GOAL 12
+set BOSSHP 16
+set BOSSOPEN 0
+set CLEAR 0
+
+player 120 1180
+checkpoint 120 1180
+platform 0 1320 3600 80
+platform 260 1180 190 16
+platform 560 1060 190 16
+platform 910 960 220 16
+platform 1320 880 230 16
+platform 1720 820 230 16
+platform 2060 760 230 16
+platform 2440 700 230 16
+platform 2860 640 260 16
+platform 3180 560 220 16
+
+npc bossGate 3360 1240 34 78
+colorof bossGate #f59e0b
+enemy w1 780 1280 18 18
+patrol w1 690 1020 1.1
+enemy w2 1650 810 18 18
+patrol w2 1540 1880 1.4
+enemy w3 2570 690 18 18
+patrol w3 2460 2940 1.7
+
+loop 6
+  coin rand 250 1500 rand 860 1220 10 10
+end
+loop 6
+  item rand 1600 3320 rand 620 1100 12 12
+end
+
+button heal 40 94 220 42 "Use Medkit"
+onui heal goto use_heal
+
 on left move -1 0
 on right move 1 0
 onpress up jump 10
+onpress space shoot 1
 onrelease left stopx
 onrelease right stopx
+
+every storm 12 goto storm_wave
+every bonus_drop 9 goto bonus_drop
+
 tick:
-  hud "Coin" SCORE 20 24
-  hud "HP" HP 20 46
-  hud "Goal" GOAL 20 68
-  if PY > 1190 goto player_fall
-  if SCORE >= GOAL goto unlock_finish
-  if PX > 2320 goto check_finish
+  hud "Titan Trials" 24 30
+  hud "HP" HP 24 56
+  hud "Score" SCORE 24 82
+  hud "Coin" COIN 24 108
+  hud "Key" KEY 24 134
+  hud "Shard" SHARD 24 160
+  hud "Stage" STAGE 24 186
+  if PY > 1390 goto fail_fall
+  if COIN >= GOAL goto unlock_gate
+  if PX > 3350 goto check_gate
+  if BOSSOPEN == 1 goto boss_loop
 end
-unlock_finish:
-  remove finishGate
+
+storm_wave:
+  if CLEAR == 1 goto storm_skip
+  enemy rand 900 3200 rand 620 1280 18 18
+  add SCORE 4
 end
-check_finish:
-  if SCORE >= GOAL goto stage_clear
+storm_skip:
 end
-player_fall:
-  sub HP 1
-  respawn
-  if HP <= 0 goto game_over
+
+bonus_drop:
+  if CLEAR == 1 goto bonus_skip
+  item rand 700 3300 rand 650 1180 12 12
 end
+bonus_skip:
+end
+
+unlock_gate:
+  if KEY == 1 goto unlock_skip
+  set KEY 1
+  msg "Titan key obtained" 1.2
+  remove bossGate
+end
+unlock_skip:
+end
+
+check_gate:
+  if KEY == 1 goto open_boss
+  msg "Collect more coin" 0.8
+end
+
+open_boss:
+  if BOSSOPEN == 1 goto boss_entered
+  set BOSSOPEN 1
+  checkpoint 3310 1180
+  enemy titan 3480 1230 28 28
+  patrol titan 3400 3560 1.8
+  msg "Boss awakened!" 1.1
+end
+boss_entered:
+end
+
+boss_loop:
+  if BOSSHP <= 0 goto win
+end
+
+use_heal:
+  if SHARD < 2 goto no_heal
+  sub SHARD 2
+  add HP 2
+  msg "HP restored" 0.8
+end
+no_heal:
+  msg "Need 2 shard" 0.8
+end
+
+item_pick:
+  add SHARD 1
+  add SCORE 12
+  msg "Shard +1" 0.6
+end
+
 enemy_hit:
   sub HP 1
-  respawn
+  if PX > 3360 goto boss_damage
+  msg "Hit by enemy" 0.6
   if HP <= 0 goto game_over
 end
-item_pick:
-  add SCORE 1
-  msg "Coin collected" 0.6
+
+boss_damage:
+  sub BOSSHP 1
+  add SCORE 18
+  msg "Boss HP -1" 0.5
+  if HP <= 0 goto game_over
 end
-stage_clear:
-  msg "Stage clear!" 2
+
+coin_pick:
+  inc COIN 1
+  add SCORE 6
+end
+
+fail_fall:
+  sub HP 1
+  respawn
+  msg "Fall damage" 0.8
+  if HP <= 0 goto game_over
+end
+
+win:
+  set CLEAR 1
+  msg "Titan Trials Clear!" 2
   stop
 end
+
 game_over:
-  msg "Game Over" 2
+  msg "Mission failed" 2
   stop
 end`,
   },
   {
     id: 'rpg-village',
-    title: 'Village RPG Starter',
+    title: 'Chronicle Kingdom RPG',
     category: 'rpg',
     difficulty: 'intermediate',
-    description: 'RPG top-down: quest accept, objective progress, reward, dan ending clear.',
-    code: `bg #111827
-world 1500 920
-speed 2.1
-friction 0.22
+    description:
+      'Mega RPG siap jadi: chapter questline, economy, merchant, raid timer, skill point, dan true ending multi-kondisi.',
+    code: `bg #0f172a
+world 2800 1600
+speed 2.2
+friction 0.2
 gravity 0
-player 120 120 20 20
-set GOLD 10
-set QUEST 0
-set GEMS 0
-set TARGET 3
-npc elder 620 240 28 42
-npc merchant 980 430 28 42
-colorof elder #f59e0b
-colorof merchant #10b981
-item g1 380 520 12 12
-item g2 760 640 12 12
-item g3 1190 560 12 12
-uirect 20 20 360 140 #1f2937
-button questBtn 40 80 320 44 "Accept Quest"
-onui questBtn goto quest_accept
-onpress e goto talk
+touch auto
+
+player 180 180 20 20
+camfollow player
+camlerp 0.16
+
+set GOLD 40
+set CHAPTER 0
+set RELIC 0
+set CRYSTAL 0
+set SKILL 1
+set HP 12
+set REP 0
+set RAID 90
+set BOSS 0
+
+npc king 540 180 30 48
+npc priest 930 300 28 44
+npc smith 1240 560 28 44
+npc captain 1780 860 30 46
+colorof king #f59e0b
+colorof priest #14b8a6
+colorof smith #f97316
+colorof captain #38bdf8
+
+uirect 24 20 420 210 #1e293b
+button startQuest 46 90 380 44 "Start Royal Quest"
+button train 46 142 380 44 "Train Skill (10 Gold)"
+button raid 46 194 380 44 "Launch Raid"
+onui startQuest goto quest_start
+onui train goto train_skill
+onui raid goto raid_launch
+
+loop 6
+  item rand 760 2500 rand 280 1300 12 12
+end
+loop 4
+  enemy rand 980 2600 rand 300 1400 18 18
+end
+
+every raid_tick 1 goto raid_tick
+every market_tick 8 goto market_income
+
+on left move -1 0
+on right move 1 0
+on up move 0 -1
+on down move 0 1
+onrelease left stopx
+onrelease right stopx
+onrelease up stopy
+onrelease down stopy
+onpress e goto interact
+
 tick:
-  hud "Gold" GOLD 30 170
-  hud "Quest" QUEST 30 194
-  hud "Gem" GEMS 30 218
-  if QUEST == 1 goto quest_progress
+  hud "Chronicle Kingdom" 24 34
+  hud "HP" HP 24 58
+  hud "Gold" GOLD 24 82
+  hud "Chapter" CHAPTER 24 106
+  hud "Relic" RELIC 24 130
+  hud "Crystal" CRYSTAL 24 154
+  hud "Skill" SKILL 24 178
+  hud "Raid" RAID 24 202
+  if HP <= 0 goto fail
+  if BOSS == 1 goto boss_phase
 end
-talk:
-  if PX < 760 goto elder_talk
-  goto merchant_talk
+
+quest_start:
+  if CHAPTER > 0 goto quest_locked
+  set CHAPTER 1
+  msg "Chapter 1 started" 1
 end
-elder_talk:
-  if QUEST == 0 goto elder_hint
-  if GEMS < TARGET goto elder_wait
-  goto elder_finish
-end
-elder_hint:
-  msg "Talk to board: Accept Quest" 1.4
-end
-elder_wait:
-  msg "Find all gems in forest" 1.3
-end
-elder_finish:
-  add GOLD 25
-  set QUEST 2
-  msg "Quest clear! Reward +25" 1.5
-  stop
-end
-merchant_talk:
-  if GOLD < 5 goto no_potion
-  sub GOLD 5
-  msg "Potion bought" 1
-end
-no_potion:
-  msg "Need 5 gold" 1
-end
-quest_accept:
-  if QUEST > 0 goto already_active
-  set QUEST 1
-  msg "Quest started" 1.2
-end
-already_active:
+quest_locked:
   msg "Quest already active" 0.8
 end
+
+interact:
+  if PX < 760 goto king_dialog
+  if PX < 1140 goto priest_dialog
+  if PX < 1540 goto smith_dialog
+  goto captain_dialog
+end
+
+king_dialog:
+  if CHAPTER == 0 goto king_wait
+  if RELIC < 4 goto king_need_relic
+  if CRYSTAL < 3 goto king_need_crystal
+  goto king_promote
+end
+king_wait:
+  msg "Start quest from panel" 0.9
+end
+king_need_relic:
+  msg "Find 4 relic first" 0.9
+end
+king_need_crystal:
+  msg "Bring 3 crystal from raid" 1
+end
+king_promote:
+  set CHAPTER 3
+  set BOSS 1
+  msg "Final chapter unlocked" 1.2
+end
+
+priest_dialog:
+  if GOLD < 12 goto priest_no_gold
+  sub GOLD 12
+  add HP 3
+  add REP 1
+  msg "Blessing restored HP" 0.9
+end
+priest_no_gold:
+  msg "Need 12 gold" 0.8
+end
+
+smith_dialog:
+  if GOLD < 16 goto smith_no_gold
+  sub GOLD 16
+  inc SKILL 1
+  msg "Weapon upgrade" 0.9
+end
+smith_no_gold:
+  msg "Not enough gold" 0.8
+end
+
+captain_dialog:
+  if CHAPTER < 2 goto captain_locked
+  msg "Raid route is open" 0.9
+end
+captain_locked:
+  msg "Complete relic mission first" 0.9
+end
+
+train_skill:
+  if GOLD < 10 goto train_fail
+  sub GOLD 10
+  add SKILL 1
+  add REP 1
+  msg "Skill trained" 0.8
+end
+train_fail:
+  msg "Need 10 gold" 0.8
+end
+
+raid_launch:
+  if CHAPTER < 2 goto raid_locked
+  set RAID 45
+  msg "Raid started" 0.8
+end
+raid_locked:
+  msg "Progress to chapter 2" 0.8
+end
+
+market_income:
+  add GOLD REP
+end
+
+raid_tick:
+  if RAID <= 0 goto raid_done
+  if CHAPTER < 2 goto raid_skip
+  dec RAID 1
+end
+raid_skip:
+end
+raid_done:
+  if CHAPTER < 2 goto raid_reset
+  inc CRYSTAL 1
+  set CHAPTER 2
+  set RAID 90
+  msg "Raid reward: crystal" 0.9
+end
+raid_reset:
+end
+
 item_pick:
-  if QUEST < 1 goto ignore_gem
-  add GEMS 1
-  msg "Gem +1" 0.8
+  if CHAPTER < 1 goto item_skip
+  add RELIC 1
+  add GOLD 5
+  msg "Relic found" 0.6
 end
-ignore_gem:
+item_skip:
 end
-quest_progress:
-  hud "Collect" TARGET 30 242
+
+enemy_hit:
+  sub HP 1
+  if BOSS == 1 goto boss_damage
+  msg "Ambushed" 0.6
+  if HP <= 0 goto fail
+end
+
+boss_phase:
+  if CHAPTER < 3 goto boss_wait
+  hud "Boss HP" BOSS 24 226
+end
+boss_wait:
+end
+
+boss_damage:
+  if CHAPTER < 3 goto boss_none
+  add BOSS 1
+  if BOSS < 12 goto boss_none
+  goto clear
+end
+boss_none:
+end
+
+clear:
+  msg "True Ending Unlocked" 2
+  stop
+end
+
+fail:
+  msg "Kingdom collapsed" 2
+  stop
 end`,
   },
   {
     id: 'tycoon-factory',
-    title: 'Mini Factory Tycoon',
+    title: 'HyperGrid Tycoon Empire',
     category: 'tycoon',
     difficulty: 'intermediate',
-    description: 'Idle tycoon siap jadi: income loop, auto-win target, upgrade scaling, dan fail-safe UI.',
-    code: `bg #0f172a
-world 1280 760
+    description:
+      'Mega tycoon siap jadi: 4 lini produksi, saham, event krisis, automation tier, prestige, dan target empire endgame.',
+    code: `bg #0b1220
+world 1800 980
 gravity 0
-friction 0.18
-player 80 600 18 18
-set MONEY 100
-set RATE 2
+friction 0.2
+touch auto
+player 120 780 18 18
+
+set MONEY 250
+set RATE 5
 set LEVEL 1
-set TARGET 1000
-uirect 24 20 390 220 #1e293b
-button buy 50 150 340 54 "Upgrade Conveyor"
-button cashout 50 214 340 54 "Cashout & Finish"
-onui buy goto buy_upgrade
-onui cashout goto check_finish
-every income 1 goto tick_income
+set STAFF 3
+set STOCK 0
+set QUALITY 1
+set MARKET 100
+set PRESTIGE 0
+set TARGET 50000
+
+uirect 24 20 460 290 #1e293b
+button lineA 44 78 420 42 "Upgrade Line A"
+button lineB 44 126 420 42 "Upgrade Line B"
+button hire 44 174 420 42 "Hire Staff"
+button marketBtn 44 222 420 42 "Expand Market"
+button prestigeBtn 44 270 420 42 "Prestige"
+onui lineA goto up_line_a
+onui lineB goto up_line_b
+onui hire goto hire_staff
+onui marketBtn goto up_market
+onui prestigeBtn goto do_prestige
+
+every income_tick 1 goto income_tick
+every stock_tick 2 goto stock_tick
+every event_tick 12 goto event_tick
+every quality_tick 8 goto quality_tick
+
 tick:
-  hud "Money" MONEY 40 60
-  hud "Rate/s" RATE 40 85
-  hud "Level" LEVEL 40 110
-  hud "Target" TARGET 40 135
+  hud "HyperGrid Empire" 24 34
+  hud "Money" MONEY 24 58
+  hud "Rate" RATE 24 82
+  hud "Level" LEVEL 24 106
+  hud "Staff" STAFF 24 130
+  hud "Stock" STOCK 24 154
+  hud "Quality" QUALITY 24 178
+  hud "Market" MARKET 24 202
+  hud "Prestige" PRESTIGE 24 226
+  if MONEY >= TARGET goto clear
 end
-tick_income:
-  add MONEY RATE
+
+income_tick:
+  GAIN = RATE
+  GAIN *= STAFF
+  GAIN *= QUALITY
+  div GAIN 2
+  add MONEY GAIN
 end
-buy_upgrade:
-  COST = 40
+
+stock_tick:
+  PROD = LEVEL
+  PROD *= STAFF
+  add STOCK PROD
+  if STOCK < 1200 goto stock_ok
+  add MONEY MARKET
+  sub STOCK 400
+end
+stock_ok:
+end
+
+quality_tick:
+  if LEVEL < 6 goto quality_skip
+  if QUALITY > 9 goto quality_skip
+  inc QUALITY 1
+  msg "Quality increased" 0.7
+end
+quality_skip:
+end
+
+event_tick:
+  EVENT = rand
+  if EVENT > 70 goto event_boom
+  if EVENT < 20 goto event_crash
+  msg "Stable cycle" 0.6
+end
+
+event_boom:
+  add MONEY 800
+  add MARKET 8
+  msg "Market boom" 0.8
+end
+
+event_crash:
+  sub MONEY 350
+  if MONEY < 0 goto reset_money
+  msg "Supply disruption" 0.8
+end
+reset_money:
+  if MONEY > 0 goto event_done
+  set MONEY 0
+end
+event_done:
+end
+
+up_line_a:
+  COST = 120
   COST *= LEVEL
-  if MONEY < COST goto no_money
+  if MONEY < COST goto no_cash
   sub MONEY COST
+  add RATE 6
   inc LEVEL 1
-  add RATE 3
-  msg "Upgrade success" 0.9
+  msg "Line A boosted" 0.8
 end
-no_money:
-  msg "Not enough money" 0.9
+
+up_line_b:
+  COST = 90
+  COST *= QUALITY
+  if MONEY < COST goto no_cash
+  sub MONEY COST
+  add RATE 4
+  inc QUALITY 1
+  msg "Line B boosted" 0.8
 end
-check_finish:
-  if MONEY < TARGET goto not_ready
-  msg "Tycoon clear!" 1.8
+
+hire_staff:
+  COST = 140
+  COST *= STAFF
+  if MONEY < COST goto no_cash
+  sub MONEY COST
+  inc STAFF 1
+  msg "Staff hired" 0.8
+end
+
+up_market:
+  COST = 300
+  COST *= PRESTIGE
+  add COST 300
+  if MONEY < COST goto no_cash
+  sub MONEY COST
+  add MARKET 20
+  msg "Market expanded" 0.8
+end
+
+do_prestige:
+  if MONEY < 9000 goto prestige_fail
+  inc PRESTIGE 1
+  set MONEY 450
+  set RATE 8
+  set LEVEL 2
+  set STAFF 4
+  set QUALITY 2
+  add TARGET 15000
+  msg "Prestige activated" 1
+end
+prestige_fail:
+  msg "Need 9000 money" 0.8
+end
+
+no_cash:
+  msg "Insufficient money" 0.8
+end
+
+clear:
+  msg "Tycoon empire complete" 2
   stop
-end
-not_ready:
-  msg "Target belum tercapai" 1
 end`,
   },
   {
     id: 'arena-shooter',
-    title: 'Arena Shooter Loop',
+    title: 'Omega Siege Shooter',
     category: 'shooter',
     difficulty: 'advanced',
-    description: 'Arena shooter: wave progression, score target, HP fail-state, dan victory condition.',
+    description:
+      'Mega shooter siap jadi: wave director, elite spawn, ammo economy, supply drop, boss phase, combo score, dan survival objective.',
     code: `bg #020617
-world 1900 1040
+world 3200 1400
 camfollow player
-speed 3.2
-gravity 0.45
-friction 0.06
-player 180 850
+camlerp 0.15
+speed 3.1
+gravity 0.42
+friction 0.05
+touch auto
+
+player 240 1180
+platform 0 1320 3200 80
+platform 420 1120 220 16
+platform 980 980 220 16
+platform 1660 900 220 16
+platform 2420 840 220 16
+
 set SCORE 0
+set COMBO 0
 set WAVE 1
-set HP 5
-set TARGET 300
-every wave_spawn 3 goto spawn_wave
+set HP 7
+set AMMO 16
+set ELITE 0
+set TARGET 2400
+set BOSSHP 22
+set PHASE 0
+
+button reloadBtn 40 96 240 42 "Reload"
+button burstBtn 40 144 240 42 "Burst Fire"
+onui reloadBtn goto reload
+onui burstBtn goto burst_fire
+
 on left move -1 0
 on right move 1 0
 onpress up jump 9
-onpress space shoot 1
+onpress space goto fire
 onrelease left stopx
 onrelease right stopx
+
+every director 3 goto director
+every supply 10 goto supply_drop
+every combo_decay 2 goto combo_decay
+
 tick:
-  hud "Score" SCORE 20 24
-  hud "Wave" WAVE 20 48
-  hud "HP" HP 20 72
-  hud "Target" TARGET 20 96
+  hud "Omega Siege" 24 30
+  hud "HP" HP 24 54
+  hud "Ammo" AMMO 24 78
+  hud "Score" SCORE 24 102
+  hud "Combo" COMBO 24 126
+  hud "Wave" WAVE 24 150
+  hud "Target" TARGET 24 174
   if HP <= 0 goto lose
-  if SCORE >= TARGET goto win
+  if SCORE >= TARGET goto start_boss
+  if PHASE == 2 goto boss_phase
 end
-spawn_wave:
-  loop 2
-    enemy rand 520 1820 rand 760 930 20 20
+
+fire:
+  if AMMO <= 0 goto no_ammo
+  sub AMMO 1
+  shoot 1
+end
+no_ammo:
+  msg "Reload!" 0.5
+end
+
+reload:
+  if AMMO > 8 goto reload_skip
+  set AMMO 16
+  msg "Ammo refilled" 0.7
+end
+reload_skip:
+end
+
+burst_fire:
+  if AMMO < 3 goto no_ammo
+  sub AMMO 3
+  loop 3
+    shoot 1
   end
-  if WAVE > 8 goto keep_wave
+  msg "Burst!" 0.5
+end
+
+director:
+  if PHASE > 0 goto director_skip
+  loop 2
+    enemy rand 460 3060 rand 760 1260 18 18
+  end
+  if WAVE < 10 goto wave_up
+  goto elite_spawn
+end
+director_skip:
+end
+
+wave_up:
   inc WAVE 1
 end
-keep_wave:
+
+elite_spawn:
+  if ELITE > 5 goto elite_skip
+  enemy rand 900 3000 rand 760 1240 26 26
+  inc ELITE 1
+  msg "Elite incoming" 0.7
 end
+elite_skip:
+end
+
+supply_drop:
+  if PHASE == 2 goto supply_skip
+  item rand 500 3000 rand 740 1240 12 12
+end
+supply_skip:
+end
+
+combo_decay:
+  if COMBO <= 0 goto combo_keep
+  dec COMBO 1
+end
+combo_keep:
+end
+
+start_boss:
+  if PHASE > 0 goto boss_started
+  set PHASE 2
+  enemy omega 2920 1180 34 34
+  patrol omega 2760 3120 2
+  checkpoint 2660 1180
+  msg "Omega Core detected" 1
+end
+boss_started:
+end
+
+boss_phase:
+  hud "BossHP" BOSSHP 24 198
+  if BOSSHP <= 0 goto win
+end
+
 enemy_hit:
-  add SCORE 30
+  if PHASE == 2 goto boss_damage
+  sub HP 1
+  if HP <= 0 goto lose
+  msg "Enemy struck" 0.5
 end
+
+boss_damage:
+  sub BOSSHP 1
+  add SCORE 40
+  add COMBO 2
+  if BOSSHP <= 0 goto win
+end
+
 item_pick:
-  add SCORE 10
+  add AMMO 4
+  add SCORE 20
+  add COMBO 1
+  msg "Supply picked" 0.5
 end
+
+enemy_down:
+  add SCORE 25
+  add COMBO 1
+end
+
 lose:
-  msg "Arena Failed" 2
+  msg "Omega Siege failed" 2
   stop
 end
+
 win:
-  msg "Arena Victory" 2
+  msg "Omega Siege complete" 2
   stop
 end`,
   },
   {
     id: 'puzzle-switches',
-    title: 'Switch Puzzle Adventure',
+    title: 'Quantum Vault Puzzle',
     category: 'puzzle',
     difficulty: 'beginner',
-    description: 'Puzzle logic lengkap: dual switch, gate unlock, objective finish, dan clear state.',
-    code: `bg #111827
-world 1700 920
-gravity 0.7
-player 120 790
-platform 0 870 1700 50
-platform 460 760 260 16
-platform 920 680 260 16
-npc gate 1460 800 26 70
-set SW1 0
-set SW2 0
-set DONE 0
-button s1 120 60 180 48 "Switch A"
-button s2 320 60 180 48 "Switch B"
-onui s1 toggle SW1
-onui s2 toggle SW2
+    description:
+      'Mega puzzle adventure: panel logic berantai, memory sequence, power routing, anti-softlock reset, dan final vault finale.',
+    code: `bg #0f172a
+world 2600 1300
+gravity 0.66
+speed 2.7
+friction 0.08
+touch auto
+
+player 120 1130
+platform 0 1240 2600 60
+platform 360 1080 220 16
+platform 780 980 220 16
+platform 1260 900 220 16
+platform 1720 820 220 16
+platform 2120 740 220 16
+npc vaultGate 2400 1160 30 80
+colorof vaultGate #fbbf24
+
+set PWR 0
+set SWA 0
+set SWB 0
+set SWC 0
+set MEM1 0
+set MEM2 0
+set MEM3 0
+set TOKEN 0
+set LOCK 1
+set FAIL 0
+
+uirect 20 20 430 300 #1e293b
+button swA 44 74 180 42 "Toggle A"
+button swB 240 74 180 42 "Toggle B"
+button swC 44 124 180 42 "Toggle C"
+button mem1 44 182 120 38 "M1"
+button mem2 176 182 120 38 "M2"
+button mem3 308 182 120 38 "M3"
+button resetP 44 236 384 42 "Reset Circuit"
+onui swA toggle SWA
+onui swB toggle SWB
+onui swC toggle SWC
+onui mem1 goto mem_press_1
+onui mem2 goto mem_press_2
+onui mem3 goto mem_press_3
+onui resetP goto circuit_reset
+
+every pulse 2 goto pulse
+
 tick:
-  hud "A" SW1 40 140
-  hud "B" SW2 40 164
-  if SW1 == 1 goto check_second
-  if PX > 1600 goto check_exit
+  hud "Quantum Vault" 24 32
+  hud "Power" PWR 24 56
+  hud "A" SWA 24 80
+  hud "B" SWB 24 104
+  hud "C" SWC 24 128
+  hud "Token" TOKEN 24 152
+  hud "Lock" LOCK 24 176
+  if SWA == 1 goto pwr_check_b
+  if PX > 2440 goto check_exit
 end
-check_second:
-  if SW2 == 1 goto open_gate
+
+pwr_check_b:
+  if SWB == 1 goto pwr_check_c
+  goto pwr_drain
 end
-open_gate:
-  if DONE == 1 goto skip_open
-  set DONE 1
-  remove gate
-  msg "Gate unlocked" 1.2
+
+pwr_check_c:
+  if SWC == 1 goto pwr_fill
+  goto pwr_drain
 end
-skip_open:
+
+pwr_fill:
+  add PWR 2
+  if PWR < 20 goto pwr_wait
+  set TOKEN 1
+  msg "Circuit stable" 0.8
 end
+pwr_wait:
+end
+
+pwr_drain:
+  if PWR <= 0 goto pwr_zero
+  dec PWR 1
+end
+pwr_zero:
+end
+
+pulse:
+  if TOKEN == 0 goto pulse_skip
+  if MEM1 == 1 goto pulse_mem2
+  goto pulse_fail
+end
+pulse_mem2:
+  if MEM2 == 1 goto pulse_mem3
+  goto pulse_fail
+end
+pulse_mem3:
+  if MEM3 == 1 goto unlock
+  goto pulse_fail
+end
+
+pulse_fail:
+  if TOKEN == 0 goto pulse_skip
+  set FAIL 1
+  msg "Memory mismatch" 0.7
+end
+pulse_skip:
+end
+
+mem_press_1:
+  if TOKEN == 0 goto mem_locked
+  set MEM1 1
+  msg "M1 accepted" 0.5
+end
+
+mem_press_2:
+  if MEM1 == 0 goto mem_locked
+  set MEM2 1
+  msg "M2 accepted" 0.5
+end
+
+mem_press_3:
+  if MEM2 == 0 goto mem_locked
+  set MEM3 1
+  msg "M3 accepted" 0.5
+end
+
+mem_locked:
+  msg "Sequence blocked" 0.6
+end
+
+circuit_reset:
+  set PWR 0
+  set TOKEN 0
+  set MEM1 0
+  set MEM2 0
+  set MEM3 0
+  set FAIL 0
+  msg "Circuit reset" 0.8
+end
+
+unlock:
+  if LOCK == 0 goto unlock_done
+  set LOCK 0
+  remove vaultGate
+  msg "Vault unlocked" 1
+end
+unlock_done:
+end
+
 check_exit:
-  if DONE == 1 goto puzzle_clear
+  if LOCK == 0 goto clear
+  msg "Vault still locked" 0.8
 end
-puzzle_clear:
-  msg "Puzzle solved!" 1.8
+
+clear:
+  msg "Quantum vault solved" 2
   stop
 end`,
   },
   {
     id: 'survival-night',
-    title: 'Night Survival Rush',
+    title: 'Ashfall Survival Frontier',
     category: 'survival',
     difficulty: 'advanced',
-    description: 'Survival complete: countdown night, resource loop, starving penalty, dan ending survive/fail.',
+    description:
+      'Mega survival siap jadi: siang-malam, hunger/thirst/temperature, camp build, raid night, extraction ending, dan fail-state komplit.',
     code: `bg #030712
-world 2300 1200
+world 3400 1600
 camfollow player
-player 180 1030
-platform 0 1120 2300 80
-set FOOD 6
-set HP 6
-set NIGHT 75
-every drain 1 goto night_drain
-every loot 2 goto spawn_loot
+camlerp 0.14
+touch auto
+
+player 180 1380
+platform 0 1520 3400 80
+platform 680 1360 200 16
+platform 1380 1240 220 16
+platform 1980 1160 220 16
+platform 2640 1080 220 16
+
+set DAYTIME 180
+set NIGHT 0
+set HP 10
+set FOOD 12
+set WATER 10
+set TEMP 5
+set WOOD 0
+set ORE 0
+set CAMP 0
+set SIGNAL 0
+set EVAC 0
+set SCORE 0
+
+button campBtn 40 94 260 42 "Build Campfire"
+button signalBtn 40 146 260 42 "Build Signal"
+button drinkBtn 40 198 260 42 "Emergency Drink"
+onui campBtn goto build_camp
+onui signalBtn goto build_signal
+onui drinkBtn goto emergency_drink
+
+every survival_tick 1 goto survival_tick
+every loot_tick 4 goto loot_tick
+every raid_tick 8 goto raid_tick
+
+on left move -1 0
+on right move 1 0
+onpress up jump 10
+onrelease left stopx
+onrelease right stopx
+
 tick:
-  hud "Food" FOOD 20 24
-  hud "HP" HP 20 46
-  hud "Night" NIGHT 20 68
-  if NIGHT <= 0 goto survive
-  if FOOD <= 0 goto starve
+  hud "Ashfall Frontier" 24 30
+  hud "HP" HP 24 54
+  hud "Food" FOOD 24 78
+  hud "Water" WATER 24 102
+  hud "Temp" TEMP 24 126
+  hud "Wood" WOOD 24 150
+  hud "Ore" ORE 24 174
+  hud "Signal" SIGNAL 24 198
+  hud "Day" DAYTIME 24 222
+  if HP <= 0 goto fail
+  if EVAC == 1 goto clear
 end
-night_drain:
-  dec NIGHT 1
+
+survival_tick:
+  dec DAYTIME 1
+  if DAYTIME > 0 goto day_logic
+  set NIGHT 1
+  set DAYTIME 180
+  msg "Night has begun" 0.8
+end
+
+day_logic:
   dec FOOD 1
+  dec WATER 1
+  if CAMP == 1 goto temp_safe
+  dec TEMP 1
 end
-spawn_loot:
-  item rand 450 2200 rand 900 1040 12 12
-  enemy rand 500 2100 rand 960 1080 18 18
+temp_safe:
+  if FOOD > 0 goto food_ok
+  sub HP 1
 end
+food_ok:
+  if WATER > 0 goto water_ok
+  sub HP 1
+end
+water_ok:
+  if TEMP > 0 goto temp_ok
+  sub HP 1
+end
+temp_ok:
+end
+
+loot_tick:
+  item rand 500 3200 rand 900 1460 12 12
+  enemy rand 700 3100 rand 1000 1460 18 18
+end
+
+raid_tick:
+  if NIGHT == 0 goto raid_skip
+  enemy rand 1200 3300 rand 980 1460 20 20
+  msg "Night raid!" 0.7
+end
+raid_skip:
+end
+
 item_pick:
-  inc FOOD 2
-  msg "Food +2" 0.8
+  ROLL = rand
+  if ROLL < 40 goto gain_wood
+  if ROLL < 70 goto gain_ore
+  goto gain_food
 end
+
+gain_wood:
+  add WOOD 2
+  add SCORE 8
+  msg "Wood +2" 0.6
+end
+
+gain_ore:
+  add ORE 1
+  add SCORE 10
+  msg "Ore +1" 0.6
+end
+
+gain_food:
+  add FOOD 2
+  add WATER 2
+  add SCORE 12
+  msg "Supplies +" 0.6
+end
+
 enemy_hit:
-  dec HP 1
-  msg "Enemy hit" 0.7
-  if HP <= 0 goto game_over
+  sub HP 1
+  msg "Threat contact" 0.6
+  if HP <= 0 goto fail
 end
-starve:
-  dec HP 1
-  set FOOD 2
-  if HP <= 0 goto game_over
+
+build_camp:
+  if WOOD < 8 goto camp_fail
+  sub WOOD 8
+  set CAMP 1
+  add TEMP 4
+  msg "Campfire online" 0.8
 end
-survive:
-  msg "You survived the night" 2
+camp_fail:
+  msg "Need 8 wood" 0.8
+end
+
+build_signal:
+  if ORE < 5 goto signal_fail
+  if WOOD < 6 goto signal_fail
+  sub ORE 5
+  sub WOOD 6
+  inc SIGNAL 1
+  msg "Signal progress +1" 0.8
+  if SIGNAL >= 3 goto evac_ready
+end
+signal_fail:
+  msg "Need 5 ore & 6 wood" 0.8
+end
+
+emergency_drink:
+  add WATER 2
+  sub SCORE 4
+  msg "Emergency hydration" 0.7
+end
+
+evac_ready:
+  set EVAC 1
+  msg "Extraction incoming" 1
+end
+
+clear:
+  msg "Frontier survived" 2
   stop
 end
-game_over:
-  msg "Survival failed" 2
+
+fail:
+  msg "Expedition lost" 2
   stop
 end`,
   },
