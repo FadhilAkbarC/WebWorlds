@@ -11,6 +11,7 @@ import { Save, Plus, X, Play, Upload, Store } from 'lucide-react';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
 import {
   applyTemplateToProject,
+  WBW_BUILTIN_TEMPLATES,
   createTemplateScript,
   type WBWTemplateDefinition,
 } from '@/lib/wbw-template-store';
@@ -292,6 +293,32 @@ export default function MobileEditorPage() {
             </button>
           </div>
 
+          <div className="rounded-2xl border border-[#232323] bg-[#141414] p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Creator Store Template List</p>
+            <div className="space-y-2">
+              {WBW_BUILTIN_TEMPLATES.map((template) => (
+                <div key={template.id} className="rounded border border-[#2b2b2b] bg-black/30 p-2">
+                  <p className="text-xs font-semibold text-white">{template.title}</p>
+                  <p className="text-[10px] text-slate-400">{template.category} • {template.difficulty}</p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => applyTemplate(template)}
+                      className="flex-1 rounded bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white"
+                    >
+                      Use
+                    </button>
+                    <button
+                      onClick={() => createScriptFromTemplate(template)}
+                      className="flex-1 rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="rounded-2xl border border-[#232323] bg-[#141414] overflow-hidden">
             {currentScript ? (
               <WBWEditor
@@ -469,5 +496,4 @@ export default function MobileEditorPage() {
     </div>
   );
 }
-
 
