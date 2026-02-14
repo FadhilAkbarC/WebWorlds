@@ -79,6 +79,33 @@
 .wbw-identifier { color: #e2e8f0; }
 .wbw-color { color: #22c55e; }
 .wbw-label { color: #c4b5fd; font-weight: 700; }
+
+.wbw-error-line {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(248, 113, 113, 0.95);
+  text-underline-offset: 3px;
+}
+.wbw-error-token {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(248, 113, 113, 0.95);
+  text-underline-offset: 3px;
+}
+.wbw-error-tooltip {
+  position: absolute;
+  z-index: 20;
+  max-width: min(360px, calc(100% - 24px));
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(248, 113, 113, 0.75);
+  color: #fecaca;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.55);
+  pointer-events: none;
+}
 @import "tailwindcss";
 
 * {

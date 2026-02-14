@@ -533,6 +533,21 @@ function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
   return { program: { init, labels }, errors };
 }
 
+
+export function analyzeWBWCode(code: string): WBWError[] {
+  const { program, errors } = parseWBW(code);
+  const validationErrors: WBWError[] = [];
+  const allLines = [...program.init, ...Object.values(program.labels).flat()];
+
+  allLines.forEach((line) => {
+    const command = normalizeCommand(line.tokens[0]);
+    if (!KNOWN_COMMANDS.has(command)) {
+      validationErrors.push({ line: line.line, message: `Unknown command: ${line.tokens[0]}` });
+    }
+  });
+
+  return [...errors, ...validationErrors];
+}
 function isNumber(value: string): boolean {
   return /^-?\d+(\.\d+)?$/.test(value);
 }
@@ -658,10 +673,9 @@ export class WBWEngine {
   }
 
   load(code: string): { errors: WBWError[] } {
-    const { program, errors } = parseWBW(code);
-    const validationErrors = this.validateProgram(program);
+    const { program } = parseWBW(code);
     this.program = program;
-    this.parseErrors = [...errors, ...validationErrors];
+    this.parseErrors = analyzeWBWCode(code);
     return { errors: this.parseErrors };
   }
 
@@ -708,18 +722,6 @@ export class WBWEngine {
 
   getErrors() {
     return this.parseErrors;
-  }
-
-  private validateProgram(program: WBWProgram): WBWError[] {
-    const errors: WBWError[] = [];
-    const allLines = [...program.init, ...Object.values(program.labels).flat()];
-    allLines.forEach((line) => {
-      const command = normalizeCommand(line.tokens[0]);
-      if (!KNOWN_COMMANDS.has(command)) {
-        errors.push({ line: line.line, message: `Unknown command: ${line.tokens[0]}` });
-      }
-    });
-    return errors;
   }
 
   private resetState() {
