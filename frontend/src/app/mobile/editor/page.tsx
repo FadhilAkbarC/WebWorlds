@@ -15,7 +15,6 @@ import {
   createTemplateScript,
   type WBWTemplateDefinition,
 } from '@/lib/wbw-template-store';
-import WBWVisualEditor from '@/components/shared/wbw-visual-editor';
 import WBWTemplateStoreModal from '@/components/shared/wbw-template-store-modal';
 import { lazyWithRetry } from '@/lib/lazy-with-retry';
 
@@ -61,7 +60,6 @@ export default function MobileEditorPage() {
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
   const [showTemplateStore, setShowTemplateStore] = useState(false);
-  const [editorMode, setEditorMode] = useState<'visual' | 'code'>('visual');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -329,34 +327,13 @@ export default function MobileEditorPage() {
                   <>
                     <div className="flex items-center justify-between border-b border-[#2b2b2b] px-3 py-2">
                       <p className="text-xs text-slate-400">{currentScript.name}</p>
-                      <div className="flex gap-2 text-[11px]">
-                        <button
-                          onClick={() => setEditorMode('visual')}
-                          className={`rounded px-2 py-1 ${editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
-                        >
-                          Visual
-                        </button>
-                        <button
-                          onClick={() => setEditorMode('code')}
-                          className={`rounded px-2 py-1 ${editorMode === 'code' ? 'bg-blue-600 text-white' : 'bg-[#2b2b2b] text-slate-200'}`}
-                        >
-                          Code
-                        </button>
-                      </div>
+                      <span className="rounded bg-[#2b2b2b] px-2 py-1 text-[11px] text-slate-200">Code</span>
                     </div>
-                    {editorMode === 'visual' ? (
-                      <WBWVisualEditor
-                        value={currentScript.code}
-                        onChange={(val: string) => updateScript(currentScript.id, val)}
-                        readOnly={false}
-                      />
-                    ) : (
-                      <WBWEditor
-                        value={currentScript.code}
-                        onChange={(val: string) => updateScript(currentScript.id, val)}
-                        readOnly={false}
-                      />
-                    )}
+                    <WBWEditor
+                      value={currentScript.code}
+                      onChange={(val: string) => updateScript(currentScript.id, val)}
+                      readOnly={false}
+                    />
                   </>
                 ) : (
                   <div className="p-6 text-slate-400">Select a script to edit</div>

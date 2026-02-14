@@ -17,11 +17,11 @@
     min-height: 3.2rem !important;
   }
 }
-/* WBW Syntax Highlighting */
+/* WBW Syntax Highlighting V2 */
 .wbw-editor-wrap {
   position: relative;
   flex: 1;
-  background: #181c1f;
+  background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
   overflow: hidden;
 }
 .wbw-editor-highlight {
@@ -32,9 +32,10 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow: auto;
-  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', 'monospace';
   font-size: 0.875rem;
   line-height: 1.5;
+  color: #d1d5db;
 }
 .wbw-editor-input {
   position: absolute;
@@ -43,10 +44,10 @@
   resize: none;
   background: transparent;
   color: transparent;
-  caret-color: #aaff55;
+  caret-color: #f8fafc;
   border: 0;
   outline: none;
-  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', 'monospace';
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -57,27 +58,27 @@
   position: absolute;
   top: 1rem;
   left: 1rem;
-  color: #3a4a2f;
-  font-family: 'Fira Mono', 'Consolas', 'monospace';
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Consolas', 'monospace';
   font-size: 0.875rem;
   pointer-events: none;
 }
 .wbw-editor::selection {
-  background: #2d3a1f;
+  background: rgba(56, 189, 248, 0.25);
 }
-.wbw-core { color: #ffd166; font-weight: 600; }
-.wbw-input { color: #00f5d4; font-weight: 600; }
-.wbw-flow { color: #f15bb5; font-weight: 600; }
-.wbw-math { color: #4cc9f0; font-weight: 600; }
-.wbw-event { color: #fca311; font-weight: 600; }
-.wbw-key { color: #90e0ef; }
-.wbw-number { color: #00e0ff; }
-.wbw-string { color: #ff6bcb; }
-.wbw-comment { color: #6c7a89; font-style: italic; }
-.wbw-constant { color: #ff7b7b; font-weight: 600; }
-.wbw-identifier { color: #aaff55; }
-.wbw-color { color: #00ff99; }
-.wbw-label { color: #cdb4db; font-weight: 600; }
+.wbw-core { color: #f59e0b; font-weight: 700; }
+.wbw-input { color: #22d3ee; font-weight: 700; }
+.wbw-flow { color: #a78bfa; font-weight: 700; }
+.wbw-math { color: #60a5fa; font-weight: 700; }
+.wbw-event { color: #fb7185; font-weight: 700; }
+.wbw-key { color: #7dd3fc; }
+.wbw-number { color: #34d399; }
+.wbw-string { color: #fda4af; }
+.wbw-comment { color: #94a3b8; font-style: italic; }
+.wbw-constant { color: #f472b6; font-weight: 700; }
+.wbw-identifier { color: #e2e8f0; }
+.wbw-color { color: #22c55e; }
+.wbw-label { color: #c4b5fd; font-weight: 700; }
 @import "tailwindcss";
 
 * {
