@@ -242,6 +242,9 @@ const COMMAND_ALIASES: Record<string, string> = {
   mix: 'lerp',
   randi: 'randint',
   randf: 'randfloat',
+  let: 'set',
+  var: 'set',
+  const: 'set',
   camfollow: 'camfollow',
   camlerp: 'camlerp',
   camoffset: 'camoffset',
@@ -445,6 +448,29 @@ function tokenize(line: string): string[] {
   return tokens;
 }
 
+function expandAssignmentShorthand(rawLine: string): string {
+  const match = rawLine.match(/^([A-Za-z_][\w.]*)\s*(=|\+=|-=|\*=|\/=|%=)\s*(.+)$/);
+  if (!match) return rawLine;
+
+  const [, name, operator, rhs] = match;
+  const trimmedRhs = rhs.trim();
+  if (!trimmedRhs) return rawLine;
+
+  if (operator === '=') {
+    return `set ${name} ${trimmedRhs}`;
+  }
+
+  const map: Record<string, string> = {
+    '+=': 'add',
+    '-=': 'sub',
+    '*=': 'mul',
+    '/=': 'div',
+    '%=': 'mod',
+  };
+  const command = map[operator];
+  return command ? `${command} ${name} ${trimmedRhs}` : rawLine;
+}
+
 function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
   const errors: WBWError[] = [];
   const init: CommandLine[] = [];
@@ -457,7 +483,9 @@ function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
     const stripped = stripComments(raw).trim();
     if (!stripped) return;
 
-    const tokens = tokenize(stripped);
+    const normalizedLine = expandAssignmentShorthand(stripped);
+
+    const tokens = tokenize(normalizedLine);
     if (tokens.length === 0) return;
 
     const first = tokens[0];
@@ -475,7 +503,7 @@ function parseWBW(code: string): { program: WBWProgram; errors: WBWError[] } {
       return;
     }
 
-    const command: CommandLine = { tokens, line: lineNumber, raw: stripped };
+    const command: CommandLine = { tokens, line: lineNumber, raw: normalizedLine };
     if (currentLabel) {
       labels[currentLabel].push(command);
     } else {
@@ -2243,6 +2271,13 @@ export class WBWEngine {
   private getValue(token: string): number | string {
     if (token === undefined) return 0;
     if (token === 'rand') return Math.random();
+    if (token.includes('.')) {
+      const namespaced = this.vars[token];
+      if (namespaced !== undefined) return namespaced;
+      const separatorIndex = token.lastIndexOf('.');
+      const short = separatorIndex >= 0 ? token.slice(separatorIndex + 1) : token;
+      if (short && this.vars[short] !== undefined) return this.vars[short];
+    }
     if (this.vars[token] !== undefined) return this.vars[token];
     if (isNumber(token)) return Number(token);
     return token;
@@ -2251,6 +2286,19 @@ export class WBWEngine {
   private getNumberValue(token: string | undefined): number {
     if (!token) return 0;
     if (token.toLowerCase() === 'rand') return Math.random();
+    if (token.includes('.')) {
+      const namespaced = this.vars[token];
+      if (namespaced !== undefined) {
+        const value = Number(namespaced);
+        return Number.isNaN(value) ? 0 : value;
+      }
+      const separatorIndex = token.lastIndexOf('.');
+      const short = separatorIndex >= 0 ? token.slice(separatorIndex + 1) : token;
+      if (short && this.vars[short] !== undefined) {
+        const value = Number(this.vars[short]);
+        return Number.isNaN(value) ? 0 : value;
+      }
+    }
     if (this.vars[token] !== undefined) {
       const value = Number(this.vars[token]);
       return Number.isNaN(value) ? 0 : value;

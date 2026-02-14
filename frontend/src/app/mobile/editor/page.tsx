@@ -7,8 +7,10 @@ import { WBWEngine, type WBWError } from '@/engine/wbw-game-engine';
 import { useEditorStore } from '@/stores/editorStore';
 import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
-import { Save, Plus, X, Play, Upload } from 'lucide-react';
+import { Save, Plus, X, Play, Upload, Store } from 'lucide-react';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
+import { type WBWTemplateDefinition } from '@/lib/wbw-template-store';
+import WBWTemplateStoreModal from '@/components/shared/wbw-template-store-modal';
 import { lazyWithRetry } from '@/lib/lazy-with-retry';
 
 const ManageGamesTab = dynamic(lazyWithRetry(() => import('../../editor/manage-games-tab')), {
@@ -52,6 +54,7 @@ export default function MobileEditorPage() {
   const [wbwErrors, setWbwErrors] = useState<WBWError[]>([]);
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
+  const [showTemplateStore, setShowTemplateStore] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -137,6 +140,37 @@ export default function MobileEditorPage() {
     addScript(newScript);
     setNewScriptName('');
     setShowNewScriptDialog(false);
+  };
+
+  const applyTemplate = (template: WBWTemplateDefinition) => {
+    const baseProject = useEditorStore.getState().project;
+    loadProject({
+      ...baseProject,
+      title: template.title,
+      description: template.description,
+      scripts: [
+        {
+          id: 'main',
+          name: 'main.wbw',
+          code: template.code,
+          language: 'wbw' as const,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    } as any);
+    setActiveTab('main');
+    setShowTemplateStore(false);
+  };
+
+  const createScriptFromTemplate = (template: WBWTemplateDefinition) => {
+    addScript({
+      id: `template_${template.id}_${Date.now()}`,
+      name: `${template.id}.wbw`,
+      code: template.code,
+      language: 'wbw' as const,
+      createdAt: new Date().toISOString(),
+    });
+    setShowTemplateStore(false);
   };
 
   async function handlePublishGame() {
@@ -228,6 +262,12 @@ export default function MobileEditorPage() {
           >
             <Save size={12} className="inline mr-1" /> {isSaving ? 'Saving...' : 'Save'}
           </button>
+          <button
+            onClick={() => setShowTemplateStore(true)}
+            className="rounded-full bg-purple-600 px-3 py-1 text-xs font-semibold text-white"
+          >
+            <Store size={12} className="inline mr-1" /> Templates
+          </button>
         </div>
       </div>
 
@@ -257,6 +297,12 @@ export default function MobileEditorPage() {
               className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
             >
               <Plus size={12} className="inline mr-1" /> New
+            </button>
+            <button
+              onClick={() => setShowTemplateStore(true)}
+              className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
+            >
+              <Store size={12} className="inline mr-1" /> Store
             </button>
           </div>
 
@@ -427,6 +473,13 @@ export default function MobileEditorPage() {
           </div>
         </div>
       )}
+      <WBWTemplateStoreModal
+        open={showTemplateStore}
+        onClose={() => setShowTemplateStore(false)}
+        onUseAsProject={applyTemplate}
+        onAddScript={createScriptFromTemplate}
+      />
+
     </div>
   );
 }
