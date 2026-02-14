@@ -46,6 +46,25 @@ WebWorlds/
 - `frontend/src/lib/server-api-client.ts`: Server-side fetch helpers
 - `frontend/src/lib/lazy-with-retry.ts`: Dynamic import retry strategy
 - `frontend/src/components/shared/ChunkRecovery.tsx`: Chunk load recovery UI
+- `frontend/src/lib/wbw-template-store.ts`: Built-in WBW template catalog + helpers (`applyTemplateToProject`, `createTemplateScript`)
+- `frontend/src/components/shared/wbw-template-store-modal.tsx`: Reusable Creator Store / Template Store modal
+
+### WBW Editor Template Store (Desktop + Mobile)
+
+- Desktop editor (`/editor`) now shows an inline **Creator Store Templates** list in the left panel.
+- Mobile editor (`/mobile/editor`) also shows an inline **Creator Store Template List** card for parity.
+- Both UIs support quick actions:
+  - **Use**: replace current project with selected template
+  - **Add**: add selected template as an extra WBW script
+- Both inline lists and modal use the same shared template source (`WBW_BUILTIN_TEMPLATES`) to keep behavior consistent and lightweight.
+
+### WBW Syntax Improvements (Current)
+
+- Assignment shorthand is supported by engine parser normalization:
+  - `VAR = 10`
+  - `VAR += 2`, `VAR -= 1`, `VAR *= 3`, `VAR /= 2`, `VAR %= 5`
+- `let`, `var`, and `const` aliases map to `set` command.
+- Namespaced variable reads (example `Game.Rock`) can fall back to short variable name (`Rock`) if needed.
 
 ### Backend Key Paths
 
