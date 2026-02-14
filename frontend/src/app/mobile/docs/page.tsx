@@ -1,80 +1,55 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import MobileStaticPage from '@/components/mobile/MobileStaticPage';
+import { WBW_SYNTAX_TOPICS } from '@/lib/wbw-syntax-docs';
 
 export default function MobileDocsPage() {
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return WBW_SYNTAX_TOPICS;
+    return WBW_SYNTAX_TOPICS.filter((topic) =>
+      [topic.title, topic.syntax, topic.example, topic.notes, ...(topic.aliases || [])]
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [query]);
+
   return (
-    <MobileStaticPage title="Documentation">
+    <MobileStaticPage title="WBW Documentation">
       <section>
-        <h2 className="text-sm font-semibold text-white mb-2">Getting Started</h2>
-        <p>
-          Welcome to WebWorlds! This guide will help you get started with creating and playing games
-          on our platform.
-        </p>
+        <p className="mb-2 text-sm text-slate-300">Cari syntax cepat ala forum:</p>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search syntax..."
+          className="w-full rounded border border-[#2b2b2b] bg-[#151515] px-3 py-2 text-sm text-slate-100 outline-none"
+        />
       </section>
 
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">1. Creating an Account</h3>
-        <p className="mb-2">
-          To start using WebWorlds, you&apos;ll need to create an account. Click on &quot;Sign Up&quot; and fill
-          in your details:
-        </p>
-        <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
-          <li>Username: 3-20 characters, alphanumeric only</li>
-          <li>Email: Valid email address</li>
-          <li>Password: At least 8 characters with uppercase, lowercase, and numbers</li>
-        </ul>
-      </section>
+      {filtered.map((topic) => (
+        <section key={topic.id} className="rounded border border-[#2b2b2b] bg-[#141414] p-3">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-white">{topic.title}</h3>
+            <span className="rounded bg-[#232323] px-2 py-0.5 text-[10px] text-slate-300">{topic.category}</span>
+          </div>
+          <p className="text-xs text-slate-300">Syntax: <code>{topic.syntax}</code></p>
+          <p className="text-xs text-emerald-300">Example: <code>{topic.example}</code></p>
+          {topic.aliases && topic.aliases.length > 0 && (
+            <p className="text-[11px] text-slate-400">Alias: {topic.aliases.join(', ')}</p>
+          )}
+          <p className="mt-1 text-xs text-slate-300">{topic.notes}</p>
+        </section>
+      ))}
 
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">2. Creating Your First Game</h3>
-        <p>
-          Navigate to the &quot;Create&quot; section to open the game editor. You can create interactive games
-          using our intuitive visual editor without writing any code.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">3. Browsing Games</h3>
-        <p>
-          Visit the &quot;Games&quot; section to browse and play games created by our community. Filter by
-          category, view trending games, and discover new favorites.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">4. Multiplayer Gaming</h3>
-        <p>
-          WebWorlds supports real-time multiplayer gaming through WebSocket connections. Games can
-          host multiple players simultaneously for an enhanced gaming experience.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">5. Leaderboards</h3>
-        <p>
-          Compete with other players and track your progress on game-specific leaderboards. Your
-          achievements are recorded and displayed on your profile.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">API Reference</h3>
-        <p>
-          For developers interested in extending WebWorlds, comprehensive API documentation is
-          available. Our REST API allows you to build custom integrations and experiences.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-white mb-2">Troubleshooting</h3>
-        <p>
-          Having issues? Contact our support team at{' '}
-          <a href="mailto:hello@webworlds.dev" className="text-blue-300">
-            hello@webworlds.dev
-          </a>
-        </p>
-      </section>
+      {filtered.length === 0 && (
+        <section>
+          <p className="text-sm text-slate-300">Tidak ada hasil. Coba kata kunci: <code>onpress</code>, <code>button</code>, <code>+=</code>.</p>
+        </section>
+      )}
     </MobileStaticPage>
   );
 }
-
-

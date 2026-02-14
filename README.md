@@ -57,8 +57,11 @@ WebWorlds/
   - **Use**: replace current project with selected template
   - **Add**: add selected template as an extra WBW script
 - Both inline lists and modal use the same shared template source (`WBW_BUILTIN_TEMPLATES`) to keep behavior consistent and lightweight.
+- Creator Store panel sekarang bersifat buka/tutup (collapsible), sejalan dengan pola panel Code Explorer di editor.
 
 ### WBW Syntax Improvements (Current)
+
+- Docs page (`/docs` dan `/mobile/docs`) sekarang mendukung **forum-style syntax search**: search bar + kategori/tag syntax agar navigasi command lebih cepat.
 
 - Assignment shorthand is supported by engine parser normalization:
   - `VAR = 10`

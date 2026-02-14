@@ -272,63 +272,66 @@ export default function EditorPage() {
           <TabsContent value="editor" className="flex flex-1 gap-4 overflow-hidden">
             {/* Left Panel - File Explorer */}
             <div className="w-64 bg-slate-900 rounded-lg border border-slate-700 p-4 overflow-y-auto">
-              <div className="mb-4">
-                <h2 className="text-sm font-bold text-slate-300 uppercase mb-2">Scripts</h2>
-                <button
-                  onClick={() => setShowNewScriptDialog(true)}
-                  className="flex items-center gap-2 w-full px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-sm transition-colors"
-                >
-                  <Plus size={16} />
-                  New Script
-                </button>
-                <button
-                  onClick={() => {
-                    addScript({
-                      id: `script_${Date.now()}`,
-                      name: 'template.wbw',
-                      code: DEFAULT_WBW_TEMPLATE,
-                      language: 'wbw',
-                      createdAt: new Date().toISOString(),
-                    });
-                  }}
-                  className="flex items-center gap-2 w-full mt-2 px-3 py-2 bg-green-800 hover:bg-green-700 text-white rounded text-sm transition-colors"
-                >
-                  <Plus size={16} />
-                  WBW Game Template
-                </button>
-                <button
-                  onClick={() => setShowTemplateStore(true)}
-                  className="flex items-center gap-2 w-full mt-2 px-3 py-2 bg-purple-800 hover:bg-purple-700 text-white rounded text-sm transition-colors"
-                >
-                  <Plus size={16} />
-                  Template Store / Creator
-                </button>
-              </div>
-              <div className="space-y-1">
-                {project.scripts.map((script) => (
-                  <div
-                    key={script.id}
-                    onClick={() => setActiveTab(script.id)}
-                    className={`flex items-center justify-between p-2 rounded cursor-pointer text-sm transition-colors ${activeTabId === script.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+              <details className="mb-4" open>
+                <summary className="cursor-pointer text-sm font-bold uppercase text-slate-300">Code Explorer</summary>
+                <div className="mt-3">
+                  <button
+                    onClick={() => setShowNewScriptDialog(true)}
+                    className="flex items-center gap-2 w-full px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-sm transition-colors"
                   >
-                    <span className="flex-1">{script.name}</span>
-                    {script.id !== 'main' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeScript(script.id);
-                        }}
-                        className="p-1 hover:bg-red-600 rounded"
+                    <Plus size={16} />
+                    New Script
+                  </button>
+                  <button
+                    onClick={() => {
+                      addScript({
+                        id: `script_${Date.now()}`,
+                        name: 'template.wbw',
+                        code: DEFAULT_WBW_TEMPLATE,
+                        language: 'wbw',
+                        createdAt: new Date().toISOString(),
+                      });
+                    }}
+                    className="flex items-center gap-2 w-full mt-2 px-3 py-2 bg-green-800 hover:bg-green-700 text-white rounded text-sm transition-colors"
+                  >
+                    <Plus size={16} />
+                    WBW Game Template
+                  </button>
+                  <div className="mt-3 space-y-1">
+                    {project.scripts.map((script) => (
+                      <div
+                        key={script.id}
+                        onClick={() => setActiveTab(script.id)}
+                        className={`flex items-center justify-between p-2 rounded cursor-pointer text-sm transition-colors ${activeTabId === script.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                       >
-                        <X size={14} />
-                      </button>
-                    )}
+                        <span className="flex-1">{script.name}</span>
+                        {script.id !== 'main' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeScript(script.id);
+                            }}
+                            className="p-1 hover:bg-red-600 rounded"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 border-t border-slate-700 pt-4">
-                <h3 className="mb-2 text-xs font-bold uppercase text-slate-400">Creator Store Templates</h3>
-                <div className="space-y-2">
+                </div>
+              </details>
+
+              <details className="mt-3 border-t border-slate-700 pt-3" open>
+                <summary className="cursor-pointer text-xs font-bold uppercase text-slate-400">Creator Store Templates</summary>
+                <div className="mt-3 space-y-2">
+                  <button
+                    onClick={() => setShowTemplateStore(true)}
+                    className="flex items-center gap-2 w-full px-3 py-2 bg-purple-800 hover:bg-purple-700 text-white rounded text-sm transition-colors"
+                  >
+                    <Plus size={16} />
+                    Template Store / Creator
+                  </button>
                   {WBW_BUILTIN_TEMPLATES.map((template) => (
                     <div key={template.id} className="rounded border border-slate-700 bg-slate-800 p-2">
                       <p className="text-xs font-semibold text-white">{template.title}</p>
@@ -350,7 +353,7 @@ export default function EditorPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </details>
               {/* New Script Dialog */}
               {showNewScriptDialog && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -245,6 +245,9 @@ const COMMAND_ALIASES: Record<string, string> = {
   let: 'set',
   var: 'set',
   const: 'set',
+  when: 'if',
+  then: 'goto',
+  fn: 'goto',
   camfollow: 'camfollow',
   camlerp: 'camlerp',
   camoffset: 'camoffset',
@@ -449,14 +452,22 @@ function tokenize(line: string): string[] {
 }
 
 function expandAssignmentShorthand(rawLine: string): string {
-  const match = rawLine.match(/^([A-Za-z_][\w.]*)\s*(=|\+=|-=|\*=|\/=|%=)\s*(.+)$/);
+  const trimmed = rawLine.trim();
+
+  const unaryMatch = trimmed.match(/^([A-Za-z_][\w.]*)\s*(\+\+|--)$/);
+  if (unaryMatch) {
+    const [, name, op] = unaryMatch;
+    return `${op === '++' ? 'inc' : 'dec'} ${name} 1`;
+  }
+
+  const match = trimmed.match(/^([A-Za-z_][\w.]*)\s*(=|:=|\+=|-=|\*=|\/=|%=)\s*(.+)$/);
   if (!match) return rawLine;
 
   const [, name, operator, rhs] = match;
   const trimmedRhs = rhs.trim();
   if (!trimmedRhs) return rawLine;
 
-  if (operator === '=') {
+  if (operator === '=' || operator === ':=') {
     return `set ${name} ${trimmedRhs}`;
   }
 

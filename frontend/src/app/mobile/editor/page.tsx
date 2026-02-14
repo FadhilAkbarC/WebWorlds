@@ -265,37 +265,40 @@ export default function MobileEditorPage() {
         </TabsList>
 
         <TabsContent value="editor" className="mt-4 space-y-4">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            {project.scripts.map((script) => (
+          <details className="rounded-2xl border border-[#232323] bg-[#141414] p-3" open>
+            <summary className="cursor-pointer text-xs font-semibold uppercase text-slate-300">Code Explorer</summary>
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto">
+              {project.scripts.map((script) => (
+                <button
+                  key={script.id}
+                  onClick={() => setActiveTab(script.id)}
+                  className={`rounded-full border px-3 py-1 text-xs ${
+                    activeTabId === script.id
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-200'
+                      : 'border-[#2b2b2b] text-slate-400'
+                  }`}
+                >
+                  {script.name}
+                </button>
+              ))}
               <button
-                key={script.id}
-                onClick={() => setActiveTab(script.id)}
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  activeTabId === script.id
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                    : 'border-[#2b2b2b] text-slate-400'
-                }`}
+                onClick={() => setShowNewScriptDialog(true)}
+                className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
               >
-                {script.name}
+                <Plus size={12} className="inline mr-1" /> New
               </button>
-            ))}
-            <button
-              onClick={() => setShowNewScriptDialog(true)}
-              className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
-            >
-              <Plus size={12} className="inline mr-1" /> New
-            </button>
-            <button
-              onClick={() => setShowTemplateStore(true)}
-              className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
-            >
-              <Store size={12} className="inline mr-1" /> Store
-            </button>
-          </div>
+              <button
+                onClick={() => setShowTemplateStore(true)}
+                className="rounded-full border border-[#2b2b2b] px-3 py-1 text-xs text-slate-300"
+              >
+                <Store size={12} className="inline mr-1" /> Store
+              </button>
+            </div>
+          </details>
 
-          <div className="rounded-2xl border border-[#232323] bg-[#141414] p-3">
-            <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Creator Store Template List</p>
-            <div className="space-y-2">
+          <details className="rounded-2xl border border-[#232323] bg-[#141414] p-3" open>
+            <summary className="cursor-pointer text-xs font-semibold uppercase text-slate-400">Creator Store Template List</summary>
+            <div className="mt-3 space-y-2">
               {WBW_BUILTIN_TEMPLATES.map((template) => (
                 <div key={template.id} className="rounded border border-[#2b2b2b] bg-black/30 p-2">
                   <p className="text-xs font-semibold text-white">{template.title}</p>
@@ -317,7 +320,7 @@ export default function MobileEditorPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </details>
 
           <div className="rounded-2xl border border-[#232323] bg-[#141414] overflow-hidden">
             {currentScript ? (
