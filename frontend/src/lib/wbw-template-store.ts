@@ -69,6 +69,9 @@ touch auto
 
 set HP 6
 set SCORE 0
+set WAVE 1
+set TOXIN 0
+set RADAR 0
 set STAGE 1
 set COIN 0
 set KEY 0
@@ -77,6 +80,9 @@ set GOAL 12
 set BOSSHP 16
 set BOSSOPEN 0
 set CLEAR 0
+set COMBO 0
+set ENERGY 100
+set SEED 42
 
 player 120 1180
 checkpoint 120 1180
@@ -108,7 +114,12 @@ loop 6
 end
 
 button heal 40 94 220 42 "Use Medkit"
+button dash 40 142 220 42 "Dash Burst"
+button focus 40 190 220 42 "Focus Mode"
 onui heal goto use_heal
+onui dash goto dash_burst
+onui focus goto focus_mode
+onhoverui heal goto ui_hint
 
 on left move -1 0
 on right move 1 0
@@ -119,6 +130,8 @@ onrelease right stopx
 
 every storm 12 goto storm_wave
 every bonus_drop 9 goto bonus_drop
+every combo_tick 2 goto combo_tick
+after intro 2 goto intro_msg
 
 tick:
   hud "Titan Trials" 24 30
@@ -128,6 +141,8 @@ tick:
   hud "Key" KEY 24 134
   hud "Shard" SHARD 24 160
   hud "Stage" STAGE 24 186
+  hud "Combo" COMBO 24 212
+  hud "Energy" ENERGY 24 238
   if PY > 1390 goto fail_fall
   if COIN >= GOAL goto unlock_gate
   if PX > 3350 goto check_gate
@@ -140,6 +155,21 @@ storm_wave:
   add SCORE 4
 end
 storm_skip:
+end
+
+intro_msg:
+  msg "Titan Trials initiated" 1
+end
+
+ui_hint:
+  msg "Use shard for heal" 0.4
+end
+
+combo_tick:
+  if COMBO <= 0 goto combo_hold
+  dec COMBO 1
+end
+combo_hold:
 end
 
 bonus_drop:
@@ -191,6 +221,8 @@ end
 item_pick:
   add SHARD 1
   add SCORE 12
+  add COMBO 2
+  clamp COMBO 0 99
   msg "Shard +1" 0.6
 end
 
@@ -204,6 +236,9 @@ end
 boss_damage:
   sub BOSSHP 1
   add SCORE 18
+  add COMBO 3
+  sub ENERGY 4
+  if ENERGY < 20 goto focus_prompt
   msg "Boss HP -1" 0.5
   if HP <= 0 goto game_over
 end
@@ -211,6 +246,34 @@ end
 coin_pick:
   inc COIN 1
   add SCORE 6
+  add ENERGY 1
+  clamp ENERGY 0 100
+end
+
+dash_burst:
+  if ENERGY < 25 goto dash_fail
+  sub ENERGY 25
+  pushx player 5
+  add SCORE 15
+  msg "Dash!" 0.5
+end
+dash_fail:
+  msg "Need 25 energy" 0.6
+end
+
+focus_mode:
+  if ENERGY < 15 goto focus_fail
+  sub ENERGY 15
+  shake 3 0.2
+  add SCORE 8
+  msg "Focus activated" 0.6
+end
+focus_fail:
+  msg "Low energy" 0.6
+end
+
+focus_prompt:
+  msg "Energy critical" 0.6
 end
 
 fail_fall:
@@ -258,6 +321,10 @@ set HP 12
 set REP 0
 set RAID 90
 set BOSS 0
+set MANA 14
+set THREAT 0
+set ALIGN 0
+set BOUNTY 0
 
 npc king 540 180 30 48
 npc priest 930 300 28 44
@@ -272,9 +339,12 @@ uirect 24 20 420 210 #1e293b
 button startQuest 46 90 380 44 "Start Royal Quest"
 button train 46 142 380 44 "Train Skill (10 Gold)"
 button raid 46 194 380 44 "Launch Raid"
+button arcane 46 246 380 44 "Arcane Burst (3 Mana)"
 onui startQuest goto quest_start
 onui train goto train_skill
 onui raid goto raid_launch
+onui arcane goto cast_arcane
+onhoverui arcane goto arcane_hint
 
 loop 6
   item rand 760 2500 rand 280 1300 12 12
@@ -285,6 +355,8 @@ end
 
 every raid_tick 1 goto raid_tick
 every market_tick 8 goto market_income
+every mana_tick 4 goto mana_tick
+every threat_tick 6 goto threat_tick
 
 on left move -1 0
 on right move 1 0
@@ -305,6 +377,9 @@ tick:
   hud "Crystal" CRYSTAL 24 154
   hud "Skill" SKILL 24 178
   hud "Raid" RAID 24 202
+  hud "Mana" MANA 24 226
+  hud "Threat" THREAT 24 250
+  hud "Bounty" BOUNTY 24 274
   if HP <= 0 goto fail
   if BOSS == 1 goto boss_phase
 end
@@ -397,6 +472,28 @@ end
 
 market_income:
   add GOLD REP
+  add BOUNTY 1
+end
+
+mana_tick:
+  if MANA >= 20 goto mana_hold
+  inc MANA 1
+end
+mana_hold:
+end
+
+threat_tick:
+  if CHAPTER < 1 goto threat_skip
+  inc THREAT 1
+  if THREAT < 15 goto threat_skip
+  enemy rand 1200 2600 rand 260 1400 20 20
+  set THREAT 0
+end
+threat_skip:
+end
+
+arcane_hint:
+  msg "Burst scales with skill" 0.4
 end
 
 raid_tick:
@@ -405,6 +502,22 @@ raid_tick:
   dec RAID 1
 end
 raid_skip:
+end
+
+toxin_tick:
+  if TOXIN <= 0 goto toxin_safe
+  dec HP 1
+  dec TOXIN 1
+end
+toxin_safe:
+end
+
+radar_tick:
+  if RADAR <= 0 goto radar_off
+  item rand 800 3200 rand 980 1460 10 10
+  dec RADAR 1
+end
+radar_off:
 end
 raid_done:
   if CHAPTER < 2 goto raid_reset
@@ -442,10 +555,24 @@ end
 boss_damage:
   if CHAPTER < 3 goto boss_none
   add BOSS 1
+  sub MANA 1
+  add BOUNTY 3
   if BOSS < 12 goto boss_none
   goto clear
 end
 boss_none:
+end
+
+cast_arcane:
+  if MANA < 3 goto arcane_fail
+  sub MANA 3
+  ARCDMG = SKILL
+  add ARCDMG 1
+  add BOSS ARCDMG
+  msg "Arcane burst" 0.7
+end
+arcane_fail:
+  msg "Not enough mana" 0.6
 end
 
 clear:
@@ -481,6 +608,9 @@ set QUALITY 1
 set MARKET 100
 set PRESTIGE 0
 set TARGET 50000
+set POWER 1
+set TAX 0
+set AUTO 0
 
 uirect 24 20 460 290 #1e293b
 button lineA 44 78 420 42 "Upgrade Line A"
@@ -488,16 +618,21 @@ button lineB 44 126 420 42 "Upgrade Line B"
 button hire 44 174 420 42 "Hire Staff"
 button marketBtn 44 222 420 42 "Expand Market"
 button prestigeBtn 44 270 420 42 "Prestige"
+button autoBtn 500 78 260 42 "Automation"
+button auditBtn 500 126 260 42 "Tax Audit"
 onui lineA goto up_line_a
 onui lineB goto up_line_b
 onui hire goto hire_staff
 onui marketBtn goto up_market
 onui prestigeBtn goto do_prestige
+onui autoBtn goto buy_auto
+onui auditBtn goto tax_audit
 
 every income_tick 1 goto income_tick
 every stock_tick 2 goto stock_tick
 every event_tick 12 goto event_tick
 every quality_tick 8 goto quality_tick
+every tax_tick 11 goto tax_tick
 
 tick:
   hud "HyperGrid Empire" 24 34
@@ -509,6 +644,8 @@ tick:
   hud "Quality" QUALITY 24 178
   hud "Market" MARKET 24 202
   hud "Prestige" PRESTIGE 24 226
+  hud "Power" POWER 24 250
+  hud "Auto" AUTO 24 274
   if MONEY >= TARGET goto clear
 end
 
@@ -516,6 +653,10 @@ income_tick:
   GAIN = RATE
   GAIN *= STAFF
   GAIN *= QUALITY
+  GAIN *= POWER
+  if AUTO == 1 goto auto_bonus
+auto_bonus:
+  add GAIN 20
   div GAIN 2
   add MONEY GAIN
 end
@@ -563,6 +704,15 @@ reset_money:
   set MONEY 0
 end
 event_done:
+end
+
+tax_tick:
+  if PRESTIGE < 1 goto tax_skip
+  TAX = MARKET
+  div TAX 10
+  sub MONEY TAX
+end
+tax_skip:
 end
 
 up_line_a:
@@ -619,6 +769,20 @@ prestige_fail:
   msg "Need 9000 money" 0.8
 end
 
+buy_auto:
+  if MONEY < 2200 goto no_cash
+  sub MONEY 2200
+  set AUTO 1
+  msg "Automation online" 0.8
+end
+
+tax_audit:
+  if MONEY < 500 goto no_cash
+  sub MONEY 500
+  inc POWER 1
+  msg "Efficiency boosted" 0.8
+end
+
 no_cash:
   msg "Insufficient money" 0.8
 end
@@ -660,11 +824,18 @@ set ELITE 0
 set TARGET 2400
 set BOSSHP 22
 set PHASE 0
+set HEAT 0
+set SHIELD 4
+set DRONE 0
 
 button reloadBtn 40 96 240 42 "Reload"
 button burstBtn 40 144 240 42 "Burst Fire"
+button shieldBtn 40 192 240 42 "Shield Pulse"
+button droneBtn 40 240 240 42 "Deploy Drone"
 onui reloadBtn goto reload
 onui burstBtn goto burst_fire
+onui shieldBtn goto shield_pulse
+onui droneBtn goto deploy_drone
 
 on left move -1 0
 on right move 1 0
@@ -676,6 +847,8 @@ onrelease right stopx
 every director 3 goto director
 every supply 10 goto supply_drop
 every combo_decay 2 goto combo_decay
+every heat_tick 1 goto heat_tick
+every drone_tick 3 goto drone_tick
 
 tick:
   hud "Omega Siege" 24 30
@@ -685,6 +858,9 @@ tick:
   hud "Combo" COMBO 24 126
   hud "Wave" WAVE 24 150
   hud "Target" TARGET 24 174
+  hud "Heat" HEAT 24 198
+  hud "Shield" SHIELD 24 222
+  hud "Drone" DRONE 24 246
   if HP <= 0 goto lose
   if SCORE >= TARGET goto start_boss
   if PHASE == 2 goto boss_phase
@@ -692,8 +868,13 @@ end
 
 fire:
   if AMMO <= 0 goto no_ammo
+  if HEAT > 90 goto overheat
   sub AMMO 1
+  inc HEAT 6
   shoot 1
+end
+overheat:
+  msg "Weapon overheated" 0.5
 end
 no_ammo:
   msg "Reload!" 0.5
@@ -754,6 +935,21 @@ end
 combo_keep:
 end
 
+heat_tick:
+  if HEAT <= 0 goto heat_keep
+  dec HEAT 3
+end
+heat_keep:
+end
+
+drone_tick:
+  if DRONE <= 0 goto drone_keep
+  add SCORE 8
+  add COMBO 1
+end
+drone_keep:
+end
+
 start_boss:
   if PHASE > 0 goto boss_started
   set PHASE 2
@@ -794,6 +990,25 @@ end
 enemy_down:
   add SCORE 25
   add COMBO 1
+end
+
+shield_pulse:
+  if SHIELD <= 0 goto shield_fail
+  dec SHIELD 1
+  add HP 1
+  msg "Shield restored HP" 0.6
+end
+shield_fail:
+  msg "No shield charge" 0.6
+end
+
+deploy_drone:
+  if DRONE > 0 goto drone_fail
+  set DRONE 8
+  msg "Drone deployed" 0.7
+end
+drone_fail:
+  msg "Drone already active" 0.6
 end
 
 lose:
@@ -840,6 +1055,9 @@ set MEM3 0
 set TOKEN 0
 set LOCK 1
 set FAIL 0
+set PHASE 0
+set CLOCK 180
+set MIRROR 0
 
 uirect 20 20 430 300 #1e293b
 button swA 44 74 180 42 "Toggle A"
@@ -849,6 +1067,7 @@ button mem1 44 182 120 38 "M1"
 button mem2 176 182 120 38 "M2"
 button mem3 308 182 120 38 "M3"
 button resetP 44 236 384 42 "Reset Circuit"
+button mirror 44 284 384 42 "Mirror Phase"
 onui swA toggle SWA
 onui swB toggle SWB
 onui swC toggle SWC
@@ -856,8 +1075,10 @@ onui mem1 goto mem_press_1
 onui mem2 goto mem_press_2
 onui mem3 goto mem_press_3
 onui resetP goto circuit_reset
+onui mirror goto mirror_phase
 
 every pulse 2 goto pulse
+every clock_tick 1 goto clock_tick
 
 tick:
   hud "Quantum Vault" 24 32
@@ -867,6 +1088,8 @@ tick:
   hud "C" SWC 24 128
   hud "Token" TOKEN 24 152
   hud "Lock" LOCK 24 176
+  hud "Clock" CLOCK 24 200
+  hud "Mirror" MIRROR 24 224
   if SWA == 1 goto pwr_check_b
   if PX > 2440 goto check_exit
 end
@@ -919,6 +1142,14 @@ end
 pulse_skip:
 end
 
+clock_tick:
+  dec CLOCK 1
+  if CLOCK > 0 goto clock_ok
+  goto fail
+end
+clock_ok:
+end
+
 mem_press_1:
   if TOKEN == 0 goto mem_locked
   set MEM1 1
@@ -939,6 +1170,11 @@ end
 
 mem_locked:
   msg "Sequence blocked" 0.6
+end
+
+mirror_phase:
+  toggle MIRROR
+  msg "Mirror phase toggled" 0.7
 end
 
 circuit_reset:
@@ -962,7 +1198,17 @@ end
 
 check_exit:
   if LOCK == 0 goto clear
+  if MIRROR == 1 goto mirror_hint
   msg "Vault still locked" 0.8
+end
+
+mirror_hint:
+  msg "Try mirror phase" 0.8
+end
+
+fail:
+  msg "Vault lockdown" 2
+  stop
 end
 
 clear:
@@ -1006,13 +1252,17 @@ set SCORE 0
 button campBtn 40 94 260 42 "Build Campfire"
 button signalBtn 40 146 260 42 "Build Signal"
 button drinkBtn 40 198 260 42 "Emergency Drink"
+button radarBtn 40 250 260 42 "Deploy Radar"
 onui campBtn goto build_camp
 onui signalBtn goto build_signal
 onui drinkBtn goto emergency_drink
+onui radarBtn goto deploy_radar
 
 every survival_tick 1 goto survival_tick
 every loot_tick 4 goto loot_tick
 every raid_tick 8 goto raid_tick
+every toxin_tick 5 goto toxin_tick
+every radar_tick 3 goto radar_tick
 
 on left move -1 0
 on right move 1 0
@@ -1030,6 +1280,9 @@ tick:
   hud "Ore" ORE 24 174
   hud "Signal" SIGNAL 24 198
   hud "Day" DAYTIME 24 222
+  hud "Wave" WAVE 24 246
+  hud "Toxin" TOXIN 24 270
+  hud "Radar" RADAR 24 294
   if HP <= 0 goto fail
   if EVAC == 1 goto clear
 end
@@ -1071,6 +1324,8 @@ end
 raid_tick:
   if NIGHT == 0 goto raid_skip
   enemy rand 1200 3300 rand 980 1460 20 20
+  inc WAVE 1
+  add TOXIN 1
   msg "Night raid!" 0.7
 end
 raid_skip:
@@ -1130,6 +1385,16 @@ build_signal:
 end
 signal_fail:
   msg "Need 5 ore & 6 wood" 0.8
+end
+
+deploy_radar:
+  if ORE < 2 goto radar_fail
+  sub ORE 2
+  set RADAR 12
+  msg "Radar active" 0.7
+end
+radar_fail:
+  msg "Need 2 ore" 0.7
 end
 
 emergency_drink:
