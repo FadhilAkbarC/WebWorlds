@@ -27,7 +27,7 @@ export default function DocsPage() {
       <div className="mx-auto max-w-5xl">
         <h1 className="mb-3 text-5xl font-bold text-white">WBW Documentation</h1>
         <p className="mb-6 text-slate-300">
-          Search syntax seperti forum thread: ketik kata kunci, filter kategori, lalu copy syntax yang dibutuhkan.
+          Search syntax seperti forum thread: ketik kata kunci, filter kategori, lalu copy syntax yang dibutuhkan. Editor kini default ke visual coding ala Scratch, dan block akan dikonversi ke WBW syntax.
         </p>
 
         <div className="mb-6 grid gap-3 md:grid-cols-[1fr_220px]">

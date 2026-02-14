@@ -51,6 +51,8 @@ WebWorlds/
 
 ### WBW Editor Template Store (Desktop + Mobile)
 
+- Editor sekarang mendukung **Visual Coding** ala block (inspirasi Scratch) melalui palette + block sequence editor, dengan mode switch `Visual` / `Code` untuk desktop dan mobile.
+
 - Desktop editor (`/editor`) now shows an inline **Creator Store Templates** list in the left panel.
 - Mobile editor (`/mobile/editor`) also shows an inline **Creator Store Template List** card for parity.
 - Both UIs support quick actions:
