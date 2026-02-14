@@ -10,6 +10,8 @@ import { Save, Plus, X, Play, Settings, Upload } from 'lucide-react';
 import WBWEditor from '@/components/shared/wbw-code-editor';
 import { DEFAULT_WBW_TEMPLATE } from '@/lib/wbw-game-template';
 import { lazyWithRetry } from '@/lib/lazy-with-retry';
+import { type WBWTemplateDefinition } from '@/lib/wbw-template-store';
+import WBWTemplateStoreModal from '@/components/shared/wbw-template-store-modal';
 
 const ManageGamesTab = dynamic(lazyWithRetry(() => import('./manage-games-tab')), {
   ssr: false,
@@ -43,6 +45,7 @@ export default function EditorPage() {
   const [wbwErrors, setWbwErrors] = useState<WBWError[]>([]);
   const [newScriptName, setNewScriptName] = useState('');
   const [showNewScriptDialog, setShowNewScriptDialog] = useState(false);
+  const [showTemplateStore, setShowTemplateStore] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -131,6 +134,37 @@ export default function EditorPage() {
     addScript(newScript);
     setNewScriptName('');
     setShowNewScriptDialog(false);
+  };
+
+  const applyTemplate = (template: WBWTemplateDefinition) => {
+    const baseProject = useEditorStore.getState().project;
+    loadProject({
+      ...baseProject,
+      title: template.title,
+      description: template.description,
+      scripts: [
+        {
+          id: 'main',
+          name: 'main.wbw',
+          code: template.code,
+          language: 'wbw' as const,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    } as any);
+    setActiveTab('main');
+    setShowTemplateStore(false);
+  };
+
+  const createScriptFromTemplate = (template: WBWTemplateDefinition) => {
+    addScript({
+      id: `template_${template.id}_${Date.now()}`,
+      name: `${template.id}.wbw`,
+      code: template.code,
+      language: 'wbw',
+      createdAt: new Date().toISOString(),
+    });
+    setShowTemplateStore(false);
   };
 
 
@@ -276,6 +310,13 @@ export default function EditorPage() {
                   <Plus size={16} />
                   WBW Game Template
                 </button>
+                <button
+                  onClick={() => setShowTemplateStore(true)}
+                  className="flex items-center gap-2 w-full mt-2 px-3 py-2 bg-purple-800 hover:bg-purple-700 text-white rounded text-sm transition-colors"
+                >
+                  <Plus size={16} />
+                  Template Store / Creator
+                </button>
               </div>
               <div className="space-y-1">
                 {project.scripts.map((script) => (
@@ -333,6 +374,12 @@ export default function EditorPage() {
                   </div>
                 </div>
               )}
+              <WBWTemplateStoreModal
+                open={showTemplateStore}
+                onClose={() => setShowTemplateStore(false)}
+                onUseAsProject={applyTemplate}
+                onAddScript={createScriptFromTemplate}
+              />
             </div>
             {/* Center Panel - Code Editor */}
             <div className="flex-1 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden flex flex-col">

@@ -4,11 +4,12 @@ export const DEFAULT_WBW_TEMPLATE = `// WBW Game Template v4 - Mega Platformer S
 // Camera: world/cam/camfollow/camlerp/camoffset/camclamp/camreset
 // Control: on/onpress/onrelease + move/jump/shoot/vel/push + setx/sety/addx/addy/velx/vely/pushx/pushy
 // UI: uirect/uicircle/uiline/button/onui/onhoverui/uivisible/uienable/uicolor/removeui/clearui
-// Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp
+// Logic: set/add/sub/mul/div/mod/rand/randint/randfloat/inc/dec/abs/neg/sign/floor/ceil/round/min/max/clamp (+ shorthand VAR=10, VAR+=2)
 // Timer: after/every/canceltimer/cleartimers
 // Math: pow/sqrt/log/exp/sin/cos/tan/asin/acos/atan/lerp/mix/swap/copy/toggle
 // Events: msg/shake/stop + checkpoint/respawn/patrol + colorof/sizeof/remove
 // Built-in vars: PX PY VX VY TIME FRAME DT GROUND WORLDW WORLDH CAMX CAMY MX MY MOUSEDOWN UIHOVER UICLICK
+// Namespace vars: set Rock 3 -> can be reused as Rock or Game.Rock
 
 bg #0b1120
 world 2400 1200
@@ -25,14 +26,16 @@ size 18 24
 pcolor #38bdf8
 textsize 16
 
-set SCORE 0
-set HP 5
-set COINS 0
-set STAGE 1
-set WAVE 0
-set CHECK 0
-set FLAG 0
-set ANG 0.5
+SCORE = 0
+HP = 5
+COINS = 0
+STAGE = 1
+WAVE = 0
+CHECK = 0
+FLAG = 0
+ANG = 0.5
+Rock = 4
+Game.Rock += 2
 goto math_lab
 
 // World
