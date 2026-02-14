@@ -275,6 +275,10 @@ const COMMAND_ALIASES: Record<string, string> = {
   repeat: 'every',
   stoptimer: 'canceltimer',
   stoptimers: 'cleartimers',
+  del: 'unset',
+  delete: 'unset',
+  strlen: 'len',
+  distance: 'dist',
 };
 
 const KNOWN_COMMANDS = new Set<string>([
@@ -397,6 +401,15 @@ const KNOWN_COMMANDS = new Set<string>([
   'and',
   'or',
   'not',
+  'unset',
+  'exists',
+  'len',
+  'concat',
+  'str',
+  'dist',
+  'atan2',
+  'between',
+  'clamp01',
 ]);
 
 function normalizeKey(key: string): string {
@@ -590,6 +603,18 @@ function validateParsedProgram(program: WBWProgram): WBWError[] {
 
     if (command === 'jump' && tokens.length < 2) {
       validationErrors.push({ line: line.line, message: 'jump requires force value' });
+    }
+
+    if ((command === 'str' || command === 'concat') && tokens.length < 3) {
+      validationErrors.push({ line: line.line, message: `${command} requires variable and text` });
+    }
+
+    if ((command === 'unset' || command === 'exists' || command === 'len') && tokens.length < 2) {
+      validationErrors.push({ line: line.line, message: `${command} requires variable name` });
+    }
+
+    if ((command === 'dist' || command === 'atan2' || command === 'between' || command === 'clamp01') && tokens.length < 3) {
+      validationErrors.push({ line: line.line, message: `${command} requires destination variable and numeric values` });
     }
 
     if (command === 'touch' && tokens[1] && !['on', 'off', 'auto'].includes(tokens[1].toLowerCase())) {
@@ -2286,6 +2311,75 @@ export class WBWEngine {
         if (!name) break;
         const source = tokens[2] ? this.getNumberValue(tokens[2]) : this.getNumberVar(name, 0);
         this.vars[name] = source !== 0 ? 0 : 1;
+        break;
+      }
+      case 'unset': {
+        const name = tokens[1];
+        if (!name) break;
+        delete this.vars[name];
+        break;
+      }
+      case 'exists': {
+        const name = tokens[1];
+        if (!name) break;
+        const target = tokens[2] || name;
+        this.vars[name] = this.vars[target] !== undefined ? 1 : 0;
+        break;
+      }
+      case 'len': {
+        const name = tokens[1];
+        if (!name) break;
+        const target = tokens[2] || name;
+        const resolved = this.getValue(target);
+        this.vars[name] = String(resolved ?? '').length;
+        break;
+      }
+      case 'str': {
+        const name = tokens[1];
+        if (!name) break;
+        this.vars[name] = this.resolveText(tokens.slice(2));
+        break;
+      }
+      case 'concat': {
+        const name = tokens[1];
+        if (!name) break;
+        const base = String(this.vars[name] ?? '');
+        const addon = this.resolveText(tokens.slice(2));
+        this.vars[name] = `${base}${addon}`;
+        break;
+      }
+      case 'dist': {
+        const name = tokens[1];
+        if (!name) break;
+        const x1 = this.getNumberValue(tokens[2]);
+        const y1 = this.getNumberValue(tokens[3]);
+        const x2 = this.getNumberValue(tokens[4]);
+        const y2 = this.getNumberValue(tokens[5]);
+        this.vars[name] = Math.hypot(x2 - x1, y2 - y1);
+        break;
+      }
+      case 'atan2': {
+        const name = tokens[1];
+        if (!name) break;
+        const y = this.getNumberValue(tokens[2]);
+        const x = this.getNumberValue(tokens[3]);
+        this.vars[name] = Math.atan2(y, x);
+        break;
+      }
+      case 'between': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = this.getNumberValue(tokens[2]);
+        const min = this.getNumberValue(tokens[3]);
+        const max = this.getNumberValue(tokens[4]);
+        this.vars[name] = value >= Math.min(min, max) && value <= Math.max(min, max) ? 1 : 0;
+        break;
+      }
+      case 'clamp01': {
+        const name = tokens[1];
+        if (!name) break;
+        const value = this.getNumberValue(tokens[2] || name);
+        this.vars[name] = clamp(value, 0, 1);
         break;
       }
       case 'goto': {

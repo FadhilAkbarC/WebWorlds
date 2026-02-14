@@ -32,15 +32,16 @@ const GROUPS = {
     'addx', 'addy', 'velx', 'vely', 'pushx', 'pushy', 'stopx', 'stopy', 'flipx', 'flipy', 'bouncex', 'bouncey',
     'setpos', 'teleport', 'sizeof', 'colorof',
   ]),
-  flow: new Set(['if', 'ifnot', 'goto', 'loop', 'end', 'stop', 'after', 'every', 'canceltimer', 'cleartimers']),
+  flow: new Set(['if', 'ifnot', 'goto', 'loop', 'end', 'stop', 'after', 'every', 'canceltimer', 'cleartimers', 'exists', 'between']),
   math: new Set([
     'set', 'add', 'sub', 'mul', 'div', 'mod', 'rand', 'randint', 'randfloat', 'inc', 'dec', 'abs', 'neg',
     'sign', 'floor', 'ceil', 'round', 'min', 'max', 'clamp', 'pow', 'sqrt', 'log', 'exp', 'sin', 'cos', 'tan',
-    'asin', 'acos', 'atan', 'lerp', 'mix', 'swap', 'copy', 'toggle', 'speed', 'gravity', 'friction',
+    'asin', 'acos', 'atan', 'atan2', 'lerp', 'mix', 'swap', 'copy', 'toggle', 'speed', 'gravity', 'friction',
+    'clamp01', 'dist', 'len',
   ]),
   event: new Set([
     'msg', 'shake', 'sound', 'checkpoint', 'respawn', 'remove', 'patrol', 'onui', 'onhoverui', 'after', 'every',
-    'canceltimer', 'cleartimers',
+    'canceltimer', 'cleartimers', 'concat', 'str', 'unset',
   ]),
 };
 
