@@ -4,6 +4,7 @@ import { Navbar } from '@/components/desktop/Navbar';
 import { Footer } from '@/components/desktop/Footer';
 import ChunkRecovery from '@/components/shared/ChunkRecovery';
 import SlowConnectionNotice from '@/components/shared/SlowConnectionNotice';
+import { BroadcastRefreshBanner } from '@/components/shared/BroadcastRefresh';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body className="bg-slate-950 text-white">
         <SlowConnectionNotice />
         <Navbar />
+        <BroadcastRefreshBanner />
         <main className="min-h-screen">
           {children}
         </main>

@@ -6,6 +6,7 @@ import MobileTabBar from '@/components/mobile/MobileTabBar';
 import MobileFooter from '@/components/mobile/MobileFooter';
 import ChunkRecovery from '@/components/shared/ChunkRecovery';
 import SlowConnectionNotice from '@/components/shared/SlowConnectionNotice';
+import { BroadcastRefreshBanner } from '@/components/shared/BroadcastRefresh';
 
 export const metadata: Metadata = {
   title: 'WebWorlds Mobile',
@@ -20,6 +21,7 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
       <body className="bg-slate-950 text-white">
         <SlowConnectionNotice />
         <MobileHeader />
+        <BroadcastRefreshBanner />
         <main className="min-h-screen pb-24">{children}</main>
         <MobileFooter />
         <MobileTabBar />

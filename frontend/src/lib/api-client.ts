@@ -239,6 +239,14 @@ export const apiClient = {
   updateProfile: (data: Record<string, unknown>) =>
     api.put('/auth/profile', data),
 
+  // Broadcast refresh alerts
+  getBroadcastRefreshAlert: () => api.get('/broadcast-alert'),
+
+  setBroadcastRefreshAlert: (message: string) =>
+    api.post('/broadcast-alert', { message }),
+
+  consumeBroadcastRefreshAlert: () => api.post('/broadcast-alert/consume'),
+
   // Comments
   getGameComments: (gameId: string, params?: Record<string, unknown>) =>
     api.get(`/games/${gameId}/comments`, { params }),
