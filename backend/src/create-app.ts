@@ -11,6 +11,7 @@ import commentRoutes from './routes/comments.routes';
 import activityRoutes from './routes/activities.routes';
 import groupRoutes from './routes/groups.routes';
 import userRoutes from './routes/users.routes';
+import broadcastAlertRoutes from './routes/broadcast-alert.routes';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 
 export function createApp(): Express {
@@ -112,6 +113,7 @@ export function createApp(): Express {
   app.use('/api/users', userRoutes);
   app.use('/api', commentRoutes);
   app.use('/api', activityRoutes);
+  app.use('/api', broadcastAlertRoutes);
 
   // ============ Health Check ============
   app.get('/health', (req, res) => {

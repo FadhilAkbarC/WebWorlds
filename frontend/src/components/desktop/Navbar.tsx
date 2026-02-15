@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { shallow } from 'zustand/shallow';
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
+import { BroadcastRefreshSettingsButton } from '@/components/shared/BroadcastRefresh';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -39,14 +40,17 @@ export const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 bg-[#1f1f1f] border-b border-[#2a2a2a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-center justify-between gap-4">
-          <AppLink href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white text-black rounded-md flex items-center justify-center font-bold text-lg">
-              W
-            </div>
-            <span className="text-lg font-bold text-white hidden sm:inline">
-              WebWorlds
-            </span>
-          </AppLink>
+          <div className="flex items-center gap-2">
+            <BroadcastRefreshSettingsButton />
+            <AppLink href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-white text-black rounded-md flex items-center justify-center font-bold text-lg">
+                W
+              </div>
+              <span className="text-lg font-bold text-white hidden sm:inline">
+                WebWorlds
+              </span>
+            </AppLink>
+          </div>
 
           <div className="hidden md:flex flex-1 justify-center">
             <div className="relative w-full max-w-xl">

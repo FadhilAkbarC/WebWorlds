@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Search, Plus, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import MobileLink from '@/components/mobile/MobileLink';
+import { BroadcastRefreshSettingsButton } from '@/components/shared/BroadcastRefresh';
 
 const MobileHeader: React.FC = () => {
   const pathname = usePathname();
@@ -15,12 +16,15 @@ const MobileHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-[#141414]/95 backdrop-blur border-b border-[#232323]">
       <div className="flex items-center justify-between px-4 py-3">
-        <MobileLink href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold">
-            W
-          </div>
-          <span className="text-base font-semibold text-white">WebWorlds</span>
-        </MobileLink>
+        <div className="flex items-center gap-2">
+          <BroadcastRefreshSettingsButton />
+          <MobileLink href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold">
+              W
+            </div>
+            <span className="text-base font-semibold text-white">WebWorlds</span>
+          </MobileLink>
+        </div>
         <div className="flex items-center gap-2">
           <MobileLink
             href="/search"
